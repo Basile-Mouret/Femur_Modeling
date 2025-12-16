@@ -1,3 +1,0 @@
-/home/user/Femur_Modeling/build/CMakeFiles/main.dir
-/home/user/Femur_Modeling/build/CMakeFiles/edit_cache.dir
-/home/user/Femur_Modeling/build/CMakeFiles/rebuild_cache.dir
