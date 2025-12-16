@@ -1,7 +1,6 @@
 #include <iostream>
-#include "temp.hpp"
 
 int main() {
-    HelloWorld();
+    std::cout << "Femur Modeling Project" << std::endl;
     return 0;
 }
