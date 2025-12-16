@@ -1,0 +1,34 @@
+build/
+bin/
+lib/
+
+# --- CMake Generated Files ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# --- Compiled Binaries & Objects ---
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+*.out
+
+# --- Swap files ---
+*.swp
+*.swo
+.vscode/
+
+# --- LSP & Tooling ---
+compile_commands.json
+
+# Clangd
+.clangd/
+.cache/

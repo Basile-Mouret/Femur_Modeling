@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
-  "/home/tim/Documents/cours/Femur_Modeling/bin/main"
-  "/home/tim/Documents/cours/Femur_Modeling/bin/main.pdb"
+  "/home/user/Femur_Modeling/bin/main"
+  "/home/user/Femur_Modeling/bin/main.pdb"
+  "CMakeFiles/main.dir/link.d"
   "CMakeFiles/main.dir/src/main.cpp.o"
   "CMakeFiles/main.dir/src/main.cpp.o.d"
 )
