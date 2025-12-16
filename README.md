@@ -30,6 +30,8 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 5. Méthode d'entrainement pour le réseau de neurone (déscente de gradient)
 6. Parser nos fichiers, classe fémur 
 
+# Avancées
+- Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
 
 # Compilation
 
