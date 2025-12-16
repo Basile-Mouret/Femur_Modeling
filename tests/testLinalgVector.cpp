@@ -21,7 +21,7 @@ int main(){
     std::cout << "v1 == v4: " << (v1 == v4 ? "true" : "false") << std::endl;
     std::cout << "v1 == v2: " << (v1 == v2 ? "true" : "false") << std::endl;
 
-    std::cout << "v3[1]: " << v3[1] << std::endl;
+    std::cout << "v3[1]: " << v3(1) << std::endl;
     v3.setCoeff(1, 5.0f);
     std::cout << "v3 after setCoeff(1, 5.0): " << v3 << std::endl;
 
