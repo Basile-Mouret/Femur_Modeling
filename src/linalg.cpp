@@ -58,7 +58,7 @@ bool Vector::operator==(const Vector& other) const {
     return true;
 }
 
-float Vector::operator[](size_t i_index) const {
+float Vector::operator()(size_t i_index) const {
     return m_data(i_index);
 }
 
@@ -118,6 +118,8 @@ float Vector::dot(const Vector& other){
 }
 
 
+
+
 // Matrix2D class method implementations
 std::ostream& operator<<(std::ostream& os, const Matrix2D& mat) {
     os << "[";
@@ -137,7 +139,6 @@ std::ostream& operator<<(std::ostream& os, const Matrix2D& mat) {
     os << "]";
     return os;
 }
-
 
 //Constructors
 Matrix2D::Matrix2D(size_t rows, size_t cols) : m_rows(rows), m_cols(cols), m_data(Eigen::MatrixXd::Zero(rows, cols)) {}
@@ -195,7 +196,7 @@ bool Matrix2D::setRow(size_t i_row, const Vector& row) {
         return false;
     }
     for(size_t j = 0; j < m_cols; ++j) {
-        m_data(i_row, j) = row[j];
+        m_data(i_row, j) = row(j);
     }
     return true;
 }
@@ -206,7 +207,7 @@ bool Matrix2D::setCol(size_t i_col, const Vector& col) {
         return false;
     }
     for(size_t i = 0; i < m_rows; ++i) {
-        m_data(i, i_col) = col[i];
+        m_data(i, i_col) = col(i);
     }
     return true;
 }
@@ -306,7 +307,7 @@ Vector Matrix2D::operator*(const Vector &vec){
     for (size_t j = 0; j < m_rows; ++j) {
         float sum = 0;
         for (size_t i = 0; i < m_cols; ++i) {
-            sum += m_data(j, i) * vec[i];
+            sum += m_data(j, i) * vec(i);
         }
         result.setCoeff(j, sum);
     }

@@ -67,7 +67,7 @@ class Vector{
         * @param index: size_t
         * @return float
         */
-        float operator[](size_t i_index) const;
+        float operator()(size_t i_index) const;
 
         /*
         * @brief Set the coefficient of the vector at a specific index
