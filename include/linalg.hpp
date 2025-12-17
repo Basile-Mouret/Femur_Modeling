@@ -5,12 +5,14 @@
 #include <vector>
 #include <Eigen/Dense>
 
+template<typename T>
 class Vector{
-    friend std::ostream& operator<<(std::ostream& os, const Vector& vec);
+    template<typename U>
+    friend std::ostream& operator<<(std::ostream& os, const Vector<U>& vec);
 
     protected:
         size_t m_size;
-        Eigen::VectorXd m_data;
+        Eigen::Matrix<T, Eigen::Dynamic, 1> m_data;
 
     public:
         //Constructors
@@ -23,23 +25,23 @@ class Vector{
         /*
         * @brief Construct a Vector of given size initialized to init_value
         * @param s: size_t
-        * @param init_value: float
+        * @param init_value: T
         */
-        Vector(size_t s, float init_value);
+        Vector(size_t s, T init_value);
 
         /*
         * @brief Construct a Vector of given size initialized to init_values
         * @param s: size_t
-        * @param init_values: const std::vector<float>&
+        * @param init_values: const std::vector<T>&
         */
-        Vector(size_t s, const std::vector<float>& init_values);
+        Vector(size_t s, const std::vector<T>& init_values);
 
         /*
         * @brief Copy constructor
-        * @param other: const Vector&
-        * @return Vector
+        * @param other: const Vector<T>&
+        * @return Vector<T>
         */
-        Vector(const Vector& other);
+        Vector(const Vector<T>& other);
 
         // Basic operations
 
@@ -57,25 +59,25 @@ class Vector{
 
         /*
         * @brief Equality operator overload
-        * @param other: const Vector&
+        * @param other: const Vector<T>&
         * @return bool
         */
-        bool operator==(const Vector& other) const;
+        bool operator==(const Vector<T>& other) const;
 
         /*
         * @brief Subscript operator overload for read-only access
         * @param index: size_t
-        * @return float
+        * @return T
         */
-        float operator()(size_t i_index) const;
+        T operator()(size_t i_index) const;
 
         /*
         * @brief Set the coefficient of the vector at a specific index
         * @param index: size_t
-        * @param value: float
+        * @param value: T
         * @return bool
         */
-        bool setCoeff(size_t i_index, float value);
+        bool setCoeff(size_t i_index, T value);
 
 
 
@@ -83,42 +85,44 @@ class Vector{
 
         /*
         * @brief Scalar multiplication. Returns a reference to a new vector after multiplication.
-        * @param scalar: float
-        * @return Vector&
+        * @param scalar: T
+        * @return Vector<T>
         */
-        Vector operator*(const float scalar);
+        Vector<T> operator*(const T scalar);
 
         /*
         * @brief Vector addition. Returns a reference to a new vector after addition. If sizes do not match, no operation is performed.
-        * @param other: const Vector&
-        * @return Vector&
+        * @param other: const Vector<T>&
+        * @return Vector<T>
         */
-        Vector operator+(const Vector &other);
+        Vector<T> operator+(const Vector<T> &other);
 
         /*
         * @brief Vector subtraction. Returns a reference to a new vector after subtraction. If sizes do not match, no operation is performed.
-        * @param other: const Vector&
-        * @return Vector&
+        * @param other: const Vector<T>&
+        * @return Vector<T>
         */
-        Vector operator-(const Vector &other);
+        Vector<T> operator-(const Vector<T> &other);
 
 
         /*
         * @brief Compute the dot product with another vector. Return 0 if sizes do not match.
-        * @param other: const Vector&
-        * @return float
+        * @param other: const Vector<T>&
+        * @return T
         */
-        float dot(const Vector& other);
+        T dot(const Vector<T>& other);
 };
 
 
+template<typename T>
 class Matrix2D{
-    friend std::ostream& operator<<(std::ostream& os, const Matrix2D& mat);
+    template<typename U>
+    friend std::ostream& operator<<(std::ostream& os, const Matrix2D<U>& mat);
     
     protected:
         size_t m_rows;
         size_t m_cols;
-        Eigen::MatrixXd m_data;
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> m_data;
 
     public:
         // Constructors
@@ -134,15 +138,15 @@ class Matrix2D{
         * @brief Construct a Matrix2D of given sizes initialized to init_value
         * @param rows: size_t
         * @param cols: size_t
-        * @param init_value: float
+        * @param init_value: T
         */
-        Matrix2D(size_t rows, size_t cols, const float init_value);
+        Matrix2D(size_t rows, size_t cols, const T init_value);
 
         /*
         * @brief Copy constructor
-        * @param other: const Matrix2D&
+        * @param other: const Matrix2D<T>&
         */
-        Matrix2D(const Matrix2D& other);
+        Matrix2D(const Matrix2D<T>& other);
 
 
 
@@ -163,41 +167,41 @@ class Matrix2D{
         /*
         * @brief Get the Row in a Matrix2D as a Vector. Print an error message if i_row is out of bounds and return a zero Vector.
         * @param i_row: size_t
-        * @return Vector
+        * @return Vector<T>
         */
-        Vector getRow(size_t i_row) const;
+        Vector<T> getRow(size_t i_row) const;
 
         /*
         * @brief Get the Column in a Matrix2D as a Vector. Print an error message if i_col is out of bounds and return a zero Vector.
         * @param i_col: size_t
-        * @return Vector
+        * @return Vector<T>
         */
-        Vector getCol(size_t i_col) const;
+        Vector<T> getCol(size_t i_col) const;
 
         /*
         * @brief Set the coefficient of the matrix at a specific row and column. Return false if indices are out of bounds.
         * @param i_row: size_t
         * @param i_col: size_t
-        * @param value: float
+        * @param value: T
         * @return bool
         */
-        bool setCoeff(size_t i_row, size_t i_col, float value);
+        bool setCoeff(size_t i_row, size_t i_col, T value);
 
         /*
         *@brief Set the Row in a Matrix2D from a Vector. Return false if sizes do not match.
         *@param i_row: size_t
-        *@param row: const Vector&
+        *@param row: const Vector<T>&
         *@return bool
         */
-        bool setRow(size_t i_row, const Vector& row);
+        bool setRow(size_t i_row, const Vector<T>& row);
 
         /*
         *@brief Set the Column in a Matrix2D from a Vector. Return false if sizes do not match.
         *@param i_col: size_t
-        *@param col: const Vector&
+        *@param col: const Vector<T>&
         *@return bool
         */
-        bool setCol(size_t i_col, const Vector& col);
+        bool setCol(size_t i_col, const Vector<T>& col);
 
         /*
         * @brief Check if the matrix is a zero matrix
@@ -216,9 +220,9 @@ class Matrix2D{
         * @brief Access an element in the matrix
         * @param i_row: size_t
         * @param i_col: size_t
-        * @return float
+        * @return T
         */
-       float operator()(size_t i_row, size_t i_col) const;
+       T operator()(size_t i_row, size_t i_col) const;
 
 
         // Linear algebra operations
@@ -256,10 +260,11 @@ class Matrix2D{
         * @param vec: const Vector&
         * @return Vector
         */
-        Vector operator*(const Vector &vec);
+        Vector<T> operator*(const Vector<T> &vec);
 };
 
-class Matrix2DSquare : public Matrix2D {
+template<typename T>
+class Matrix2DSquare : public Matrix2D<T> {
     public:
         /*
         * @brief Construct a Square Matrix2D of given size initialized to zero
@@ -270,15 +275,15 @@ class Matrix2DSquare : public Matrix2D {
         /*
         * @brief Construct a Square Matrix2D of given size initialized to init_value
         * @param size: size_t
-        * @param init_value: float
+        * @param init_value: T
         */
-        Matrix2DSquare(size_t size, const float init_value);
+        Matrix2DSquare(size_t size, const T init_value);
 
         /*
         * @brief Copy constructor
-        * @param other: const Matrix2DSquare&
+        * @param other: const Matrix2DSquare<T>&
         */
-        Matrix2DSquare(const Matrix2DSquare& other);
+        Matrix2DSquare(const Matrix2DSquare<T>& other);
 };
 
 #endif
