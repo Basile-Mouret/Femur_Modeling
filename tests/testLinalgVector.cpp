@@ -3,10 +3,10 @@
 #include <vector>
 
 int main(){
-    Vector v1(3);
-    Vector v2(3, 2.0f);
-    Vector v3(3, std::vector<float>{1.0f, 2.0f, 3.0f});
-    Vector v4(v1);
+    Vector<float> v1(3);
+    Vector<float> v2(3, 2.0f);
+    Vector<float> v3(3, std::vector<float>{1.0f, 2.0f, 3.0f});
+    Vector<float> v4(v1);
 
     std::cout << "v1: " << v1 << std::endl;
     std::cout << "v2: " << v2 << std::endl;
