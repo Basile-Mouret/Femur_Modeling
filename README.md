@@ -32,6 +32,7 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 
 # Avancées
 - Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
+- Neural Network Function
 
 # Compilation
 
