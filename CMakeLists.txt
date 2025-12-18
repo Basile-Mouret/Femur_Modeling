@@ -21,3 +21,4 @@ add_executable(main src/main.cpp src/linalg.cpp)
 ### Tests
 add_executable(testLinalgVector tests/testLinalgVector.cpp src/linalg.cpp)
 add_executable(testLinalgMatrix tests/testLinalgMatrix.cpp src/linalg.cpp)
+add_executable(testNNFunctions tests/testNNFunctions.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp)
