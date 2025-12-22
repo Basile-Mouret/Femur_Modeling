@@ -15,10 +15,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 ### Main executable
-add_executable(main src/main.cpp src/linalg.cpp src/femur.cpp)
+add_executable(main src/main.cpp src/linalg.cpp)
 
 
 ### Tests
 add_executable(testLinalgVector tests/testLinalgVector.cpp src/linalg.cpp)
 add_executable(testLinalgMatrix tests/testLinalgMatrix.cpp src/linalg.cpp)
 add_executable(testFemur tests/testFemur.cpp src/femur.cpp src/linalg.cpp)
+add_executable(testNNFunctions tests/testNNFunctions.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp)

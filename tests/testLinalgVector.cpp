@@ -3,10 +3,10 @@
 #include <vector>
 
 int main(){
-    Vector v1(3);
-    Vector v2(3, 2.);
-    Vector v3(3, std::vector<double>{1., 2., 3.});
-    Vector v4(v1);
+    Vector<float> v1(3);
+    Vector<float> v2(3, 2.0f);
+    Vector<float> v3(3, std::vector<float>{1.0f, 2.0f, 3.0f});
+    Vector<float> v4(v1);
 
     std::cout << "v1: " << v1 << std::endl;
     std::cout << "v2: " << v2 << std::endl;
@@ -22,10 +22,10 @@ int main(){
     std::cout << "v1 == v2: " << (v1 == v2 ? "true" : "false") << std::endl;
 
     std::cout << "v3[1]: " << v3(1) << std::endl;
-    v3.setCoeff(1, 5.);
+    v3.setCoeff(1, 5.0f);
     std::cout << "v3 after setCoeff(1, 5.0): " << v3 << std::endl;
 
-    std::cout << "v2 * 3.0 = " << v2 << " * 3.0 = " << (v2 * 3.) << std::endl;
+    std::cout << "v2 * 3.0 = " << v2 << " * 3.0 = " << (v2 * 3.0f) << std::endl;
     std::cout << "v2 + v3 = " << v2 << " + " << v3 << " = " << (v2 + v3) << std::endl;
     std::cout << "v3 - v2 = " << v3 << " - " << v2 << " = " << (v3 - v2) << std::endl;
     std::cout << "v2 . v3 = " << v2 << " . " << v3 << " = " << v2.dot(v3) << std::endl;
