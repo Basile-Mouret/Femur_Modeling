@@ -13,4 +13,12 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/eigen-5.0.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-add_executable(main src/main.cpp)
+
+### Main executable
+add_executable(main src/main.cpp src/linalg.cpp src/femur.cpp)
+
+
+### Tests
+add_executable(testLinalgVector tests/testLinalgVector.cpp src/linalg.cpp)
+add_executable(testLinalgMatrix tests/testLinalgMatrix.cpp src/linalg.cpp)
+add_executable(testFemur tests/testFemur.cpp src/femur.cpp src/linalg.cpp)
