@@ -72,6 +72,13 @@ class Vector{
         T operator()(size_t i_index) const;
 
         /*
+        * @brief Subscript operator overload for read-only access
+        * @param index: size_t
+        * @return T
+        */
+        T &operator()(size_t i_index);
+
+        /*
         * @brief Set the coefficient of the vector at a specific index
         * @param index: size_t
         * @param value: T
@@ -224,6 +231,13 @@ class Matrix2D{
         */
        T operator()(size_t i_row, size_t i_col) const;
 
+        /*
+        * @brief Access an element in the matrix
+        * @param i_row: size_t
+        * @param i_col: size_t
+        * @return T
+        */
+       T &operator()(size_t i_row, size_t i_col);
 
         // Linear algebra operations
 

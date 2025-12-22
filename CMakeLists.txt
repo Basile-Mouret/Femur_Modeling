@@ -15,7 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 ### Main executable
-add_executable(main src/main.cpp src/linalg.cpp)
+add_executable(main src/main.cpp src/linalg.cpp src/femur.cpp)
 
 
 ### Tests

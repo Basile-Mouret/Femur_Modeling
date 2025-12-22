@@ -72,6 +72,11 @@ T Vector<T>::operator()(size_t i_index) const {
 }
 
 template<typename T>
+T &Vector<T>::operator()(size_t i_index){
+    return m_data(i_index);
+}
+
+template<typename T>
 bool Vector<T>::setCoeff(size_t i_index, T value) {
     if(i_index >= m_size) {
         return false;
@@ -266,6 +271,11 @@ bool Matrix2D<T>::operator==(const Matrix2D<T>& other) const {
 
 template<typename T>
 T Matrix2D<T>::operator()(size_t i_row, size_t i_col) const {
+    return m_data(i_row, i_col);
+}
+
+template<typename T>
+T &Matrix2D<T>::operator()(size_t i_row, size_t i_col){
     return m_data(i_row, i_col);
 }
 

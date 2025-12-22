@@ -1,11 +1,14 @@
 #include <fstream>
 #include <string>
+#include <iomanip>
+#include <limits>
+
 #include "Femur.hpp"
 #include "linalg.hpp"
 
 Femur::Femur() : m_coords(18291,3), m_normals(18291,3), m_triangles(36578,3){}
 
-Femur::Femur(Matrix2D coords, Matrix2D normals, Matrix2D triangles) : m_coords(coords), m_normals(normals), m_triangles(triangles){}
+Femur::Femur(Matrix2D<double> coords, Matrix2D<double> normals, Matrix2D<double> triangles) : m_coords(coords), m_normals(normals), m_triangles(triangles){}
 
 Femur::Femur(std::string filename) : m_coords(18291,3), m_normals(18291,3), m_triangles(36578,3){
 
@@ -19,8 +22,6 @@ Femur::Femur(std::string filename) : m_coords(18291,3), m_normals(18291,3), m_tr
     std::string line;
 
     std::getline(file, line); // # 18291 vertice(s)
-
-    
     for (size_t i=0; i<18291; i++){
         std::getline(file, line);
         sscanf(line.c_str(), "v %lf %lf %lf", &m_coords(i,0), &m_coords(i,1), &m_coords(i,2));
@@ -56,24 +57,33 @@ void Femur::saveToFile(std::string filepath) const {
         return;
     }
 
-    file << "# " << m_coords.getSizeRows() << " vertice(s)\n";
+    // sets the number of digits needed for maximum precision
+    file << std::setprecision(15);
+    
+    //drop trailing zeros.
+    file << std::defaultfloat;
+
+    // upper case e's
+    file << std::uppercase;
+
+    file << "# " << m_coords.getSizeRows() << " vertice(s)\r\n";
     // Write Vertices (v x y z)
     for (int i = 0; i < m_coords.getSizeRows(); ++i) {
         file << "v " << m_coords(i, 0) << " " 
                      << m_coords(i, 1) << " " 
-                     << m_coords(i, 2) << "\n";
+                     << m_coords(i, 2) << "\r\n";
     }
-    file << "\n";
-    file << "# " << m_normals.getSizeRows() << " normal(s)\n";
+    file << "\r\n";
+    file << "# " << m_normals.getSizeRows() << " normal(s)\r\n";
 
     // Write Normals (vn x y z)
     for (int i = 0; i < m_normals.getSizeRows(); ++i) {
         file << "vn " << m_normals(i, 0) << " " 
                       << m_normals(i, 1) << " " 
-                      << m_normals(i, 2) << "\n";
+                      << m_normals(i, 2) << "\r\n";
     }
-    file << "\n";
-    file << "# " << m_triangles.getSizeRows() << " face(s)\n\n";
+    file << "\r\n";
+    file << "# " << m_triangles.getSizeRows() << " triangle(s)\r\n";
     // Write Faces (f v1//n1 v2//n2 v3//n3)
     for (int i = 0; i < m_triangles.getSizeRows(); ++i) {
         int v1 = static_cast<int>(m_triangles(i, 0)) + 1;
@@ -82,21 +92,21 @@ void Femur::saveToFile(std::string filepath) const {
 
         file << "f " << v1 << "//" << v1 << " " 
                      << v2 << "//" << v2 << " " 
-                     << v3 << "//" << v3 << "\n";
+                     << v3 << "//" << v3 << "\r\n";
     }
 
     file.close();
     std::cout << "Successfully saved to " << filepath << std::endl;
 }
 
-Matrix2D Femur::getCoords() const{
+Matrix2D<double> Femur::getCoords() const{
    return m_coords;
 }
-Matrix2D Femur::getNormals() const{
+Matrix2D<double> Femur::getNormals() const{
    return m_normals;
 }
 
-Matrix2D Femur::getTriangles() const{
+Matrix2D<double> Femur::getTriangles() const{
    return m_triangles;
 }
 

@@ -6,9 +6,9 @@
 
 class Femur{
     private:
-        Matrix2D m_coords;
-        Matrix2D m_normals;
-        Matrix2D m_triangles;
+        Matrix2D<double> m_coords;
+        Matrix2D<double> m_normals;
+        Matrix2D<double> m_triangles;
 
     public:
         //Constructors
@@ -26,16 +26,16 @@ class Femur{
 
         /*
         * @brief Constructs a Femur from data
-        * @param coords : Matrix2D
-        * @param normals : Matrix2D
-        * @param triangles : Matrix2D
+        * @param coords : Matrix2D<double>
+        * @param normals : Matrix2D<double>
+        * @param triangles : Matrix2D<double>
         */
-        Femur(Matrix2D coords, Matrix2D normals, Matrix2D triangles);
+        Femur(Matrix2D<double> coords, Matrix2D<double> normals, Matrix2D<double> triangles);
         
         // Saving
         /*
         * @brief Saves a Femur in an obj file
-        * @param coords : Matrix2D
+        * @param coords : Matrix2D<double>
         */
         void saveToFile(std::string filepath) const;
 
@@ -43,17 +43,17 @@ class Femur{
         /*
         * @brief Gets the coordinate Matrix
         */
-        Matrix2D getCoords() const;
+        Matrix2D<double> getCoords() const;
 
         /*
         * @brief Gets the normals Matrix
         */
-        Matrix2D getNormals() const;
+        Matrix2D<double> getNormals() const;
 
         /*
         * @brief Gets the triangles Matrix
         */
-        Matrix2D getTriangles() const;
+        Matrix2D<double> getTriangles() const;
 };
 
 #endif
