@@ -136,7 +136,29 @@ T Vector<T>::dot(const Vector<T>& other){
     return result;    
 }
 
+template<typename T>
+Vector<T> Vector<T>::hadamard(const Vector<T>& other) const {
+    if(m_size != other.m_size) {
+        std::cout << "ERROR: Vectors must be of the same size for Hadamard product." << std::endl;
+        return Vector<T>(m_size);
+    }
+    Vector<T> result(m_size);
+    for(size_t i = 0; i < m_size; ++i) {
+        result.setCoeff(i, m_data(i) * other.m_data(i));
+    }
+    return result;
+}
 
+template<typename T>
+Matrix2D<T> Vector<T>::outerProduct(const Vector<T>& other) const {
+    Matrix2D<T> result(m_size, other.m_size);
+    for(size_t i = 0; i < m_size; ++i) {
+        for(size_t j = 0; j < other.m_size; ++j) {
+            result.setCoeff(i, j, m_data(i) * other.m_data(j));
+        }
+    }
+    return result;
+}
 
 
 // Matrix2D class method implementations
@@ -353,6 +375,17 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
             sum += m_data(j, i) * vec(i);
         }
         result.setCoeff(j, sum);
+    }
+    return result;
+}
+
+template<typename T>
+Matrix2D<T> Matrix2D<T>::transpose() const {
+    Matrix2D<T> result(m_cols, m_rows);
+    for (size_t i = 0; i < m_rows; ++i) {
+        for (size_t j = 0; j < m_cols; ++j) {
+            result.setCoeff(j, i, m_data(i, j));
+        }
     }
     return result;
 }

@@ -5,6 +5,10 @@
 #include <vector>
 #include <Eigen/Dense>
 
+// Forward declarations
+template<typename T>
+class Matrix2D;
+
 template<typename T>
 class Vector{
     template<typename U>
@@ -118,6 +122,20 @@ class Vector{
         * @return T
         */
         T dot(const Vector<T>& other);
+
+        /*
+        * @brief Hadamard product (element-wise multiplication) with another vector. Returns a new vector. If sizes do not match, returns a zero vector.
+        * @param other: const Vector<T>&
+        * @return Vector<T>
+        */
+        Vector<T> hadamard(const Vector<T>& other) const;
+
+        /*
+        * @brief Outer product with another vector. Returns a matrix of size (this.size x other.size).
+        * @param other: const Vector<T>&
+        * @return Matrix2D<T>
+        */
+        Matrix2D<T> outerProduct(const Vector<T>& other) const;
 };
 
 
@@ -275,6 +293,12 @@ class Matrix2D{
         * @return Vector
         */
         Vector<T> operator*(const Vector<T> &vec);
+
+        /*
+        * @brief Transpose of the matrix. Returns a new matrix with rows and columns swapped.
+        * @return Matrix2D<T>
+        */
+        Matrix2D<T> transpose() const;
 };
 
 template<typename T>
