@@ -23,3 +23,5 @@ add_executable(testLinalgVector tests/testLinalgVector.cpp src/linalg.cpp)
 add_executable(testLinalgMatrix tests/testLinalgMatrix.cpp src/linalg.cpp)
 add_executable(testFemur tests/testFemur.cpp src/femur.cpp src/linalg.cpp)
 add_executable(testNNFunctions tests/testNNFunctions.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp)
+
+add_executable(testNeuralNetwork tests/testNeuralNetwork.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)

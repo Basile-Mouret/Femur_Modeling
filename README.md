@@ -33,6 +33,7 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 # Avancées
 - Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
 - Neural Network Function
+- Neural Network les test ont été fait avec l'IA. Voir si on corrige ça.  
 
 # Compilation
 
@@ -45,15 +46,15 @@ cd build
 
 # If CmakeLists.txt modified
 cmake ..
-make
+make "[Name executable]"
 
 #else
-make
+make "[Name executable]"
 ```
 
 **3**
 ```bash
-../bin/main
+../bin/"[Name executable]"
 ```
 
 
