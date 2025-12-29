@@ -11,7 +11,7 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
    1. Devant fonctions et classes laisser un espace pour les commentaires
    2. Utilisation de *@brief* pour ce que ça fait et *@param* pour décrire les paramètres
    ```cpp
-   /* 
+   /**
    * @brief Function saying Hello to a person of our choice
    *
    * @param name: str 
