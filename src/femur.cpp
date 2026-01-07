@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <limits>
 
-#include "Femur.hpp"
+#include "femur.hpp"
 #include "linalg.hpp"
 
 Femur::Femur() : m_coords(18291,3), m_normals(18291,3), m_triangles(36578,3){}
