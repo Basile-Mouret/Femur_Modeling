@@ -35,3 +35,6 @@ compile_commands.json
 
 # IDE
 .idea
+
+# Virtual Environments
+venv/
