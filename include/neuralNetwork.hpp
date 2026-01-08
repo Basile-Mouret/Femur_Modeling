@@ -73,7 +73,18 @@ public:
      * @param learningRate Learning rate for gradient descent (default: 0.01)
      */
     NeuralNetwork(const std::vector<size_t>& layers, T learningRate = 0.01);
-    
+
+    /**
+     * @brief Constructs a neural network from a saved file
+     * 
+     * Creates a neural network by loading a previously saved model from a file.
+     * This constructor restores the network architecture, weights, biases, and
+     * hyperparameters from the specified file.
+     * 
+     * @param filename Path to the file containing the saved network model
+     */
+    NeuralNetwork(const std::string& filename);
+
     /**
      * @brief Destructor
      * 
@@ -159,18 +170,7 @@ public:
      * @return true if save was successful, false otherwise
      */
     bool save(const std::string& filename) const;
-    
-    /**
-     * @brief Loads a network from a previously saved file
-     * 
-     * Deserializes a network state from a file, restoring the complete
-     * architecture, weights, biases, and hyperparameters.
-     * 
-     * @param filename Path to the input file
-     * @return true if load was successful, false otherwise
-     */
-    bool load(const std::string& filename);
-    
+
     // Accessors
     
     /**

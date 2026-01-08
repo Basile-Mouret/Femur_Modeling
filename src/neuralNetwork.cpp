@@ -32,6 +32,64 @@ NeuralNetwork<T>::NeuralNetwork(const std::vector<size_t>& layers, T learningRat
     initializeWeights();
 }
 
+template <typename T>
+NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << std::endl;
+    }
+
+    // Load architecture
+    size_t numLayers;
+    file >> numLayers;
+
+    for (size_t i = 0; i < numLayers; ++i) {
+        size_t size;
+        file >> size;
+        m_layers.push_back(size);
+    }
+
+    // Load learning rate
+    file >> m_learningRate;
+    
+    // Load activation and loss function names
+    file >> m_activation;
+    file >> m_loss;
+
+    // Load weights and biases
+    for (size_t layer = 0; layer < numLayers - 1; ++layer) {
+        // Load dimensions
+        size_t rows, cols;
+        file >> rows >> cols;
+
+        Matrix2D<T> weights(rows, cols);
+
+        // Load weights
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                T value;
+                file >> value;
+                weights.setCoeff(i, j, value);
+            }
+        }
+        m_weights.push_back(weights);
+
+        // Load biases
+        Vector<T> bias(rows);
+        for (size_t i = 0; i < rows; ++i) {
+            T value;
+            file >> value;
+            bias.setCoeff(i, value);
+        }
+        m_biases.push_back(bias);
+    }
+
+    file.close();
+
+    std::cout << "Network loaded from " << filename << std::endl;
+}
+
 // Destructor
 template <typename T>
 NeuralNetwork<T>::~NeuralNetwork() {
@@ -244,73 +302,6 @@ bool NeuralNetwork<T>::save(const std::string& filename) const {
     file.close();
     
     std::cout << "Network saved to " << filename << std::endl;
-    
-    return true;
-}
-
-// Load network from file
-template <typename T>
-bool NeuralNetwork<T>::load(const std::string& filename) {
-    std::ifstream file(filename);
-    
-    if (!file.is_open()) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
-        return false;
-    }
-    
-    // Load architecture
-    size_t numLayers;
-    file >> numLayers;
-    
-    m_layers.clear();
-    for (size_t i = 0; i < numLayers; ++i) {
-        size_t size;
-        file >> size;
-        m_layers.push_back(size);
-    }
-    
-    // Load learning rate
-    file >> m_learningRate;
-    
-    // Load activation and loss function names
-    file >> m_activation;
-    file >> m_loss;
-    
-    // Reset weights and biases
-    m_weights.clear();
-    m_biases.clear();
-    
-    // Load weights and biases
-    for (size_t layer = 0; layer < numLayers - 1; ++layer) {
-        // Load dimensions
-        size_t rows, cols;
-        file >> rows >> cols;
-        
-        Matrix2D<T> weights(rows, cols);
-        
-        // Load weights
-        for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = 0; j < cols; ++j) {
-                T value;
-                file >> value;
-                weights.setCoeff(i, j, value);
-            }
-        }
-        m_weights.push_back(weights);
-        
-        // Load biases
-        Vector<T> bias(rows);
-        for (size_t i = 0; i < rows; ++i) {
-            T value;
-            file >> value;
-            bias.setCoeff(i, value);
-        }
-        m_biases.push_back(bias);
-    }
-    
-    file.close();
-    
-    std::cout << "Network loaded from " << filename << std::endl;
     
     return true;
 }
