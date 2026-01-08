@@ -4,7 +4,7 @@ project(Lab6_PDE)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -15,9 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 ### Main executable
-add_executable(main src/main.cpp src/linalg.cpp src/femur.cpp)
-
-
+add_executable(main src/main.cpp src/linalg.cpp src/femur.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp)
 ### Tests
 add_executable(testLinalgVector tests/testLinalgVector.cpp src/linalg.cpp)
 add_executable(testLinalgMatrix tests/testLinalgMatrix.cpp src/linalg.cpp)
