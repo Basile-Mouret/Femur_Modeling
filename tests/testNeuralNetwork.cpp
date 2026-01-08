@@ -129,10 +129,8 @@ void testSaveLoad() {
     
     // Créer un nouveau réseau et charger
     std::vector<size_t> layers2 = {1, 1, 1};  // Architecture différente
-    NeuralNetwork<float> nn2(layers2, 0.01f);
+    NeuralNetwork<float> nn2(filename);
     
-    bool loaded = nn2.load(filename);
-    assert(loaded);
     
     // Vérifier que l'architecture a été correctement chargée
     assert(nn2.getLayers().size() == nn1.getLayers().size());
