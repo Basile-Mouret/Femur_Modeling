@@ -33,6 +33,13 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 8. Docu Doxygen
 9. Voir resultats RDN avec differentes fonction d'activation et d'erreur
 
+
+- voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
+- enregistrement plus simple du NN (hdf5 ou format hugging face) 
+- faire la visu
+- avoir un serveur pour entrainer le réseau
+- load
+
 # Avancées
 - Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
 - Neural Network Function
@@ -54,6 +61,7 @@ make "[Name executable]"
 #else
 make "[Name executable]"
 ```
+Use the flag `-DCMAKE_BUILD_TYPE=Release` for better runtime
 
 **3**
 ```bash

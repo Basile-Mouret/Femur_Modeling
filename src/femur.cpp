@@ -110,3 +110,18 @@ Matrix2D<double> Femur::getTriangles() const{
    return m_triangles;
 }
 
+Vector<double> Femur::getCoordsVect() const{
+    Vector<double> coords(18291*3);
+    for (size_t i = 0; i<18291; i++){
+        coords(i) = getCoords().getCol(0)(i);
+    }
+
+    for (size_t i = 0; i<18291; i++){
+        coords(18291+i) = getCoords().getCol(1)(i);
+    }
+
+    for (size_t i = 0; i<18291; i++){
+        coords(18291*2+i) = getCoords().getCol(2)(i);
+    }
+    return coords;
+}

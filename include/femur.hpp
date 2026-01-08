@@ -92,6 +92,14 @@ class Femur{
          * @return Matrix2D<double> containing triangle face indices (M x 3)
          */
         Matrix2D<double> getTriangles() const;
+
+        /**
+         * @brief Gets the vertex coordinates as a vector 
+         * 
+         * @return Vector<double> containing triangle face indices (3M) (stacked columns)
+         */
+        Vector<double> getCoordsVect() const;
+
 };
 
 #endif
