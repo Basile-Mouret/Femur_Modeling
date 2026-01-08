@@ -12,7 +12,7 @@ Makefile
 
 # --- Compiled Binaries & Objects ---
 *.o
-*.obj
+#*.obj
 *.so
 *.dylib
 *.dll
