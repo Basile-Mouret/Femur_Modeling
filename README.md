@@ -29,6 +29,9 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 4. Classe réseau de neurones avec les méthodes nécessaire
 5. Méthode d'entrainement pour le réseau de neurone (déscente de gradient)
 6. Parser nos fichiers, classe fémur 
+7. Visu 3D : Martin
+8. Docu Doxygen
+9. Voir resultats RDN avec differentes fonction d'activation et d'erreur
 
 # Avancées
 - Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
