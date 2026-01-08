@@ -110,8 +110,9 @@ Matrix2D<double> Femur::getTriangles() const{
    return m_triangles;
 }
 
-Vector<double> Femur::getCoordsVect() const{
-    Vector<double> coords(18291*3);
+template<typename T>
+Vector<T> Femur::getCoordsVect() const{
+    Vector<T> coords(18291*3);
     for (size_t i = 0; i<18291; i++){
         coords(i) = getCoords().getCol(0)(i);
     }
@@ -125,3 +126,6 @@ Vector<double> Femur::getCoordsVect() const{
     }
     return coords;
 }
+
+template Vector<float> Femur::getCoordsVect<float>() const;
+template Vector<double> Femur::getCoordsVect<double>() const;
