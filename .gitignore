@@ -25,6 +25,7 @@ Makefile
 *.swp
 *.swo
 .vscode/
+.idea
 
 # --- LSP & Tooling ---
 compile_commands.json
