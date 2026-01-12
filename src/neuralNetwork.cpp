@@ -3,7 +3,6 @@
 #include <random>
 #include <cmath>
 #include <iomanip>
-#include <algorithm>
 
 // Constructor
 template <typename T>
