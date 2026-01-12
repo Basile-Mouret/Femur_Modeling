@@ -16,9 +16,8 @@ int main() {
     Femur femur;
     for (const auto& entry : std::filesystem::directory_iterator(trainingFolderPath)) {
         femur = Femur(entry.path());
-        Vector<float> femurCoords = femur.getCoordsVect<float>(54);
-        Vector<float> femurCoordsNormalized=femurCoords*(1/512.0f); // Normalize
-        training_data.push_back(femurCoordsNormalized);
+        Vector<float> femurCoordsStandardized = femur.getCoordsVect<float>(54, true);
+        training_data.push_back(femurCoordsStandardized);
     }
 
 

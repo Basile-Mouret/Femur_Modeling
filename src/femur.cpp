@@ -111,25 +111,40 @@ Matrix2D<double> Femur::getTriangles() const{
 }
 
 template<typename T>
-Vector<T> Femur::getCoordsVect(unsigned int sampleRate) const{
+Vector<T> Femur::getCoordsVect(unsigned int sampleRate, bool standardized) const{
     int numSamples = (18291 + sampleRate - 1) / sampleRate;
     Vector<T> coords(numSamples * 3);
 
     size_t idx = 0;
-    for (size_t i = 0; i < 18291; i += sampleRate){
-        coords(idx++) = m_coords(i, 0);
+    if (standardized){
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 0)/152.2f;
+        }
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 1)/20.4;
+        }
+
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 2)/16.2;
+        }
+
+    } else {
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 0);
+        }
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 1);
+        }
+
+        for (size_t i = 0; i < 18291; i += sampleRate){
+            coords(idx++) = m_coords(i, 2);
+        }
+    
     }
 
-    for (size_t i = 0; i < 18291; i += sampleRate){
-        coords(idx++) = m_coords(i, 1);
-    }
-
-    for (size_t i = 0; i < 18291; i += sampleRate){
-        coords(idx++) = m_coords(i, 2);
-    }
 
     return coords;
 }
 
-template Vector<float> Femur::getCoordsVect<float>(unsigned int sampleRate) const;
-template Vector<double> Femur::getCoordsVect<double>(unsigned int sampleRate) const;
+template Vector<float> Femur::getCoordsVect<float>(unsigned int sampleRate, bool standardized) const;
+template Vector<double> Femur::getCoordsVect<double>(unsigned int sampleRate, bool standardized) const;
