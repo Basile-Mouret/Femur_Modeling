@@ -22,9 +22,14 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
    3. Si constante, ou macro tout est en majuscue et donc utilisation du tiret du 8 ( _ ). *EARTH_GRAVITY*.
 
 # TODO
-1. Produit vectoriel et matriciel optimisé
-2. Docu Doxygen
-3. Voir resultats RDN avec differentes fonction d'activation et d'erreur
+1. Produit vectoriel et matriciel optimisé (fait ?)
+2. Voir resultats RDN avec differentes fonction d'activation et d'erreur
+3. Rajouter la fonction d'activation tanh --> et pouvoir le choisir dans le constructeur
+4. Nuage de points visu
+5. Optimisation du code
+6. Standardisation des données
+7. PCA lineaire pour augmenter le jeu de données
+8. Multi-threading
 
 # Ideas
 - voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
