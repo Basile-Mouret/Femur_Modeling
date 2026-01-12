@@ -41,3 +41,6 @@ venv/
 
 # Pytest cache
 __pycache__/
+
+# Doxygen
+doc

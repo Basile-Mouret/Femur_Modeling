@@ -65,3 +65,15 @@ Use the flag `-DCMAKE_BUILD_TYPE=Release` for better runtime
 ```bash
 ../bin/"[Name executable]"
 ```
+
+# Doxygen documentation
+
+```bash
+cd build
+
+# Generate the documentation
+make doc
+
+# Generate AND open in Firefox
+make doc-open
+```

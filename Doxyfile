@@ -1,0 +1,54 @@
+# Doxyfile for project_femur_rdn
+
+PROJECT_NAME           = "Femur RDN Project"
+PROJECT_BRIEF          = "Neural Network for on 3D Femur"
+PROJECT_NUMBER         = 1.0
+
+OUTPUT_DIRECTORY       = doc
+CREATE_SUBDIRS         = NO
+
+INPUT                  = include src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.cpp
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+
+GENERATE_LATEX         = YES
+
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+UML_LOOK               = YES
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+
+OPTIMIZE_OUTPUT_FOR_C  = NO
+BUILTIN_STL_SUPPORT    = YES
+CPP_CLI_SUPPORT        = NO
+TYPEDEF_HIDES_STRUCT   = NO
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+ALPHABETICAL_INDEX     = YES
+COLS_IN_ALPHA_INDEX    = 5
+
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES

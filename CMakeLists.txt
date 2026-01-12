@@ -24,3 +24,26 @@ add_executable(testNNFunctions tests/testNNFunctions.cpp src/linalg.cpp src/neur
 
 add_executable(testNeuralNetwork tests/testNeuralNetwork.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)
 add_executable(testNeuralNetworkLoadConstructor tests/testNeuralNetworkLoadConstructor.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)
+
+# Doxygen documentation target
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating documentation with Doxygen"
+        VERBATIM
+    )
+    
+    add_custom_target(doc-open
+        COMMAND firefox ${CMAKE_SOURCE_DIR}/doc/html/index.html
+        DEPENDS doc
+        COMMENT "Opening documentation in Firefox"
+        VERBATIM
+    )
+    
+    message(STATUS "Doxygen found. Use 'make doc' to generate documentation")
+    message(STATUS "Use 'make doc-open' to generate and open in Firefox")
+else()
+    message(WARNING "Doxygen not found. Documentation generation disabled")
+endif()
