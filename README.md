@@ -1,7 +1,6 @@
 # Femur_Modeling
 Research Project in Artificial Intelligence for the Applied Mathematics Master 1 at UGA
 
-
 # Règles
 1. Ordre: Déclarer -> Définir -> Raporter
 2. Commit au propre
@@ -23,27 +22,26 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
    3. Si constante, ou macro tout est en majuscue et donc utilisation du tiret du 8 ( _ ). *EARTH_GRAVITY*.
 
 # TODO
-1. Object vecteur et matrice avec les méthode apppropriés, posibilité d'utiliser la librairie eigen pour la gestion de mémoire (pas le droit des méthodes numérique)
-2. Fonction d'activation et de coût (peut prendre des array)
-3. Produit vectoriel et matriciel optimisé
-4. Classe réseau de neurones avec les méthodes nécessaire
-5. Méthode d'entrainement pour le réseau de neurone (déscente de gradient)
-6. Parser nos fichiers, classe fémur 
-7. Visu 3D : Martin
-8. Docu Doxygen
-9. Voir resultats RDN avec differentes fonction d'activation et d'erreur
-10. Optimisation: le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
+1. Produit vectoriel et matriciel optimisé
+2. Docu Doxygen
+3. Voir resultats RDN avec differentes fonction d'activation et d'erreur
 
+# Ideas
 - voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
 - enregistrement plus simple du NN (hdf5 ou format hugging face) 
-- faire la visu
 - avoir un serveur pour entrainer le réseau
-- load
+- le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
+
+# Remarks
+- In linalg.hpp, in class VEctor, nhadmaard return 0 if size don't match, and *this for overload+ et -
+- Modifer valeur d'un élement d'un vecteur ou matrice avec setCoeff ou &() et modifier la reference
+- a quoi sert le destructor du reseau de neurones si ya rien dedans ?
 
 # Avancées
 - Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
 - Neural Network Function
-- Neural Network les test ont été fait avec l'IA. Voir si on corrige ça.  
+- Neural Network les test ont été fait avec l'IA. Voir si on corrige ça.
+- Visu 3D du Fémur
 
 # Compilation
 
@@ -67,5 +65,3 @@ Use the flag `-DCMAKE_BUILD_TYPE=Release` for better runtime
 ```bash
 ../bin/"[Name executable]"
 ```
-
-
