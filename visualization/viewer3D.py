@@ -38,17 +38,27 @@ class Viewer3D:
                     smooth_shading,
                     show_edges,
                     show_grid,
-                    show_axes):
+                    show_axes,
+                    render_style):
         """
         Configures the PyVista plotter, camera, and lighting.
         """
         # Create a window
         self.plotter = pv.Plotter(window_size=window_size, title=title_window)
 
-        # Add the mesh to the scene
-        # smooth_shading=True makes it look like bone (smooth by interpolation), not low-poly (we see the triangles)
-        # show_edges=True draws the edges of the triangles
-        self.plotter.add_mesh(self.mesh, color=color_object, smooth_shading=smooth_shading, show_edges=show_edges)
+        # Add the mesh to the scene with different rendering styles
+        if render_style.lower() == "points": # Render as point cloud (vertices only)
+            self.plotter.add_mesh(self.mesh, 
+                                 color=color_object, 
+                                 style="points",
+                                 point_size=5,
+                                 render_points_as_spheres=True)
+        else:
+            # Default: render as surface with triangles
+            self.plotter.add_mesh(self.mesh, 
+                                 color=color_object, 
+                                 smooth_shading=smooth_shading, 
+                                 show_edges=show_edges)
 
         # Add spatial reference
         if show_axes:
@@ -63,9 +73,20 @@ class Viewer3D:
             smooth_shading=True,
             show_edges=False,
             show_grid=False,
-            show_axes=True):
+            show_axes=True,
+            render_style="surface"):
         """
         Starts the visualization loop.
+        
+        Args:
+            window_size: Tuple defining the size of the window (width, height)
+            title_window: Title of the visualization window
+            color_object: Color of the 3D object
+            smooth_shading: Bool to enable smooth shading - makes it look like bone (smooth by interpolation), not low-poly (we see the triangles)
+            show_edges: Bool to display mesh edges - draws the edges of the triangles
+            show_grid: Bool to display a grid in the background
+            show_axes: Bool to display coordinate axes
+            render_style: "surface" for triangles, "points" for point cloud
         """
         self.load_mesh()
         self.setup_scene(window_size,
@@ -74,7 +95,8 @@ class Viewer3D:
                          smooth_shading,
                          show_edges,
                          show_grid,
-                         show_axes)
+                         show_axes,
+                         render_style)
         
         print("[Info] Starting visualization window...")
         print("[Tip] Press 'q' to close the window.")

@@ -41,10 +41,3 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt #if it's the first time
 ```
-
-## Running the visualization
-
-```bash
-chmod u+x testFemurViewer3D.py #if it's the first time
-./visualizer.py
-```
