@@ -8,7 +8,7 @@ int main() {
     // Generate all data for (a + b) mod 5
     std::vector<Vector<double>> allInputs;
     std::vector<Vector<double>> allOutputs;
-    int k = 5;
+    long unsigned int k = 5;
 
     for (int a = 0; a < k; ++a) {
         for (int b = 0; b < k; ++b) {

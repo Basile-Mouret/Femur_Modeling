@@ -99,7 +99,7 @@ class Femur{
          * @return Vector<double> containing triangle face indices (3M) (stacked columns)
          */
         template<typename T>
-        Vector<T> getCoordsVect() const;
+        Vector<T> getCoordsVect(unsigned int sampleRate=1) const;
 
 };
 

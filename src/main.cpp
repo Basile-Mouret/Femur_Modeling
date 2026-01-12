@@ -16,17 +16,19 @@ int main() {
     Femur femur;
     for (const auto& entry : std::filesystem::directory_iterator(trainingFolderPath)) {
         femur = Femur(entry.path());
-        Vector<float> femurCoords = femur.getCoordsVect<float>();
-        training_data.push_back(femurCoords);
+        Vector<float> femurCoords = femur.getCoordsVect<float>(54);
+        Vector<float> femurCoordsNormalized=femurCoords*(1/512.0f); // Normalize
+        training_data.push_back(femurCoordsNormalized);
     }
 
+
     std::cout << "Initializing Neural Network" << std::endl;
-    std::vector<size_t> layers = {18291*3, 500, 10, 500, 18291*3};
-    NeuralNetwork<float> nn(layers, 1.f);
+    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 64, 128, 256, 512, 1017};
+    NeuralNetwork<float> nn(layers, .01f);
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
-    std::vector<float> losses = nn.train(training_data, training_data, 2, true);
+    std::vector<float> losses = nn.train(training_data, training_data, 1000, true);
     
     std::cout << "\n✓ Training Complete" << std::endl;
     std::cout << "  Initial loss : " << losses[0] << std::endl;

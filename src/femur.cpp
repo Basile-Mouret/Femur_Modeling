@@ -111,21 +111,25 @@ Matrix2D<double> Femur::getTriangles() const{
 }
 
 template<typename T>
-Vector<T> Femur::getCoordsVect() const{
-    Vector<T> coords(18291*3);
-    for (size_t i = 0; i<18291; i++){
-        coords(i) = getCoords().getCol(0)(i);
+Vector<T> Femur::getCoordsVect(unsigned int sampleRate) const{
+    int numSamples = (18291 + sampleRate - 1) / sampleRate;
+    Vector<T> coords(numSamples * 3);
+
+    size_t idx = 0;
+    for (size_t i = 0; i < 18291; i += sampleRate){
+        coords(idx++) = m_coords(i, 0);
     }
 
-    for (size_t i = 0; i<18291; i++){
-        coords(18291+i) = getCoords().getCol(1)(i);
+    for (size_t i = 0; i < 18291; i += sampleRate){
+        coords(idx++) = m_coords(i, 1);
     }
 
-    for (size_t i = 0; i<18291; i++){
-        coords(18291*2+i) = getCoords().getCol(2)(i);
+    for (size_t i = 0; i < 18291; i += sampleRate){
+        coords(idx++) = m_coords(i, 2);
     }
+
     return coords;
 }
 
-template Vector<float> Femur::getCoordsVect<float>() const;
-template Vector<double> Femur::getCoordsVect<double>() const;
+template Vector<float> Femur::getCoordsVect<float>(unsigned int sampleRate) const;
+template Vector<double> Femur::getCoordsVect<double>(unsigned int sampleRate) const;
