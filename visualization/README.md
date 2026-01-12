@@ -25,7 +25,7 @@ We use a **Virtual Environment** (venv) :
 ### 1. Create the virtual environment
 
 ```bash
-python3 -m venv venv
+python3 -m venv venv #if it's the first time
 ```
 
 ### 2. Activate the environment
@@ -39,14 +39,12 @@ source venv/bin/activate
 ### 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt #if it's the first time
 ```
-
----
 
 ## Running the visualization
 
 ```bash
-chmod u+x visualizer.py #if it's the first time
+chmod u+x testFemurViewer3D.py #if it's the first time
 ./visualizer.py
 ```

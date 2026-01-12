@@ -38,3 +38,6 @@ compile_commands.json
 
 # Virtual Environments
 venv/
+
+# Pytest cache
+__pycache__/

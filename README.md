@@ -32,7 +32,7 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 7. Visu 3D : Martin
 8. Docu Doxygen
 9. Voir resultats RDN avec differentes fonction d'activation et d'erreur
-
+10. Optimisation: le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
 
 - voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
 - enregistrement plus simple du NN (hdf5 ou format hugging face) 
