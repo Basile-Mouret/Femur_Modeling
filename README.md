@@ -30,10 +30,10 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 6. Standardisation des données
 7. PCA lineaire pour augmenter le jeu de données
 8. Multi-threading
+9. Enregistrement plus simple du NN (hdf5 ou format hugging face) 
 
 # Ideas
 - voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
-- enregistrement plus simple du NN (hdf5 ou format hugging face) 
 - avoir un serveur pour entrainer le réseau
 - le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
 
