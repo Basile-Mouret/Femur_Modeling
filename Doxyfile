@@ -1,7 +1,7 @@
 # Doxyfile for project_femur_rdn
 
 PROJECT_NAME           = "Femur RDN Project"
-PROJECT_BRIEF          = "Neural Network for on 3D Femur"
+PROJECT_BRIEF          = "Neural Network for 3D Femurs"
 PROJECT_NUMBER         = 1.0
 
 OUTPUT_DIRECTORY       = doc
