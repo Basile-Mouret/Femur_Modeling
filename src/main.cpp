@@ -4,6 +4,7 @@
 #include "femur.hpp"
 
 int main() {
+
     std::cout << "Femur Modeling Project" << std::endl;
 
     std::vector<Vector<float>> training_data;
@@ -22,7 +23,8 @@ int main() {
 
 
     std::cout << "Initializing Neural Network" << std::endl;
-    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 64, 128, 256, 512, 1017};
+
+    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 10, 32, 64, 128, 256, 512, 1017};
     NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", .01f);
     
     // Training NN
@@ -43,6 +45,10 @@ int main() {
     
     // Also save in text format for compatibility if needed (optional)
     // nn.save("NeuralNetwork.nn");
+
+
+    Vector<float> result = nn.forward(training_data[0]);
+    
 
     return 0;
 }
