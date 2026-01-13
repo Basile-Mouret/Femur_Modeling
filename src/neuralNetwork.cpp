@@ -47,6 +47,20 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
         binFile.close();
     }
 
+    // Check for binary magic number first
+    std::ifstream binFile(filename, std::ios::binary);
+    if (binFile.is_open()) {
+        uint32_t magic;
+        if (binFile.read(reinterpret_cast<char*>(&magic), sizeof(magic))) {
+            if (magic == 0x4E4E4249) {
+                binFile.close();
+                loadBinary(filename);
+                return;
+            }
+        }
+        binFile.close();
+    }
+
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -56,6 +70,7 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
 
     // Load architecture
     size_t numLayers;
+    if (!(file >> numLayers)) return;
     if (!(file >> numLayers)) return;
 
     for (size_t i = 0; i < numLayers; ++i) {
@@ -431,15 +446,10 @@ bool NeuralNetwork<T>::saveBinary(const std::string& filename) const {
         file.write(m_loss.c_str(), lossLen);
 
     for (size_t i = 0; i < m_weights.size(); ++i) {
-        // We know dims from layers, but Matrix storage size matters
-        // Weights i is layers[i+1] x layers[i]
-        // data size = rows * cols * sizeof(T)
-        // getData() returns const T*
         size_t rows = m_weights[i].getSizeRows();
         size_t cols = m_weights[i].getSizeCols();
         file.write(reinterpret_cast<const char*>(m_weights[i].getData()), rows * cols * sizeof(T));
         
-        // Biases i is layers[i+1]
         file.write(reinterpret_cast<const char*>(m_biases[i].getData()), rows * sizeof(T));
     }
 

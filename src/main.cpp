@@ -20,9 +20,8 @@ void smallFemur(){
 
 
     std::cout << "Initializing Neural Network" << std::endl;
-
     std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 10, 32, 64, 128, 256, 512, 1017};
-    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", .01f);
+    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", .01f);
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
@@ -42,6 +41,7 @@ void smallFemur(){
     
     // Also save in text format for compatibility if needed (optional)
     // nn.save("NeuralNetwork.nn");
+
 
     Vector<float> result = nn.forward(training_data[0]);
     // Save the reconstructed femur
