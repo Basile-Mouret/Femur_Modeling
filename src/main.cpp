@@ -23,8 +23,8 @@ int main() {
 
 
     std::cout << "Initializing Neural Network" << std::endl;
-    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 10, 32, 64, 128, 256, 512, 1017};
-    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", .01f);
+    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 64, 128, 256, 512, 1017};
+    NeuralNetwork<float> nn(layers, .01f);
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
@@ -34,7 +34,16 @@ int main() {
     std::cout << "  Initial loss : " << losses[0] << std::endl;
     std::cout << "  Final loss : " << losses.back() << std::endl;
 
-    nn.save("NeuralNetwork.nn");
+    // Save in binary format for optimization
+    if (nn.saveBinary("NeuralNetwork.bin")) {
+        std::cout << "Network saved successfully (binary)." << std::endl;
+    } else {
+        std::cerr << "Failed to save network (binary)." << std::endl;
+        // Fallback or error handling
+    }
+    
+    // Also save in text format for compatibility if needed (optional)
+    // nn.save("NeuralNetwork.nn");
 
 
     Vector<float> result = nn.forward(training_data[0]);

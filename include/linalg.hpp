@@ -136,7 +136,15 @@ class Vector{
          */
         bool setCoeff(size_t i_index, T value);
 
+        /**
+         * @brief Gets pointer to raw data (const)
+         */
+        const T* getData() const { return m_data.data(); }
 
+        /**
+         * @brief Gets pointer to raw data
+         */
+        T* getData() { return m_data.data(); }
 
         // Linear algebra operations
 
@@ -374,6 +382,16 @@ class Matrix2D{
          * @return Reference to the element at the specified position
          */
        T &operator()(size_t i_row, size_t i_col);
+
+        /**
+         * @brief Gets pointer to raw data (const)
+         */
+        const T* getData() const { return m_data.data(); }
+
+        /**
+         * @brief Gets pointer to raw data
+         */
+        T* getData() { return m_data.data(); }
 
         // Linear algebra operations
 

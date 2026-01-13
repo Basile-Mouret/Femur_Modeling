@@ -173,6 +173,23 @@ public:
      */
     bool save(const std::string& filename) const;
 
+    /**
+     * @brief Saves the network to a binary file
+     * 
+     * Optimizes storage/speed by dumping raw memory.
+     * 
+     * @param filename Path to file
+     * @return true if successful
+     */
+    bool saveBinary(const std::string& filename) const;
+
+    /**
+     * @brief Loads the network from a binary file
+     * 
+     * @param filename Path to file
+     */
+    void loadBinary(const std::string& filename);
+
     // Accessors
     
     /**
