@@ -24,21 +24,18 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 # TODO
 1. Produit vectoriel et matriciel optimisé (fait ?)
 2. Voir resultats RDN avec differentes fonction d'activation et d'erreur
-3. Rajouter la fonction d'activation tanh --> et pouvoir le choisir dans le constructeur
-4. Nuage de points visu
-5. Optimisation du code
-6. Standardisation des données
-7. PCA lineaire pour augmenter le jeu de données
-8. Multi-threading
-9. Enregistrement plus simple du NN (hdf5 ou format hugging face) 
+3. Optimisation du code
+4. Standardisation des données --> Basile
+5. PCA lineaire pour augmenter le jeu de données --> Malik
+6. Multi-threading (au moins utiliser avx, voire au mieux écrire un noyau cuda)--> Basile et Martin
+7. Enregistrement plus simple du NN (hdf5 ou format hugging face) --> Time
 
 # Ideas
-- voir si on peut utiliser multithreading (tâches), au moins utiliser avx, voire au mieux écrire un noyau cuda
 - avoir un serveur pour entrainer le réseau
 - le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
 
 # Remarks
-- In linalg.hpp, in class VEctor, nhadmaard return 0 if size don't match, and *this for overload+ et -
+- In linalg.hpp, in class Vector, nhadmaard return 0 if size don't match, and *this for overload+ et -
 - Modifer valeur d'un élement d'un vecteur ou matrice avec setCoeff ou &() et modifier la reference
 - a quoi sert le destructor du reseau de neurones si ya rien dedans ?
 
