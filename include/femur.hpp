@@ -101,7 +101,16 @@ class Femur{
         template<typename T>
         Vector<T> getCoordsVect(unsigned int sampleRate=1, bool standardized=true) const;
 
+        /**
+         * @brief Sets the coordinate vector 
+         * 
+         * @return Vector<double> containing triangle face indices (3M) (stacked columns)
+         */
+        template<typename T>
+        void setCoordsVect(Vector<T> vec, bool standardized=true);
+
 };
+
 
 #endif
 

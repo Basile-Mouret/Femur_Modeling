@@ -146,5 +146,28 @@ Vector<T> Femur::getCoordsVect(unsigned int sampleRate, bool standardized) const
     return coords;
 }
 
+template<typename T>
+void Femur::setCoordsVect(Vector<T> vec, bool standardized) {
+    size_t size = vec.getSize();
+    if (standardized){
+        for (size_t i = 0; i < size; i++){
+            m_coords(i, 0) = vec(i)*152.2f;
+            m_coords(i, 1) = vec(size+i)*20.4f;
+            m_coords(i, 2) = vec(2*size+i)*12.2f;
+        }
+    } else {
+        for (size_t i = 0; i < size; i++){
+            m_coords(i, 0) = vec(i);
+            m_coords(i, 1) = vec(size+i);
+            m_coords(i, 2) = vec(2*size+i);
+        }
+    }
+}
+
+
+
 template Vector<float> Femur::getCoordsVect<float>(unsigned int sampleRate, bool standardized) const;
 template Vector<double> Femur::getCoordsVect<double>(unsigned int sampleRate, bool standardized) const;
+
+template void Femur::setCoordsVect(Vector<float> vec, bool standardized);
+template void Femur::setCoordsVect(Vector<double> vec, bool standardized);

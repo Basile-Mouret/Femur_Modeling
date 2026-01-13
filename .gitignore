@@ -45,3 +45,4 @@ __pycache__/
 
 # Doxygen
 doc
+visualization/.venv

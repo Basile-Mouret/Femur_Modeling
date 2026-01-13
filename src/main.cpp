@@ -46,9 +46,11 @@ int main() {
     // Also save in text format for compatibility if needed (optional)
     // nn.save("NeuralNetwork.nn");
 
-
     Vector<float> result = nn.forward(training_data[0]);
-    
+    // Save the reconstructed femur
+    Femur reconstructedFemur;
+    reconstructedFemur.setCoordsVect(result);
+    reconstructedFemur.saveToFile("reconstructed_femur.obj");
 
     return 0;
 }
