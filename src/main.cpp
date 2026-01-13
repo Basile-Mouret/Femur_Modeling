@@ -31,16 +31,12 @@ void smallFemur(){
     std::cout << "  Initial loss : " << losses[0] << std::endl;
     std::cout << "  Final loss : " << losses.back() << std::endl;
 
-    // Save in binary format for optimization
     if (nn.saveBinary("NeuralNetwork.bin")) {
         std::cout << "Network saved successfully (binary)." << std::endl;
     } else {
         std::cerr << "Failed to save network (binary)." << std::endl;
-        // Fallback or error handling
     }
     
-    // Also save in text format for compatibility if needed (optional)
-    // nn.save("NeuralNetwork.nn");
 
 
     Vector<float> result = nn.forward(training_data[0]);
