@@ -4,6 +4,7 @@
 #include "femur.hpp"
 
 int main() {
+
     std::cout << "Femur Modeling Project" << std::endl;
 
     std::vector<Vector<float>> training_data;
