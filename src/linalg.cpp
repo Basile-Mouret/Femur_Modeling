@@ -2,6 +2,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
+#include <thread>
 
 
 // Vector class method implementations
@@ -98,15 +99,28 @@ Vector<T> Vector<T>::operator*(const T scalar){
 }
 
 template<typename T>
+void add_elems(size_t i, const Vector<T>& a, const Vector<T>& b, Vector<T>& result) {
+    result.setCoeff(i, a.m_data(i) + b.m_data(i));
+}
+
+template<typename T>
 Vector<T> Vector<T>::operator+(const Vector<T> &other){
     if (m_size != other.m_size) {
         std::cout << "ERROR: Vectors must be of the same size for addition." << std::endl;
         return *this;
     }
     Vector<T> result(m_size);
+    
+    std::vector<std::thread> threads;
+
     for (size_t i = 0; i < m_size; ++i) {
-        result.setCoeff(i, m_data(i) + other.m_data(i));
+        threads.push_back(std::thread(add_elems<T>, i, std::ref(*this), std::ref(other), std::ref(result)));
     }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+
     return result;
 }
 
