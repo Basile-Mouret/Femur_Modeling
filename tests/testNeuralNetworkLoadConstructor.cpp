@@ -15,7 +15,7 @@ int main() {
 
     // 1) Créer et entraîner un réseau
     std::vector<size_t> layers = {2, 3, 1};
-    NeuralNetwork<float> nn(layers, 0.3f);
+    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", 0.3f);
 
     std::vector<Vector<float>> inputs;
     std::vector<Vector<float>> targets;
