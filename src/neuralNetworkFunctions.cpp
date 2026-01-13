@@ -52,6 +52,53 @@ std::vector<Vector<T>> ActivationFunction<T>::sigmoidDerivative(const std::vecto
 }
 
 template <typename T>
+T ActivationFunction<T>::tanh(T x) {
+    return std::tanh(x);
+}
+
+template <typename T>
+T ActivationFunction<T>::tanhDerivative(T x) {
+    T t = tanh(x);
+    return static_cast<T>(1) - t * t;
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::tanh(const Vector<T>& vec) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, tanh(vec(i)));
+    }
+    return result;
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::tanhDerivative(const Vector<T>& vec) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, tanhDerivative(vec(i)));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::tanh(const std::vector<Vector<T>>& vecs) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(tanh(vec));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::tanhDerivative(const std::vector<Vector<T>>& vecs) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(tanhDerivative(vec));
+    }
+    return result;
+}
+
+template <typename T>
 T LossFunction<T>::meanSquaredError(const Vector<T>& predicted, const Vector<T>& actual) {
     if (predicted.getSize() != actual.getSize()) {
         std::cout << "Vectors must be of the same size." << std::endl;

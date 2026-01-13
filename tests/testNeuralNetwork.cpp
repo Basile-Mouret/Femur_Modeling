@@ -16,7 +16,7 @@ void testConstruction() {
     std::cout << "\n=== Test 1: Construction du réseau ===" << std::endl;
     
     std::vector<size_t> layers = {2, 3, 1};
-    NeuralNetwork<float> nn(layers, 0.1f);
+    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", 0.1f);
     
     // Vérifier que l'architecture est correcte
     assert(nn.getLayers().size() == 3);
@@ -37,7 +37,7 @@ void testForward() {
     std::cout << "\n=== Test 2: Forward propagation ===" << std::endl;
     
     std::vector<size_t> layers = {2, 2, 1};
-    NeuralNetwork<float> nn(layers, 0.1f);
+    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", 0.1f);
     
     // Créer une entrée
     std::vector<float> input_data = {0.5f, 0.8f};
@@ -63,7 +63,7 @@ void testTrainingXOR() {
     
     // Architecture: 2 entrées, 4 neurones cachés, 1 sortie
     std::vector<size_t> layers = {2, 4, 1};
-    NeuralNetwork<float> nn(layers, 0.5f);
+    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", 0.5f);
     
     // Données XOR
     std::vector<Vector<float>> inputs;
@@ -112,7 +112,7 @@ void testSaveLoad() {
     
     // Créer et entraîner un réseau
     std::vector<size_t> layers = {2, 3, 1};
-    NeuralNetwork<float> nn1(layers, 0.3f);
+    NeuralNetwork<float> nn1(layers, "sigmoid", "meanSquaredError", 0.3f);
     
     std::vector<Vector<float>> inputs;
     std::vector<Vector<float>> targets;
@@ -158,7 +158,7 @@ void testLearningRateModification() {
     std::cout << "\n=== Test 5: Modification du taux d'apprentissage ===" << std::endl;
     
     std::vector<size_t> layers = {2, 2, 1};
-    NeuralNetwork<float> nn(layers, 0.1f);
+    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", 0.1f);
     
     assert(nn.getLearningRate() == 0.1f);
     
@@ -173,7 +173,7 @@ void testSimpleFunction() {
     std::cout << "\n=== Test 6: Approximation de fonction (y = x1 + x2) ===" << std::endl;
     
     std::vector<size_t> layers = {2, 5, 1};
-    NeuralNetwork<float> nn(layers, 0.3f);
+    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", 0.3f);
     
     // Générer des données d'entraînement
     std::vector<Vector<float>> inputs;

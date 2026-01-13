@@ -32,5 +32,21 @@ int main(){
     double mse = lf.meanSquaredError(predicted, actual);
     std::cout << "Mean Squared Error = " << mse << std::endl;
 
+    // Test Mean Squared Error Derivative
+    Vector<double> mse_deriv = lf.meanSquaredErrorDerivative(predicted, actual);
+    std::cout << "Mean Squared Error Derivative = ";
+    for (size_t i = 0; i < mse_deriv.getSize(); ++i) {
+        std::cout << mse_deriv(i) << " ";
+    }
+    std::cout << std::endl;
+
+    // Test tanh function
+    double tanh_val = af.tanh(val);
+    std::cout << "Tanh(" << val << ") = " << tanh_val << std::endl;
+
+    // Test tanh derivative
+    double tanh_deriv = af.tanhDerivative(val);
+    std::cout << "Tanh Derivative(" << val << ") = " << tanh_deriv << std::endl;
+
     return 0;
 }

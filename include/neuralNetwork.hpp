@@ -71,8 +71,10 @@ public:
      * 
      * @param layers Vector containing the size of each layer [input, hidden..., output]
      * @param learningRate Learning rate for gradient descent (default: 0.01)
+     * @param activation Name of the activation function to use (default: "sigmoid")
+     * @param loss Name of the loss function to use (default: "meanSquaredError
      */
-    NeuralNetwork(const std::vector<size_t>& layers, T learningRate = 0.01);
+    NeuralNetwork(const std::vector<size_t>& layers, const std::string& activation = "sigmoid", const std::string& loss = "meanSquaredError", T learningRate = 0.01);
 
     /**
      * @brief Constructs a neural network from a saved file

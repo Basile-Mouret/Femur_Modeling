@@ -6,9 +6,9 @@
 
 // Constructor
 template <typename T>
-NeuralNetwork<T>::NeuralNetwork(const std::vector<size_t>& layers, T learningRate)
+NeuralNetwork<T>::NeuralNetwork(const std::vector<size_t>& layers, const std::string& activation, const std::string& loss, const T learningRate)
     : m_layers(layers), m_learningRate(learningRate), 
-      m_activation("sigmoid"), m_loss("meanSquaredError") {
+      m_activation(activation), m_loss(loss) {
     
     if (layers.size() < 2) {
         std::cerr << "Error: Network must have at least 2 layers (input and output)" << std::endl;
@@ -150,7 +150,14 @@ Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input) {
         m_preActivations.push_back(z);
         
         // Apply activation function (sigmoid)
-        currentActivation = m_activationFunction.sigmoid(z);
+        if(m_activation == "sigmoid")
+            currentActivation = m_activationFunction.sigmoid(z);
+        else if(m_activation == "tanh")
+             currentActivation = m_activationFunction.tanh(z);
+        else {
+            std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
+            return Vector<T>(m_layers.back());
+        }
         m_activations.push_back(currentActivation);
     }
     
@@ -164,20 +171,43 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
     Vector<T> output = forward(input);
     
     // Compute loss (meanSquaredError)
-    T loss = m_lossFunction.meanSquaredError(output, target);
+    T loss;
+    if(m_loss == "meanSquaredError")
+        loss = m_lossFunction.meanSquaredError(output, target);
+    else {
+        std::cerr << "Error: Unknown loss function " << m_loss << std::endl;
+        return T(0);
+    }
+    
     
     // Compute loss gradient with respect to output
-    Vector<T> dLoss = m_lossFunction.meanSquaredErrorDerivative(output, target);
-    
+    Vector<T> dLoss(m_layers.back());
+    if(m_loss == "meanSquaredError") {
+        dLoss = m_lossFunction.meanSquaredErrorDerivative(output, target);
+    }
+    else {
+        std::cerr << "Error: Unknown loss function " << m_loss << std::endl;
+        return T(0);
+    }
     // Backpropagation
     std::vector<Vector<T>> deltas;
     
     // Output layer
     size_t lastLayer = m_weights.size() - 1;
-    Vector<T> sigmoidDeriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayer]);
+    Vector<T> deriv(m_layers.back());
+    if(m_activation == "sigmoid") {
+        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayer]);
+    }
+    else if(m_activation == "tanh") {
+        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayer]);
+    }
+    else {
+        std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
+        return loss;
+    }
     
     // Delta of the last layer: dLoss * sigmoid'(z) - using Hadamard product
-    Vector<T> delta = dLoss.hadamard(sigmoidDeriv);
+    Vector<T> delta = dLoss.hadamard(deriv);
     deltas.push_back(delta);
     
     // Backpropagation to hidden layers
@@ -189,8 +219,16 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
         Vector<T> weightedDelta = W_transpose * deltas[lastLayer - layer - 1];
         
         // Multiply by sigmoid'(z) using Hadamard product
-        sigmoidDeriv = m_activationFunction.sigmoidDerivative(m_preActivations[layer]);
-        Vector<T> currentDelta = weightedDelta.hadamard(sigmoidDeriv);
+        Vector<T> deriv(m_layers[layer + 1]);
+        if(m_activation == "sigmoid")
+            deriv = m_activationFunction.sigmoidDerivative(m_preActivations[layer]);
+        else if(m_activation == "tanh")
+            deriv = m_activationFunction.tanhDerivative(m_preActivations[layer]);
+        else {
+            std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
+        }
+
+        Vector<T> currentDelta = weightedDelta.hadamard(deriv);
         deltas.push_back(currentDelta);
     }
     

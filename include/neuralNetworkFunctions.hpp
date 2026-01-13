@@ -87,6 +87,65 @@ class ActivationFunction {
          * @return Collection of vectors with sigmoid derivative applied
          */
         std::vector<Vector<T>> sigmoidDerivative(const std::vector<Vector<T>>& vecs);
+
+        /**
+         * @brief Applies the hyperbolic tangent activation function to a scalar
+         * 
+         * Computes tanh(x) = (e^x - e^(-x)) / (e^x + e^(-x)), mapping the input to (-1, 1).
+         * 
+         * @param x Input scalar value
+         * @return Activated value in range (-1, 1)
+         */
+        T tanh(T x);
+        /**
+         * @brief Applies the derivative of the hyperbolic tangent function to a scalar
+         * 
+         * Computes tanh'(x) = 1 - tanh(x)², used for backpropagation.
+         * 
+         * @param x Input scalar value
+         * @return Derivative value
+         */
+        T tanhDerivative(T x);
+
+        /**
+         * @brief Applies the hyperbolic tangent activation function to a vector
+         * 
+         * Applies tanh element-wise to each component of the input vector.
+         * 
+         * @param vec Input vector
+         * @return Vector with tanh applied to each element
+         */
+        Vector<T> tanh(const Vector<T>& vec);
+
+        /**
+         * @brief Applies the derivative of tanh to a vector
+         * 
+         * Applies tanh derivative element-wise to each component of the input vector.
+         * 
+         * @param vec Input vector
+         * @return Vector with tanh derivative applied to each element
+         */
+        Vector<T> tanhDerivative(const Vector<T>& vec);
+
+        /**
+         * @brief Applies tanh to a collection of vectors
+         * 
+         * Applies tanh function to each vector in the collection.
+         * 
+         * @param vecs Collection of input vectors
+         * @return Collection of vectors with tanh applied
+         */
+        std::vector<Vector<T>> tanh(const std::vector<Vector<T>>& vecs);
+
+        /**
+         * @brief Applies tanh derivative to a collection of vectors
+         * 
+         * Applies tanh derivative to each vector in the collection.
+         * 
+         * @param vecs Collection of input vectors
+         * @return Collection of vectors with tanh derivative applied
+         */
+        std::vector<Vector<T>> tanhDerivative(const std::vector<Vector<T>>& vecs);
 };
 
 /**
