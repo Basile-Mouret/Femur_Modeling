@@ -22,8 +22,8 @@ int main() {
 
 
     std::cout << "Initializing Neural Network" << std::endl;
-    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 64, 128, 256, 512, 1017};
-    NeuralNetwork<float> nn(layers, .01f);
+    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 10, 32, 64, 128, 256, 512, 1017};
+    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", .01f);
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
@@ -34,6 +34,10 @@ int main() {
     std::cout << "  Final loss : " << losses.back() << std::endl;
 
     nn.save("NeuralNetwork.nn");
+
+
+    Vector<float> result = nn.forward(training_data[0]);
+    
 
     return 0;
 }
