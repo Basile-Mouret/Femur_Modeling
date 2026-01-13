@@ -55,7 +55,7 @@ int main() {
 
     // Small network: 10 -> 16 -> 16 -> 5
     std::vector<size_t> layers = {2*k, 3*k, k};
-    NeuralNetwork<double> nn(layers, 0.5);
+    NeuralNetwork<double> nn(layers, "sigmoid", "meanSquaredError", 0.5);
 
     std::cout << "\nTraining the Neural Network..." << std::endl;
     std::vector<double> losses = nn.train(trainInputs, trainOutputs, 5000, true);

@@ -33,15 +33,30 @@ NeuralNetwork<T>::NeuralNetwork(const std::vector<size_t>& layers, const std::st
 
 template <typename T>
 NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
+    // Check for binary magic number first
+    std::ifstream binFile(filename, std::ios::binary);
+    if (binFile.is_open()) {
+        uint32_t magic;
+        if (binFile.read(reinterpret_cast<char*>(&magic), sizeof(magic))) {
+            if (magic == 0x4E4E4249) {
+                binFile.close();
+                loadBinary(filename);
+                return;
+            }
+        }
+        binFile.close();
+    }
+
     std::ifstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Cannot open file " << filename << std::endl;
+        return;
     }
 
     // Load architecture
     size_t numLayers;
-    file >> numLayers;
+    if (!(file >> numLayers)) return;
 
     for (size_t i = 0; i < numLayers; ++i) {
         size_t size;
@@ -377,6 +392,111 @@ const std::string& NeuralNetwork<T>::getActivation() const {
 template <typename T>
 const std::string& NeuralNetwork<T>::getLoss() const {
     return m_loss;
+}
+
+template <typename T>
+bool NeuralNetwork<T>::saveBinary(const std::string& filename) const {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file for binary saving " << filename << std::endl;
+        return false;
+    }
+
+    uint32_t magic = 0x4E4E4249; // NNBI
+    file.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
+
+    size_t numLayers = m_layers.size();
+    file.write(reinterpret_cast<const char*>(&numLayers), sizeof(size_t));
+    if (numLayers > 0) {
+        file.write(reinterpret_cast<const char*>(m_layers.data()), numLayers * sizeof(size_t));
+    }
+
+    file.write(reinterpret_cast<const char*>(&m_learningRate), sizeof(T));
+
+    size_t actLen = m_activation.size();
+    file.write(reinterpret_cast<const char*>(&actLen), sizeof(size_t));
+    if (actLen > 0)
+        file.write(m_activation.c_str(), actLen);
+
+    size_t lossLen = m_loss.size();
+    file.write(reinterpret_cast<const char*>(&lossLen), sizeof(size_t));
+    if (lossLen > 0)
+        file.write(m_loss.c_str(), lossLen);
+
+    for (size_t i = 0; i < m_weights.size(); ++i) {
+        // We know dims from layers, but Matrix storage size matters
+        // Weights i is layers[i+1] x layers[i]
+        // data size = rows * cols * sizeof(T)
+        // getData() returns const T*
+        size_t rows = m_weights[i].getSizeRows();
+        size_t cols = m_weights[i].getSizeCols();
+        file.write(reinterpret_cast<const char*>(m_weights[i].getData()), rows * cols * sizeof(T));
+        
+        // Biases i is layers[i+1]
+        file.write(reinterpret_cast<const char*>(m_biases[i].getData()), rows * sizeof(T));
+    }
+
+    file.close();
+    std::cout << "Network saved to (binary) " << filename << std::endl;
+    return true;
+}
+
+template <typename T>
+void NeuralNetwork<T>::loadBinary(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open file " << filename << std::endl;
+        return;
+    }
+
+    uint32_t magic;
+    file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if (magic != 0x4E4E4249) {
+        std::cerr << "Error: Invalid binary format (magic number mismatch)" << std::endl;
+        return;
+    }
+
+    size_t numLayers;
+    file.read(reinterpret_cast<char*>(&numLayers), sizeof(size_t));
+    
+    m_layers.resize(numLayers);
+    if (numLayers > 0) {
+        file.read(reinterpret_cast<char*>(m_layers.data()), numLayers * sizeof(size_t));
+    }
+
+    file.read(reinterpret_cast<char*>(&m_learningRate), sizeof(T));
+
+    size_t actLen;
+    file.read(reinterpret_cast<char*>(&actLen), sizeof(size_t));
+    m_activation.resize(actLen);
+    if (actLen > 0)
+        file.read((char*)&m_activation[0], actLen);
+
+    size_t lossLen;
+    file.read(reinterpret_cast<char*>(&lossLen), sizeof(size_t));
+    m_loss.resize(lossLen);
+    if (lossLen > 0)
+        file.read((char*)&m_loss[0], lossLen);
+
+    // clear existing
+    m_weights.clear();
+    m_biases.clear();
+
+    for (size_t i = 0; i < numLayers - 1; ++i) {
+        size_t rows = m_layers[i + 1];
+        size_t cols = m_layers[i];
+   
+        Matrix2D<T> weights(rows, cols);
+        file.read(reinterpret_cast<char*>(weights.getData()), rows * cols * sizeof(T));
+        m_weights.push_back(weights);
+
+        Vector<T> bias(rows);
+        file.read(reinterpret_cast<char*>(bias.getData()), rows * sizeof(T));
+        m_biases.push_back(bias);
+    }
+    
+    file.close();
+    std::cout << "Network loaded from (binary) " << filename << std::endl;
 }
 
 // Explicit template instantiation for common types
