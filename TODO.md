@@ -1,6 +1,6 @@
 # Project TODO List
 
-## Phase 1: PCA - ✅ COMPLETE
+## Phase 1: PCA - INCOMPLETE 
 
 ### C++ Implementation ✅
 - [x] **PCA Class** (`include/pca.hpp`)
@@ -49,6 +49,11 @@
   - [x] Error heatmap visualization
   - [x] Batch analysis
 
+
+- Data augmentation process (python) :
+ - Create new synthetic data from the pca model
+ - ability to save them as files in the required format for the c++ framework to handle (since they will be used by our NN)
+
 ---
 
 ## Phase 2: Autoencoder - ⏳ NOT STARTED
@@ -73,19 +78,10 @@
 
 ---
 
-## Phase 3: Variational Autoencoder - ⏳ NOT STARTED
 
-### TODO
-- [ ] VAE class with reparameterization trick
-- [ ] KL divergence loss term
-- [ ] Proper probabilistic sampling
-- [ ] Compare generative quality vs AE
+## Phase 4: LDDMM (Advanced, in Python) - ⏳ NOT STARTED
 
----
-
-## Phase 4: LDDMM (Advanced) - ⏳ NOT STARTED
-
-### TODO
+### TODO 
 - [ ] Diffeomorphic transformation class
 - [ ] Velocity field representation
 - [ ] Shooting algorithm
@@ -141,7 +137,6 @@ make doc
 
 ## Next Steps (Priority Order)
 
-1. ~~**Add visualization scripts** to see PCA modes in 3D~~ ✅
+1. Add ability to generate synthetic data from the PCA model
 2. **Begin Autoencoder** implementation
 3. **Compare AE vs PCA** reconstruction quality
-4. **Implement VAE** if time permits
