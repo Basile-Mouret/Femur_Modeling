@@ -10,6 +10,7 @@ Tools for visualizing femur meshes and PCA-based Statistical Shape Models.
 | `pca_visualizer.py` | Comprehensive PCA visualization tools |
 | `pca_explorer.py` | Interactive GUI with sliders for PCA exploration |
 | `reconstruction_analysis.py` | Reconstruction quality analysis |
+| `synthetic_data_generator.py` | Generate synthetic shapes from PCA model |
 
 ## Prerequisites
 
@@ -181,6 +182,76 @@ python visualization/reconstruction_analysis.py \
     --output results/
 ```
 
+### Synthetic Data Generator
+
+Generate synthetic femur shapes from the trained PCA model for data augmentation.
+
+**Generate random samples:**
+```bash
+python visualization/synthetic_data_generator.py \
+    --model bin/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --output data/synthetic \
+    --count 100 \
+    --strategy random \
+    --seed 42
+```
+
+**Generate extreme mode variations (±2σ for each PC):**
+```bash
+python visualization/synthetic_data_generator.py \
+    --model bin/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --output data/synthetic/extremes \
+    --strategy extreme \
+    --sigma 2.0
+```
+
+**Latin Hypercube Sampling for comprehensive coverage:**
+```bash
+python visualization/synthetic_data_generator.py \
+    --model bin/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --output data/synthetic/lhs \
+    --count 50 \
+    --strategy lhs
+```
+
+**Grid sampling in first 3 PCs (5³ = 125 shapes):**
+```bash
+python visualization/synthetic_data_generator.py \
+    --model bin/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --output data/synthetic/grid \
+    --strategy grid \
+    --grid-dims 3 \
+    --grid-points 5
+```
+
+**Generate all strategies at once:**
+```bash
+python visualization/synthetic_data_generator.py \
+    --model bin/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --output data/synthetic/all \
+    --strategy all \
+    --count 50 \
+    --save-metadata
+```
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--count` | Number of shapes (random/lhs) | 100 |
+| `--strategy` | random, extreme, lhs, grid, all | random |
+| `--components` | Number of PCs to use | all |
+| `--sigma` | Sigma range for sampling | 3.0 |
+| `--seed` | Random seed for reproducibility | None |
+| `--grid-dims` | Dimensions for grid sampling | 3 |
+| `--grid-points` | Points per dimension | 5 |
+| `--save-metadata` | Export weights to JSON | False |
+
 ## Output Examples
 
 ### Variance Analysis Plot
@@ -202,6 +273,7 @@ visualization/
 ├── pca_visualizer.py            # PCA visualization module
 ├── pca_explorer.py              # Interactive PCA explorer
 ├── reconstruction_analysis.py   # Reconstruction quality analysis
+├── synthetic_data_generator.py  # Synthetic shape generation
 └── test/
     ├── testFemurViewer3D.py     # Test for basic viewer
     └── testPointsCloud.py       # Point cloud test
@@ -277,6 +349,36 @@ analyzer.visualize_reconstruction('shape.obj', n_components=10)
 
 # Batch analyze directory
 all_results = analyzer.batch_analyze('data/', 'output/')
+```
+
+### SyntheticGenerator Class
+
+```python
+from synthetic_data_generator import SyntheticGenerator, load_pca_model
+
+# Load model
+model = load_pca_model('model.bin')
+
+# Create generator
+generator = SyntheticGenerator(
+    model=model,
+    template_path='template.obj',
+    n_components=10,      # Use first 10 PCs (optional)
+    sigma_range=3.0,      # ±3σ sampling range
+    seed=42               # For reproducibility
+)
+
+# Generate samples with different strategies
+random_samples = generator.generate_random(count=100)
+extreme_samples = generator.generate_extreme_modes(sigma=2.0)
+lhs_samples = generator.generate_lhs(count=50)
+grid_samples = generator.generate_grid(n_dims=3, points_per_dim=5)
+
+# Save to OBJ files
+files = generator.save_shapes(random_samples, 'output/', prefix='synth')
+
+# Get shape points directly
+points = generator.weights_to_shape(weights=np.zeros(10))
 ```
 
 ## Tips

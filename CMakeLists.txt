@@ -51,3 +51,6 @@ add_executable(testBinarySavePerformance tests/testBinarySavePerformance.cpp src
 
 ### PCA Tests
 add_executable(testPCA tests/testPCA.cpp src/linalg.cpp src/femur.cpp)
+
+### Synthetic Data Tests
+add_executable(testSyntheticLoad tests/testSyntheticLoad.cpp src/linalg.cpp src/femur.cpp)
