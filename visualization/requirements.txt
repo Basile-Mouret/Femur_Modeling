@@ -1,3 +1,9 @@
-numpy
-pyvista
-vtk
+# Core dependencies for 3D visualization
+numpy>=1.20.0
+pyvista>=0.40.0
+vtk>=9.0.0
+matplotlib>=3.5.0
+
+# Qt backend for matplotlib (required on some Linux systems)
+PyQt5>=5.15.0
+
