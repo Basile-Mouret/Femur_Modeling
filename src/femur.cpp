@@ -148,12 +148,12 @@ Vector<T> Femur::getCoordsVect(unsigned int sampleRate, bool standardized) const
 
 template<typename T>
 void Femur::setCoordsVect(Vector<T> vec, bool standardized) {
-    size_t size = vec.getSize();
+    size_t size = vec.getSize()/3;
     if (standardized){
         for (size_t i = 0; i < size; i++){
             m_coords(i, 0) = vec(i)*152.2f;
             m_coords(i, 1) = vec(size+i)*20.4f;
-            m_coords(i, 2) = vec(2*size+i)*12.2f;
+            m_coords(i, 2) = vec(2*size+i)*16.2f;
         }
     } else {
         for (size_t i = 0; i < size; i++){

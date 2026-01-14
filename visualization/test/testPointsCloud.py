@@ -13,8 +13,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from viewer3D import Viewer3D
 
-path = "../../data/validation"
-femur = "R_Femur_22_DECIM.obj.FINAL.obj"
+path = "../data"
+femur = "original_data_128.obj"
+
+try:
+    app = Viewer3D(os.path.join(path, femur))
+    app.run(render_style="points")
+except Exception as e:
+    print(f"Application Error: {e}")
+
+path = "../build"
+femur = "reconstructed_femur.obj"
 
 try:
     app = Viewer3D(os.path.join(path, femur))

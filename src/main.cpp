@@ -24,8 +24,8 @@ int main() {
 
     std::cout << "Initializing Neural Network" << std::endl;
 
-    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 10, 32, 64, 128, 256, 512, 1017};
-    NeuralNetwork<float> nn(layers, "sigmoid", "meanSquaredError", .01f);
+    std::vector<size_t> layers = {1017, 512, 256, 128, 64, 32, 64, 128, 256, 512, 1017};
+    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", .01f);
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
@@ -51,6 +51,10 @@ int main() {
     Femur reconstructedFemur;
     reconstructedFemur.setCoordsVect(result);
     reconstructedFemur.saveToFile("reconstructed_femur.obj");
+
+    Femur originalFemur;
+    originalFemur.setCoordsVect(training_data[0]);
+    originalFemur.saveToFile("original_data.obj");
 
     return 0;
 }

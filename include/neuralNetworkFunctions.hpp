@@ -146,6 +146,56 @@ class ActivationFunction {
          * @return Collection of vectors with tanh derivative applied
          */
         std::vector<Vector<T>> tanhDerivative(const std::vector<Vector<T>>& vecs);
+        T ReLu(T x);
+        /**
+         * @brief Applies the derivative of the hyperbolic tangent function to a scalar
+         * 
+         * Computes tanh'(x) = 1 - tanh(x)², used for backpropagation.
+         * 
+         * @param x Input scalar value
+         * @return Derivative value
+         */
+        T ReLuDerivative(T x);
+
+        /**
+         * @brief Applies the hyperbolic tangent activation function to a vector
+         * 
+         * Applies tanh element-wise to each component of the input vector.
+         * 
+         * @param vec Input vector
+         * @return Vector with tanh applied to each element
+         */
+        Vector<T> ReLu(const Vector<T>& vec);
+
+        /**
+         * @brief Applies the derivative of tanh to a vector
+         * 
+         * Applies tanh derivative element-wise to each component of the input vector.
+         * 
+         * @param vec Input vector
+         * @return Vector with tanh derivative applied to each element
+         */
+        Vector<T> ReLuDerivative(const Vector<T>& vec);
+
+        /**
+         * @brief Applies tanh to a collection of vectors
+         * 
+         * Applies tanh function to each vector in the collection.
+         * 
+         * @param vecs Collection of input vectors
+         * @return Collection of vectors with tanh applied
+         */
+        std::vector<Vector<T>> ReLu(const std::vector<Vector<T>>& vecs);
+
+        /**
+         * @brief Applies tanh derivative to a collection of vectors
+         * 
+         * Applies tanh derivative to each vector in the collection.
+         * 
+         * @param vecs Collection of input vectors
+         * @return Collection of vectors with tanh derivative applied
+         */
+        std::vector<Vector<T>> ReLuDerivative(const std::vector<Vector<T>>& vecs);
 };
 
 /**
