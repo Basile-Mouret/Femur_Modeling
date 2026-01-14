@@ -29,7 +29,7 @@ int main() {
     
     // Training NN
     std::cout << "\nTraining the Neural Network..." << std::endl;
-    std::vector<float> losses = nn.train(training_data, training_data, 1000, true);
+    std::vector<float> losses = nn.train(training_data, training_data, 200, true);
     
     std::cout << "\n✓ Training Complete" << std::endl;
     std::cout << "  Initial loss : " << losses[0] << std::endl;

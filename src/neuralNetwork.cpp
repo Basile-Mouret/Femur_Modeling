@@ -169,6 +169,8 @@ Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input) {
             currentActivation = m_activationFunction.sigmoid(z);
         else if(m_activation == "tanh")
              currentActivation = m_activationFunction.tanh(z);
+        else if(m_activation == "ReLu")
+             currentActivation = m_activationFunction.ReLu(z);
         else {
             std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
             return Vector<T>(m_layers.back());
@@ -216,6 +218,9 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
     else if(m_activation == "tanh") {
         deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayer]);
     }
+    else if(m_activation == "ReLu") {
+        deriv = m_activationFunction.ReLuDerivative(m_preActivations[lastLayer]);
+    }
     else {
         std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
         return loss;
@@ -239,6 +244,8 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
             deriv = m_activationFunction.sigmoidDerivative(m_preActivations[layer]);
         else if(m_activation == "tanh")
             deriv = m_activationFunction.tanhDerivative(m_preActivations[layer]);
+        else if(m_activation == "ReLu")
+            deriv = m_activationFunction.ReLuDerivative(m_preActivations[layer]);
         else {
             std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
         }

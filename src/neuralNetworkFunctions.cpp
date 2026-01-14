@@ -99,6 +99,53 @@ std::vector<Vector<T>> ActivationFunction<T>::tanhDerivative(const std::vector<V
 }
 
 template <typename T>
+T ActivationFunction<T>::ReLu(T x) {
+    return (x>0 ? x : static_cast<T>(0));
+}
+
+template <typename T>
+T ActivationFunction<T>::ReLuDerivative(T x) {
+    T t = ReLu(x);
+    return (x>0 ? static_cast<T>(1) : static_cast<T>(0));
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::ReLu(const Vector<T>& vec) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, ReLu(vec(i)));
+    }
+    return result;
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::ReLuDerivative(const Vector<T>& vec) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, ReLuDerivative(vec(i)));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::ReLu(const std::vector<Vector<T>>& vecs) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(ReLu(vec));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::ReLuDerivative(const std::vector<Vector<T>>& vecs) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(ReLuDerivative(vec));
+    }
+    return result;
+}
+
+template <typename T>
 T LossFunction<T>::meanSquaredError(const Vector<T>& predicted, const Vector<T>& actual) {
     if (predicted.getSize() != actual.getSize()) {
         std::cout << "Vectors must be of the same size." << std::endl;
