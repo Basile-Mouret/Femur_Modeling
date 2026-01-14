@@ -48,3 +48,9 @@ else()
 endif()
 add_executable(benchmarkNN tests/NeuralNetworkBenchmark.cpp src/linalg.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp)
 add_executable(testBinarySavePerformance tests/testBinarySavePerformance.cpp src/linalg.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp)
+
+### PCA Tests
+add_executable(testPCA tests/testPCA.cpp src/linalg.cpp src/femur.cpp)
+
+### Synthetic Data Tests
+add_executable(testSyntheticLoad tests/testSyntheticLoad.cpp src/linalg.cpp src/femur.cpp)
