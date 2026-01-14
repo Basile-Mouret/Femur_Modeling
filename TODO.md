@@ -49,10 +49,16 @@
   - [x] Error heatmap visualization
   - [x] Batch analysis
 
-
-- Data augmentation process (python) :
- - Create new synthetic data from the pca model
- - ability to save them as files in the required format for the c++ framework to handle (since they will be used by our NN)
+- [x] **Synthetic Data Generator** (`visualization/synthetic_data_generator.py`)
+  - [x] Load PCA model from binary
+  - [x] Multiple sampling strategies:
+    - [x] Random (multivariate normal)
+    - [x] Extreme modes (±k sigma)
+    - [x] Latin Hypercube Sampling
+    - [x] Grid sampling
+  - [x] Export to OBJ format (C++ compatible)
+  - [x] Metadata export (JSON)
+  - [x] CLI interface with comprehensive options
 
 ---
 
