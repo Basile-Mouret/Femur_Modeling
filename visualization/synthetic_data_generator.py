@@ -12,9 +12,9 @@ Generation Strategies:
 - Grid sampling: Regular grid in the first few PC dimensions
 
 Usage:
-    python synthetic_data_generator.py --model bin/pca_femur_model.bin \\
-        --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
-        --output data/synthetic --count 100 --strategy random
+    python synthetic_data_generator.py --model model/pca_femur_model.bin \\
+        --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
+        --output ../data/synthetic --count 100 --strategy random
 
 Author: Femur Modeling Project
 Date: 2026
@@ -589,24 +589,24 @@ def main():
         epilog="""
 Examples:
   # Generate 100 random shapes
-  python synthetic_data_generator.py --model bin/pca_femur_model.bin \\
-      --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
-      --output data/synthetic --count 100 --strategy random
+  python synthetic_data_generator.py --model model/pca_femur_model.bin \\
+      --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
+      --output ../data/synthetic --count 100 --strategy random
 
   # Generate extreme mode variations (±2σ for each PC)
-  python synthetic_data_generator.py --model bin/pca_femur_model.bin \\
-      --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
-      --output data/synthetic/extremes --strategy extreme --sigma 2.0
+  python synthetic_data_generator.py --model model/pca_femur_model.bin \\
+      --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
+      --output ../data/synthetic/extremes --strategy extreme --sigma 2.0
 
   # Latin Hypercube Sampling for comprehensive coverage
-  python synthetic_data_generator.py --model bin/pca_femur_model.bin \\
-      --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
-      --output data/synthetic/lhs --count 50 --strategy lhs
+  python synthetic_data_generator.py --model model/pca_femur_model.bin \\
+      --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
+      --output ../data/synthetic/lhs --count 50 --strategy lhs
 
   # Grid sampling in first 3 PCs (5^3 = 125 shapes)
-  python synthetic_data_generator.py --model bin/pca_femur_model.bin \\
-      --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
-      --output data/synthetic/grid --strategy grid --grid-dims 3 --grid-points 5
+  python synthetic_data_generator.py --model model/pca_femur_model.bin \\
+      --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj \\
+      --output ../data/synthetic/grid --strategy grid --grid-dims 3 --grid-points 5
         """
     )
     

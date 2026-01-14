@@ -249,7 +249,7 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Example:
-  python pca_explorer.py --model ../bin/pca_femur_model.bin --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj
+  python pca_explorer.py --model model/pca_femur_model.bin --template ../data/training/L_Femur_11_DECIM.obj.FINAL.obj
 
 Controls:
   • Use sliders to adjust principal component weights
@@ -262,7 +262,7 @@ Controls:
     
     parser.add_argument(
         '--model', '-m', 
-        default='../bin/pca_femur_model.bin',
+        default='model/pca_femur_model.bin',
         help='Path to PCA model .bin file'
     )
     parser.add_argument(

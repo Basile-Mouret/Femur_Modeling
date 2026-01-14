@@ -68,7 +68,7 @@ All commands should be run from the **repository root** after activating `.venv`
 **Show mean shape:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --mean
 ```
@@ -76,7 +76,7 @@ python visualization/pca_visualizer.py \
 **Show mode of variation:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --mode 0
 ```
@@ -84,7 +84,7 @@ python visualization/pca_visualizer.py \
 **Show multiple modes in grid:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --modes 5
 ```
@@ -92,7 +92,7 @@ python visualization/pca_visualizer.py \
 **Animate a mode:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --animate 0
 ```
@@ -100,7 +100,7 @@ python visualization/pca_visualizer.py \
 **Show variance analysis plots:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --variance
 ```
@@ -108,7 +108,7 @@ python visualization/pca_visualizer.py \
 **Generate complete report:**
 ```bash
 python visualization/pca_visualizer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --report output/pca_report/
 ```
@@ -120,7 +120,7 @@ Launch the interactive PCA explorer with slider controls:
 ```bash
 # From repository root
 python visualization/pca_explorer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --sliders 10 \
     --range 3.0
@@ -159,7 +159,7 @@ The percentage shown next to each PC label indicates how much variance that comp
 **Analyze a single shape:**
 ```bash
 python visualization/reconstruction_analysis.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --shape data/validation/R_Femur_22_DECIM.obj.FINAL.obj
 ```
@@ -167,7 +167,7 @@ python visualization/reconstruction_analysis.py \
 **Visualize reconstruction with error heatmap:**
 ```bash
 python visualization/reconstruction_analysis.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --shape data/validation/R_Femur_22_DECIM.obj.FINAL.obj \
     --visualize --components 10
@@ -176,7 +176,7 @@ python visualization/reconstruction_analysis.py \
 **Batch analyze all validation shapes:**
 ```bash
 python visualization/reconstruction_analysis.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --batch data/validation/ \
     --output results/
@@ -189,7 +189,7 @@ Generate synthetic femur shapes from the trained PCA model for data augmentation
 **Generate random samples:**
 ```bash
 python visualization/synthetic_data_generator.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --output data/synthetic \
     --count 100 \
@@ -200,7 +200,7 @@ python visualization/synthetic_data_generator.py \
 **Generate extreme mode variations (±2σ for each PC):**
 ```bash
 python visualization/synthetic_data_generator.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --output data/synthetic/extremes \
     --strategy extreme \
@@ -210,7 +210,7 @@ python visualization/synthetic_data_generator.py \
 **Latin Hypercube Sampling for comprehensive coverage:**
 ```bash
 python visualization/synthetic_data_generator.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --output data/synthetic/lhs \
     --count 50 \
@@ -220,7 +220,7 @@ python visualization/synthetic_data_generator.py \
 **Grid sampling in first 3 PCs (5³ = 125 shapes):**
 ```bash
 python visualization/synthetic_data_generator.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --output data/synthetic/grid \
     --strategy grid \
@@ -231,7 +231,7 @@ python visualization/synthetic_data_generator.py \
 **Generate all strategies at once:**
 ```bash
 python visualization/synthetic_data_generator.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --output data/synthetic/all \
     --strategy all \
