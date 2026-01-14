@@ -633,17 +633,17 @@ if __name__ == '__main__':
         epilog="""
 Examples:
   # Analyze a single shape
-  python reconstruction_analysis.py --model ../bin/pca_femur_model.bin \\
+  python reconstruction_analysis.py --model model/pca_femur_model.bin \\
       --template ../data/training/L_Femur_11.obj \\
       --shape ../data/validation/R_Femur_22.obj
   
   # Batch analyze all shapes in a directory
-  python reconstruction_analysis.py --model ../bin/pca_femur_model.bin \\
+  python reconstruction_analysis.py --model model/pca_femur_model.bin \\
       --template ../data/training/L_Femur_11.obj \\
       --batch ../data/validation/ --output results/
   
   # Visualize reconstruction with error heatmap
-  python reconstruction_analysis.py --model ../bin/pca_femur_model.bin \\
+  python reconstruction_analysis.py --model model/pca_femur_model.bin \\
       --template ../data/training/L_Femur_11.obj \\
       --shape ../data/validation/R_Femur_22.obj \\
       --visualize --components 10

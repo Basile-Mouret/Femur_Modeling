@@ -250,30 +250,30 @@ All commands should be run from the **repository root**.
 ```bash
 # Show mean shape (interactive 3D)
 python visualization/pca_visualizer.py \
-    -m bin/pca_femur_model.bin \
+    -m visualization/model/pca_femur_model.bin \
     -t data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --mean
 
 # Show first 5 modes in a grid
 python visualization/pca_visualizer.py \
-    -m bin/pca_femur_model.bin \
+    -m visualization/model/pca_femur_model.bin \
     -t data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --modes 5
 
 # Animate PC1 oscillating between ±3σ
 python visualization/pca_visualizer.py \
-    -m bin/pca_femur_model.bin \
+    -m visualization/model/pca_femur_model.bin \
     -t data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --animate 0
 
 # Interactive explorer with sliders
 python visualization/pca_explorer.py \
-    -m bin/pca_femur_model.bin \
+    -m visualization/model/pca_femur_model.bin \
     -t data/training/L_Femur_11_DECIM.obj.FINAL.obj
 
 # Reconstruction analysis
 python visualization/reconstruction_analysis.py \
-    -m bin/pca_femur_model.bin \
+    -m visualization/model/pca_femur_model.bin \
     -t data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     -s data/validation/R_Femur_22_DECIM.obj.FINAL.obj
 ```
@@ -288,7 +288,7 @@ The **PCA Explorer** provides an interactive GUI for real-time exploration of th
 
 ```bash
 python visualization/pca_explorer.py \
-    --model bin/pca_femur_model.bin \
+    --model visualization/model/pca_femur_model.bin \
     --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
     --sliders 10 \
     --range 3.0
@@ -353,7 +353,7 @@ Where:
 from pca_visualizer import load_pca_model, load_template_mesh, PCAVisualizer
 
 # Load model and create visualizer
-model = load_pca_model('bin/pca_femur_model.bin')
+model = load_pca_model('visualization/model/pca_femur_model.bin')
 template = load_template_mesh('data/training/L_Femur_11.obj')
 viz = PCAVisualizer(model, template)
 
