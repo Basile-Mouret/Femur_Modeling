@@ -151,9 +151,9 @@ void Femur::setCoordsVect(Vector<T> vec, bool standardized) {
     size_t size = vec.getSize()/3;
     if (standardized){
         for (size_t i = 0; i < size; i++){
-            m_coords(i, 0) = (vec(i)+7.9)*246.4f;
-            m_coords(i, 1) = (vec(size+i)+6.4)*61.1f;
-            m_coords(i, 2) = (vec(2*size+i)+6.8)*44.8f;
+            m_coords(i, 0) = (vec(i)*246.4f)+7.9;
+            m_coords(i, 1) = (vec(size+i)*61.1f)+6.4;
+            m_coords(i, 2) = (vec(2*size+i)*44.8f)+6.8;
         }
     } else {
         for (size_t i = 0; i < size; i++){
