@@ -512,6 +512,153 @@ void NeuralNetwork<T>::loadBinary(const std::string& filename) {
     std::cout << "Network loaded from (binary) " << filename << std::endl;
 }
 
+// ============================================================================
+// LinearOutputNeuralNetwork Implementation
+// ============================================================================
+
+// Constructor
+template <typename T>
+LinearOutputNeuralNetwork<T>::LinearOutputNeuralNetwork(const std::vector<size_t>& layers, 
+                                                         const std::string& activation, 
+                                                         const std::string& loss, 
+                                                         T learningRate)
+    : NeuralNetwork<T>(layers, activation, loss, learningRate) {
+}
+
+// Constructor from file
+template <typename T>
+LinearOutputNeuralNetwork<T>::LinearOutputNeuralNetwork(const std::string& filename)
+    : NeuralNetwork<T>(filename) {
+}
+
+// Forward propagation with linear output layer
+template <typename T>
+Vector<T> LinearOutputNeuralNetwork<T>::forward(const Vector<T>& input, size_t layerIndex) {
+    if (input.getSize() != this->m_layers[layerIndex]) {
+        std::cerr << "Error: Input size (" << input.getSize() 
+                  << ") does not match layer " << layerIndex << " size (" 
+                  << this->m_layers[layerIndex] << ")" << std::endl;
+        return Vector<T>(this->m_layers.back());
+    }
+    
+    // Reset activation vectors
+    this->m_activations.clear();
+    this->m_preActivations.clear();
+    
+    // First activation is the input itself
+    this->m_activations.push_back(input);
+    
+    Vector<T> currentActivation = input;
+    
+    // Propagate through all layers starting from layerIndex
+    for (size_t layer = layerIndex; layer < this->m_weights.size(); ++layer) {
+        // Compute z = W * a + b
+        Vector<T> z = this->m_weights[layer] * currentActivation;
+        z = z + this->m_biases[layer];
+        
+        this->m_preActivations.push_back(z);
+        
+        // Check if this is the last layer
+        bool isLastLayer = (layer == this->m_weights.size() - 1);
+        
+        if (isLastLayer) {
+            // Linear output: no activation function
+            currentActivation = z;
+        } else {
+            // Apply activation function for hidden layers
+            if (this->m_activation == "sigmoid")
+                currentActivation = this->m_activationFunction.sigmoid(z);
+            else if (this->m_activation == "tanh")
+                currentActivation = this->m_activationFunction.tanh(z);
+            else if (this->m_activation == "ReLu")
+                currentActivation = this->m_activationFunction.ReLu(z);
+            else {
+                std::cerr << "Error: Unknown activation function " << this->m_activation << std::endl;
+                return Vector<T>(this->m_layers.back());
+            }
+        }
+        this->m_activations.push_back(currentActivation);
+    }
+    
+    return currentActivation;
+}
+
+// Backward propagation with linear output layer
+template <typename T>
+T LinearOutputNeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
+    // Forward pass
+    Vector<T> output = forward(input);
+    
+    // Compute loss
+    T loss;
+    if (this->m_loss == "meanSquaredError")
+        loss = this->m_lossFunction.meanSquaredError(output, target);
+    else {
+        std::cerr << "Error: Unknown loss function " << this->m_loss << std::endl;
+        return T(0);
+    }
+    
+    // Compute loss gradient with respect to output
+    Vector<T> dLoss(this->m_layers.back());
+    if (this->m_loss == "meanSquaredError") {
+        dLoss = this->m_lossFunction.meanSquaredErrorDerivative(output, target);
+    } else {
+        std::cerr << "Error: Unknown loss function " << this->m_loss << std::endl;
+        return T(0);
+    }
+    
+    // Backpropagation
+    std::vector<Vector<T>> deltas;
+    
+    // Output layer - linear activation, so derivative is 1
+    // Delta of the last layer: dLoss * 1 = dLoss (no activation derivative)
+    size_t lastLayer = this->m_weights.size() - 1;
+    Vector<T> delta = dLoss;  // Linear output: derivative = 1
+    deltas.push_back(delta);
+    
+    // Backpropagation to hidden layers
+    for (int layer = lastLayer - 1; layer >= 0; --layer) {
+        // delta[layer] = (W[layer+1]^T * delta[layer+1]) * activation'(z[layer])
+        
+        // Compute W^T * delta using transpose
+        Matrix2D<T> W_transpose = this->m_weights[layer + 1].transpose();
+        Vector<T> weightedDelta = W_transpose * deltas[lastLayer - layer - 1];
+        
+        // Multiply by activation'(z) using Hadamard product
+        Vector<T> deriv(this->m_layers[layer + 1]);
+        if (this->m_activation == "sigmoid")
+            deriv = this->m_activationFunction.sigmoidDerivative(this->m_preActivations[layer]);
+        else if (this->m_activation == "tanh")
+            deriv = this->m_activationFunction.tanhDerivative(this->m_preActivations[layer]);
+        else if (this->m_activation == "ReLu")
+            deriv = this->m_activationFunction.ReLuDerivative(this->m_preActivations[layer]);
+        else {
+            std::cerr << "Error: Unknown activation function " << this->m_activation << std::endl;
+        }
+
+        Vector<T> currentDelta = weightedDelta.hadamard(deriv);
+        deltas.push_back(currentDelta);
+    }
+    
+    // Reverse deltas order (computed from end to beginning)
+    std::reverse(deltas.begin(), deltas.end());
+    
+    // Update weights and biases
+    for (size_t layer = 0; layer < this->m_weights.size(); ++layer) {
+        // Update weights: W -= learningRate * (delta * a^T)
+        Matrix2D<T> gradient = deltas[layer].outerProduct(this->m_activations[layer]);
+        Matrix2D<T> weightUpdate = gradient * this->m_learningRate;
+        this->m_weights[layer] = this->m_weights[layer] - weightUpdate;
+        
+        // Update biases: b -= learningRate * delta
+        this->m_biases[layer] = this->m_biases[layer] - (deltas[layer] * this->m_learningRate);
+    }
+    
+    return loss;
+}
+
 // Explicit template instantiation for common types
 template class NeuralNetwork<float>;
 template class NeuralNetwork<double>;
+template class LinearOutputNeuralNetwork<float>;
+template class LinearOutputNeuralNetwork<double>;
