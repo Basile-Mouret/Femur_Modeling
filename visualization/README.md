@@ -403,3 +403,11 @@ export DISPLAY=:99
 import pyvista
 pyvista.start_xvfb()  # For headless rendering
 ```
+
+**Visu with sliders**
+
+```bash
+source ../visualization/venv/bin/activate
+cd build && cmake .. -Dpybind11_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())")
+&& make femur_rdn
+```
