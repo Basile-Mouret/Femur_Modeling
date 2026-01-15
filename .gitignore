@@ -46,4 +46,7 @@ __pycache__/
 
 # Doxygen
 doc
+
 visualization/.venv
+
+cmake-build-debug/
