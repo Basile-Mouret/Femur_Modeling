@@ -1,108 +1,102 @@
 #!/usr/bin/env python3
-"""3D Viewer Module
-This module provides a class to visualize 3D .obj files using PyVista.
-It includes functionality to load the mesh, set up the visualization scene,
-and run the interactive viewer."""
+"""
+3D Viewer for .obj files.
+- Point cloud (no faces) → display points OR reconstruct surface with BPA
+- Surface (with faces) → display surface directly
+"""
 
 import os
-import pyvista as pv
 import numpy as np
+import pyvista as pv
+import open3d as o3d
+
 
 class Viewer3D:
-    """
-    Main class to handle 3D visualization of .obj files.
-    """
     def __init__(self, obj_path):
+        if not os.path.exists(obj_path):
+            raise FileNotFoundError(f"File not found: {obj_path}")
         self.obj_path = obj_path
         self.mesh = None
         self.plotter = None
+        self.has_faces = False
 
-        # Validation
-        if not os.path.exists(self.obj_path):
-            raise FileNotFoundError(f"3D file not found at: {self.obj_path}")
+    def _is_point_cloud(self, mesh):
+        """Check if mesh is a point cloud (no real faces)."""
+        return mesh.n_cells == 0 or mesh.n_cells == mesh.n_points
 
-    def load_mesh(self, render_style):
+    def _reconstruct_bpa(self):
+        """Reconstruct surface from point cloud using Ball Pivoting Algorithm."""
+        print("[Info] Reconstructing surface (BPA)...")
+        
+        points = np.asarray(self.mesh.points)
+        
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(points)
+        pcd.estimate_normals(
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=5, max_nn=30)
+        )
+        pcd.orient_normals_consistent_tangent_plane(k=15)
+        
+        avg_dist = np.mean(pcd.compute_nearest_neighbor_distance())
+        radii = [avg_dist * r for r in [1.5, 2.0, 3.0]]
+        
+        mesh_o3d = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
+            pcd, o3d.utility.DoubleVector(radii)
+        )
+        
+        vertices = np.asarray(mesh_o3d.vertices)
+        faces = np.asarray(mesh_o3d.triangles)
+        pv_faces = np.hstack([[3, *f] for f in faces])
+        
+        print(f"[Info] Reconstructed: {len(vertices)} vertices, {len(faces)} faces")
+        return pv.PolyData(vertices, pv_faces)
+
+    def run(self,
+            title="Viewer3D",
+            color="beige",
+            smooth_shading=True,
+            show_edges=False,
+            show_axes=True,
+            show_grid=False,
+            window_size=(1200, 800),
+            reconstruct_surface=False):
         """
-        Loads the .obj file into memory and stores the base topology.
+        Launch viewer.
+        
+        - Point cloud + reconstruct_surface=False → display points
+        - Point cloud + reconstruct_surface=True → reconstruct and display surface
+        - Surface mesh → display surface directly
         """
-        print(f"[Info] Loading mesh from: {self.obj_path}...")
-
+        print(f"[Info] Loading: {self.obj_path}")
         self.mesh = pv.read(self.obj_path)
-
-        if render_style == "points":
-            print(f"[Success] Mesh loaded. Vertices: {self.mesh.n_points}")
-        elif render_style == "surface":
-            print(f"[Success] Mesh loaded. Vertices: {self.mesh.n_points}, Faces: {self.mesh.n_cells}")
+        
+        is_cloud = self._is_point_cloud(self.mesh)
+        
+        if is_cloud:
+            print(f"[Info] Point cloud: {self.mesh.n_points} points")
+            if reconstruct_surface:
+                self.mesh = self._reconstruct_bpa()
+                self.has_faces = True
+            else:
+                self.has_faces = False
         else:
-            raise ValueError(f"Unknown render style: {render_style}. Use 'points' or 'surface'.")
-
-    def setup_scene(self,
-                    window_size,
-                    title_window,
-                    color_object,
-                    smooth_shading,
-                    show_edges,
-                    show_grid,
-                    show_axes,
-                    render_style):
-        """
-        Configures the PyVista plotter, camera, and lighting.
-        """
-        # Create a window
-        self.plotter = pv.Plotter(window_size=window_size, title=title_window)
-
-        # Add the mesh to the scene with different rendering styles
-        if render_style.lower() == "points": # Render as point cloud (vertices only)
-            self.plotter.add_mesh(self.mesh, 
-                                 color=color_object, 
-                                 style="points",
-                                 point_size=5,
-                                 render_points_as_spheres=True)
+            print(f"[Info] Surface: {self.mesh.n_points} vertices, {self.mesh.n_cells} faces")
+            self.has_faces = True
+        
+        # Setup scene
+        self.plotter = pv.Plotter(window_size=window_size, title=title)
+        
+        if self.has_faces:
+            self.plotter.add_mesh(self.mesh, color=color, 
+                                  smooth_shading=smooth_shading, show_edges=show_edges)
         else:
-            # Default: render as surface with triangles
-            self.plotter.add_mesh(self.mesh, 
-                                 color=color_object, 
-                                 smooth_shading=smooth_shading, 
-                                 show_edges=show_edges)
-
-        # Add spatial reference
+            self.plotter.add_mesh(self.mesh, color=color, style="points",
+                                  point_size=5, render_points_as_spheres=True)
+        
         if show_axes:
             self.plotter.add_axes()
         if show_grid:
             self.plotter.show_grid()
-
-    def run(self,
-            window_size=(1200, 800),
-            title_window="Viewer3D",
-            color_object="beige",
-            smooth_shading=True,
-            show_edges=False,
-            show_grid=False,
-            show_axes=True,
-            render_style="surface"):
-        """
-        Starts the visualization loop.
         
-        Args:
-            window_size: Tuple defining the size of the window (width, height)
-            title_window: Title of the visualization window
-            color_object: Color of the 3D object
-            smooth_shading: Bool to enable smooth shading - makes it look like bone (smooth by interpolation), not low-poly (we see the triangles)
-            show_edges: Bool to display mesh edges - draws the edges of the triangles
-            show_grid: Bool to display a grid in the background
-            show_axes: Bool to display coordinate axes
-            render_style: "surface" for triangles, "points" for point cloud
-        """
-        self.load_mesh(render_style)
-        self.setup_scene(window_size,
-                         title_window,
-                         color_object,
-                         smooth_shading,
-                         show_edges,
-                         show_grid,
-                         show_axes,
-                         render_style)
-        
-        print("[Info] Starting visualization window...")
-        print("[Tip] Press 'q' to close the window.")
+        print("[Info] Press 'q' to close")
         self.plotter.show()
