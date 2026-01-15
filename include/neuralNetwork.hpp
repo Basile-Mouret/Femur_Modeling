@@ -30,7 +30,7 @@
  */
 template <typename T>
 class NeuralNetwork {
-private:
+protected:
     // Network architecture
     std::vector<size_t> m_layers;                   ///< Layer sizes [input, hidden..., output]
     
@@ -92,7 +92,7 @@ public:
      * 
      * Cleans up allocated resources.
      */
-    ~NeuralNetwork();
+    virtual ~NeuralNetwork();
     
     // Main methods
     
@@ -118,7 +118,7 @@ public:
      * @param layerIndex Optional layer index to start from (default: 0)
      * @return Output vector from the network's final layer
      */
-    Vector<T> forward(const Vector<T>& input, size_t layerIndex = 0);
+    virtual Vector<T> forward(const Vector<T>& input, size_t layerIndex = 0);
     
     /**
      * @brief Backward propagation and weight update
@@ -130,7 +130,7 @@ public:
      * @param target Expected output (ground truth) vector
      * @return Loss value for this training example
      */
-    T backward(const Vector<T>& input, const Vector<T>& target);
+    virtual T backward(const Vector<T>& input, const Vector<T>& target);
     
     /**
      * @brief Trains the network on a dataset
@@ -271,6 +271,61 @@ public:
      * @return Name of the loss function (e.g., "meanSquaredError")
      */
     const std::string& getLoss() const;
+};
+
+/**
+ * @class LinearOutputNeuralNetwork
+ * @brief Neural network with linear output layer (no activation on last layer)
+ * @tparam T Data type for computations (typically float or double)
+ * 
+ * This class inherits from NeuralNetwork and overrides the forward and backward
+ * propagation methods to skip the activation function on the output layer.
+ * This is useful for regression tasks where unbounded outputs are needed.
+ */
+template <typename T>
+class LinearOutputNeuralNetwork : public NeuralNetwork<T> {
+public:
+    /**
+     * @brief Constructs a linear output neural network with the specified architecture
+     * 
+     * @param layers Vector containing the size of each layer [input, hidden..., output]
+     * @param activation Name of the activation function for hidden layers (default: "sigmoid")
+     * @param loss Name of the loss function to use (default: "meanSquaredError")
+     * @param learningRate Learning rate for gradient descent (default: 0.01)
+     */
+    LinearOutputNeuralNetwork(const std::vector<size_t>& layers, 
+                              const std::string& activation = "sigmoid", 
+                              const std::string& loss = "meanSquaredError", 
+                              T learningRate = 0.01);
+
+    /**
+     * @brief Constructs a linear output neural network from a saved file
+     * 
+     * @param filename Path to the file containing the saved network model
+     */
+    LinearOutputNeuralNetwork(const std::string& filename);
+
+    /**
+     * @brief Forward propagation with linear output layer
+     * 
+     * Same as parent class but does not apply activation function on the last layer.
+     * 
+     * @param input Input feature vector
+     * @param layerIndex Optional layer index to start from (default: 0)
+     * @return Output vector from the network's final layer (linear, no activation)
+     */
+    Vector<T> forward(const Vector<T>& input, size_t layerIndex = 0);
+
+    /**
+     * @brief Backward propagation with linear output layer
+     * 
+     * Computes gradients accounting for linear output layer (derivative = 1).
+     * 
+     * @param input Input feature vector
+     * @param target Expected output (ground truth) vector
+     * @return Loss value for this training example
+     */
+    T backward(const Vector<T>& input, const Vector<T>& target);
 };
 
 #endif // NEURAL_NETWORK_HPP
