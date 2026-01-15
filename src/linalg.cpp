@@ -2,7 +2,32 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <cstdlib>
+#include <math.h>
 
+static size_t initNumThreads() {
+    const char* env = std::getenv("RDN_THREADS");
+    if (env) {
+        int num = std::atoi(env);
+        if (num > 0) return static_cast<size_t>(num);
+    }
+    return std::thread::hardware_concurrency();
+}
+
+static size_t initParallelThreshold() {
+    const char* env = std::getenv("RDN_PARALLEL_THRESHOLD"); // Environment variable to set parallel threshold for testing
+    if (env) {
+        int num = std::atoi(env);
+        if (num > 0) return static_cast<size_t>(num);
+    }
+    return 10000; // Default threshold
+}
+
+namespace Config {
+    size_t NUM_THREADS = initNumThreads();
+    size_t PARALLEL_THRESHOLD = initParallelThreshold();
+}
 
 // Vector class method implementations
 template<typename T>
@@ -104,9 +129,11 @@ Vector<T> Vector<T>::operator+(const Vector<T> &other){
         return *this;
     }
     Vector<T> result(m_size);
+
     for (size_t i = 0; i < m_size; ++i) {
         result.setCoeff(i, m_data(i) + other.m_data(i));
     }
+
     return result;
 }
 
@@ -363,18 +390,56 @@ Matrix2D<T> Matrix2D<T>::operator*(const Matrix2D<T> &other){
 }
 
 template<typename T>
+void mult(size_t begin_rows,
+          size_t end_rows,
+          Matrix2D<T> & mat,
+          const Vector<T> & vec,
+          Vector<T> & result)
+{
+    for (size_t j = begin_rows; j < end_rows; ++j) {
+        T sum = 0;
+        for (size_t i = 0; i < mat.getSizeCols(); ++i) {
+            sum += mat(j, i) * vec(i);
+        }
+        result.setCoeff(j, sum);
+    }
+}
+
+template<typename T>
 Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
     if (m_cols != vec.getSize()){
         std::cout << "ERROR: Matrix columns must match vector size for multiplication." << std::endl;
         return Vector<T>(0);
     }
+
     Vector<T> result(m_rows);
-    for (size_t j = 0; j < m_rows; ++j) {
-        T sum = 0;
-        for (size_t i = 0; i < m_cols; ++i) {
-            sum += m_data(j, i) * vec(i);
+
+    if (m_rows * vec.getSize() > Config::PARALLEL_THRESHOLD) { // Parallel multiplication
+        std::vector<std::thread> threads;
+
+        size_t gap_threads = (m_rows > Config::NUM_THREADS) ? (m_rows + Config::NUM_THREADS - 1) / Config::NUM_THREADS : 1;
+
+        size_t num_max = std::min(Config::NUM_THREADS, m_rows);
+
+        for (size_t i = 0; i < num_max; i++) {
+            size_t begin_rows = gap_threads * i;
+            size_t end_rows  = (i == num_max - 1) ? m_rows : begin_rows + gap_threads;
+            threads.push_back(std::thread(mult<T>, begin_rows, end_rows, std::ref(*this), std::ref(vec), std::ref(result)));
         }
-        result.setCoeff(j, sum);
+
+        for (auto& t : threads) {
+            t.join();
+        }
+    }
+
+    else { // Single-threaded multiplication
+        for (size_t j = 0; j < m_rows; ++j) {
+            T sum = 0;
+            for (size_t i = 0; i < m_cols; ++i) {
+                sum += m_data(j, i) * vec(i);
+            }
+            result.setCoeff(j, sum);
+        }
     }
     return result;
 }

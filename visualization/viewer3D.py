@@ -21,7 +21,7 @@ class Viewer3D:
         if not os.path.exists(self.obj_path):
             raise FileNotFoundError(f"3D file not found at: {self.obj_path}")
 
-    def load_mesh(self):
+    def load_mesh(self, render_style):
         """
         Loads the .obj file into memory and stores the base topology.
         """
@@ -29,7 +29,12 @@ class Viewer3D:
 
         self.mesh = pv.read(self.obj_path)
 
-        print(f"[Success] Mesh loaded. Vertices: {self.mesh.n_points}, Faces: {self.mesh.n_cells}")
+        if render_style == "points":
+            print(f"[Success] Mesh loaded. Vertices: {self.mesh.n_points}")
+        elif render_style == "surface":
+            print(f"[Success] Mesh loaded. Vertices: {self.mesh.n_points}, Faces: {self.mesh.n_cells}")
+        else:
+            raise ValueError(f"Unknown render style: {render_style}. Use 'points' or 'surface'.")
 
     def setup_scene(self,
                     window_size,
@@ -88,7 +93,7 @@ class Viewer3D:
             show_axes: Bool to display coordinate axes
             render_style: "surface" for triangles, "points" for point cloud
         """
-        self.load_mesh()
+        self.load_mesh(render_style)
         self.setup_scene(window_size,
                          title_window,
                          color_object,
