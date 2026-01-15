@@ -14,4 +14,4 @@ FEMUR_FILE = "R_Femur_22_DECIM.obj.FINAL.obj"
 
 if __name__ == "__main__":
     viewer = Viewer3D(os.path.join(DATA_DIR, FEMUR_FILE))
-    viewer.run(reconstruct_surface=True)
+    viewer.run()

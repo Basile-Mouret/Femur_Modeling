@@ -140,11 +140,11 @@ void NeuralNetwork<T>::initializeWeights(int seed) {
 
 // Forward propagation
 template <typename T>
-Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input) {
-    if (input.getSize() != m_layers[0]) {
+Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input, size_t layerIndex) {
+    if (input.getSize() != m_layers[layerIndex]) {
         std::cerr << "Error: Input size (" << input.getSize() 
-                  << ") does not match input layer size (" 
-                  << m_layers[0] << ")" << std::endl;
+                  << ") does not match layer " << layerIndex << " size (" 
+                  << m_layers[layerIndex] << ")" << std::endl;
         return Vector<T>(m_layers.back());  // Return zero vector
     }
     
@@ -157,8 +157,8 @@ Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input) {
     
     Vector<T> currentActivation = input;
     
-    // Propagate through all layers
-    for (size_t layer = 0; layer < m_weights.size(); ++layer) {
+    // Propagate through all layers starting from layerIndex
+    for (size_t layer = layerIndex; layer < m_weights.size(); ++layer) {
         // Compute z = W * a + b
         Vector<T> z = m_weights[layer] * currentActivation;
         z = z + m_biases[layer];
@@ -312,6 +312,16 @@ std::vector<T> NeuralNetwork<T>::train(const std::vector<Vector<T>>& inputs,
 template <typename T>
 Vector<T> NeuralNetwork<T>::predict(const Vector<T>& input) {
     return forward(input);
+}
+
+template <typename T>
+Vector<T> NeuralNetwork<T>::decodeLatent(const Vector<T>& latentVector, size_t layerIndex) {
+    if (layerIndex >= m_weights.size()) {
+        std::cerr << "Error: layerIndex out of bounds in decodeLatent()" << std::endl;
+        return Vector<T>(0);
+    }
+    
+    return forward(latentVector, layerIndex);
 }
 
 // Save network to file

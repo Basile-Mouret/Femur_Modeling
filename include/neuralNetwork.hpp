@@ -115,9 +115,10 @@ public:
      * pre-activation values for use in backpropagation.
      * 
      * @param input Input feature vector
+     * @param layerIndex Optional layer index to start from (default: 0)
      * @return Output vector from the network's final layer
      */
-    Vector<T> forward(const Vector<T>& input);
+    Vector<T> forward(const Vector<T>& input, size_t layerIndex = 0);
     
     /**
      * @brief Backward propagation and weight update
@@ -159,7 +160,20 @@ public:
      * @return Network prediction output vector
      */
     Vector<T> predict(const Vector<T>& input);
-    
+
+    /**
+     * @brief Decodes a latent vector to the output space
+     * 
+     * Takes a latent vector representation and reconstructs the
+     * corresponding output by passing it through the decoder part
+     * of the network starting from the specified layer index.
+     * 
+     * @param latentVector Latent space vector (size must match the dimension of the layer at layerIndex)
+     * @param layerIndex Index of the layer corresponding to the latent space (starting point for decoding)
+     * @return Reconstructed output vector
+     */
+    Vector<T> decodeLatent(const Vector<T>& latentVector, size_t layerIndex);
+
     // Save and load
     
     /**
