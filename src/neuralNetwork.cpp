@@ -47,20 +47,6 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
         binFile.close();
     }
 
-    // Check for binary magic number first
-    std::ifstream binFile(filename, std::ios::binary);
-    if (binFile.is_open()) {
-        uint32_t magic;
-        if (binFile.read(reinterpret_cast<char*>(&magic), sizeof(magic))) {
-            if (magic == 0x4E4E4249) {
-                binFile.close();
-                loadBinary(filename);
-                return;
-            }
-        }
-        binFile.close();
-    }
-
     std::ifstream file(filename);
 
     if (!file.is_open()) {
