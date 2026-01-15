@@ -13,8 +13,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from viewer3D import Viewer3D
 
-path = "../data"
-femur = "original_data_128.obj"
+path = "../build"
+femur = "reconstructed_femur1.obj"
 
 try:
     app = Viewer3D(os.path.join(path, femur))
@@ -23,7 +23,7 @@ except Exception as e:
     print(f"Application Error: {e}")
 
 path = "../build"
-femur = "reconstructed_femur.obj"
+femur = "reconstructed_femur2.obj"
 
 try:
     app = Viewer3D(os.path.join(path, femur))
