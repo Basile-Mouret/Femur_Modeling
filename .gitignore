@@ -1,6 +1,7 @@
 build/
 bin/
 lib/
+models/
 
 # --- CMake Generated Files ---
 CMakeCache.txt
