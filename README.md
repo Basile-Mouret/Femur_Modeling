@@ -27,8 +27,10 @@ Research Project in Artificial Intelligence for the Applied Mathematics Master 1
 3. Optimisation du code
 4. Standardisation des données --> Basile
 5. PCA lineaire pour augmenter le jeu de données --> Malik
-6. Multi-threading (au moins utiliser avx, voire au mieux écrire un noyau cuda)--> Basile et Martin
+6. Multi-threading (au moins utiliser avx, voire au mieux écrire un noyau cuda), pouvoir choisir le nombre de coeurs--> Martin
 7. Enregistrement plus simple du NN (hdf5 ou format hugging face) --> Time
+8. Mettre tout dans des .hpp (si le temps)
+9. Faire un programme qui a partir d'un nuage de point en .obj, trouve les triangles associés
 
 # Ideas
 - avoir un serveur pour entrainer le réseau

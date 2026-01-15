@@ -13,6 +13,18 @@
 #include <vector>
 #include <Eigen/Dense>
 
+/**
+ * @namespace Config
+ * @brief Configuration parameters for linear algebra operations
+ * This namespace contains global configuration settings such as
+ * the number of threads to use for parallel computations and
+ * the threshold size for enabling parallelization.
+ */
+namespace Config {
+    extern size_t NUM_THREADS;
+    extern size_t PARALLEL_THRESHOLD;  // Minimum size (rows*cols) to enable parallelization
+}
+
 // Forward declarations
 template<typename T>
 class Matrix2D;
