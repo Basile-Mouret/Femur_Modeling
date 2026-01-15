@@ -51,3 +51,5 @@ doc
 visualization/.venv
 
 cmake-build-debug/
+
+NeuralNetwork.bin
