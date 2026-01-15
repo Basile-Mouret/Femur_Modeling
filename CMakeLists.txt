@@ -49,3 +49,32 @@ else()
 endif()
 add_executable(benchmarkNN tests/NeuralNetworkBenchmark.cpp src/linalg.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp)
 add_executable(testBinarySavePerformance tests/testBinarySavePerformance.cpp src/linalg.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp)
+
+# ============================================
+# Python bindings with pybind11
+# ============================================
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(pybind11 CONFIG)
+
+if(pybind11_FOUND)
+    message(STATUS "pybind11 found - building Python module femur_rdn")
+    
+    pybind11_add_module(femur_rdn 
+        src/pyBindings.cpp 
+        src/linalg.cpp 
+        src/neuralNetwork.cpp 
+        src/neuralNetworkFunctions.cpp
+    )
+    
+    target_include_directories(femur_rdn PRIVATE 
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/lib/eigen-5.0.0
+    )
+    
+    # Output the .so file to visualization/ for easy import
+    set_target_properties(femur_rdn PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/visualization
+    )
+else()
+    message(WARNING "pybind11 not found - Python bindings disabled. Install with: pip install pybind11")
+endif()
