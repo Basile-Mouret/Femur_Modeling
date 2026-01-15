@@ -125,34 +125,37 @@ int main() {
         Vector<float> femurCoordsStandardized = femur.getCoordsVect<float>();
         validation_data.push_back(femurCoordsStandardized);
     }
-    std::cout << "Loading Femur" << std::endl;
+    std::cout << "Loading Neural Network" << std::endl;
     std::vector<size_t> layers = {54873, 1024, 64, 10, 64, 1024, 54873};
     NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", .1f);
-    nn.loadBinary("NeuralNetwork.bin");
+    nn.loadBinary("../models/NeuralNetwork.bin");
 
     
     // Training NN
 
-    // Save in binary format for optimization
-    //if (nn.saveBinary("NeuralNetwork.bin")) {
-    //    std::cout << "Network saved successfully (binary)." << std::endl;
-    //} else {
-    //    std::cerr << "Failed to save network (binary)." << std::endl;
-        // Fallback or error handling
-    //}
+    std::cout << "\nTraining the Neural Network..." << std::endl;
+    std::vector<float> losses = nn.train(training_data, training_data, 0, true);
     
-    // Also save in text format for compatibility if needed (optional)
-    // nn.save("NeuralNetwork.nn");
+    std::cout << "\n✓ Training Complete" << std::endl;
+
+    // Save in binary format for optimization
+    if (nn.saveBinary("NeuralNetwork.bin")) {
+        std::cout << "Network saved successfully (binary)." << std::endl;
+    } else {
+        std::cerr << "Failed to save network (binary)." << std::endl;
+        // Fallback or error handling
+    }
 
     // Save the reconstructed femur
     std::cout << validation_data.size() << std::endl;
-    Femur reconstructedFemur;
+    Femur reconstructedFemur("../data/validation/L_Femur_24_DECIM.obj.FINAL.obj");
     reconstructedFemur.setCoordsVect(nn.forward(validation_data[0]));
     reconstructedFemur.saveToFile("reconstructed_femur1.obj");
 
     // Save the reconstructed femur
-    reconstructedFemur.setCoordsVect(nn.forward(validation_data[1]));
-    reconstructedFemur.saveToFile("reconstructed_femur2.obj");
+    Femur reconstructed2Femur("../data/validation/R_Femur_22_DECIM.obj.FINAL.obj");
+    reconstructed2Femur.setCoordsVect(nn.forward(validation_data[1]));
+    reconstructed2Femur.saveToFile("reconstructed_femur2.obj");
 
 
     return 0;
