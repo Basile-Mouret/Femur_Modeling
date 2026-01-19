@@ -105,7 +105,8 @@ int main() {
 
     std::cout << "Femur Modeling Project" << std::endl;
 
-    std::vector<Vector<float>> training_data;
+    std::vector<Vector<float>> training_data_standardized;
+    std::vector<Vector<float>> training_data_unstandardized;
     std::vector<Vector<float>> validation_data;
 
 
