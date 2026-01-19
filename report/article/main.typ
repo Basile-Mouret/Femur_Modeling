@@ -80,14 +80,4 @@
 
 #include("chapters/conclusion.typ")
 
-
-
-= Vrac
-
-= Neural Network Structure
-
 #v(1em)
-
-
-
-
