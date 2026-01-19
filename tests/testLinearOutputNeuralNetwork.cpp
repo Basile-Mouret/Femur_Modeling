@@ -180,7 +180,7 @@ void testSaveLoad() {
     std::cout << "\n=== Test 6: Sauvegarde et chargement ===" << std::endl;
     
     std::vector<size_t> layers = {2, 4, 2};
-    LinearOutputNeuralNetwork<float> nn(layers, "ReLu", "meanSquaredError", 0.05f);
+    LinearOutputNeuralNetwork<float> nn(layers, "ReLU", "meanSquaredError", 0.05f);
     
     // Entrée de test
     std::vector<float> input_data = {0.3f, 0.7f};
@@ -214,7 +214,7 @@ void testUnboundedOutput() {
     std::cout << "\n=== Test 7: Vérification sortie non bornée ===" << std::endl;
     
     std::vector<size_t> layers = {1, 10, 1};
-    LinearOutputNeuralNetwork<float> nn(layers, "ReLu", "meanSquaredError", 0.01f);
+    LinearOutputNeuralNetwork<float> nn(layers, "ReLU", "meanSquaredError", 0.01f);
     
     // Données avec cibles très grandes et négatives
     std::vector<Vector<float>> inputs;
