@@ -6,3 +6,4 @@ matplotlib>=3.5.0
 
 # Qt backend for matplotlib (required on some Linux systems)
 PyQt5>=5.15.0
+scikit-learn

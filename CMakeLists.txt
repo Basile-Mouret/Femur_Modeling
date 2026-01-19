@@ -69,11 +69,12 @@ if(pybind11_FOUND)
     target_include_directories(femur_rdn PRIVATE 
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/lib/eigen-5.0.0
+        ${CMAKE_SOURCE_DIR}/lib/pybind11
     )
     
     # Output the .so file to visualization/ for easy import
     set_target_properties(femur_rdn PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/visualization
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/scripts/visualization/lib
     )
 else()
     message(WARNING "pybind11 not found - Python bindings disabled. Install with: pip install pybind11")

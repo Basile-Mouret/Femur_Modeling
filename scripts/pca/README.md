@@ -411,3 +411,11 @@ source ../visualization/venv/bin/activate
 cd build && cmake .. -Dpybind11_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())")
 && make femur_rdn
 ```
+
+
+
+**For view_latent_3d**
+
+```bash
+./view_latent_3d.py -n -1
+```
