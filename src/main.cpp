@@ -116,8 +116,8 @@ int main() {
     Femur femur;
     for (const auto& entry : std::filesystem::directory_iterator(trainingFolderPath)) {
         femur = Femur(entry.path());
-        Vector<float> femurCoordsStandardized = femur.getCoordsVect<float>();
-        training_data.push_back(femurCoordsStandardized);
+        training_data_standardized.push_back(femur.getCoordsVect<float>());
+        training_data_unstandardized.push_back(femur.getCoordsVect<float>(1,false));
     }
 
     for (const auto& entry : std::filesystem::directory_iterator(validationFolderPath)) {
@@ -126,15 +126,14 @@ int main() {
         validation_data.push_back(femurCoordsStandardized);
     }
     std::cout << "Loading Neural Network" << std::endl;
-    std::vector<size_t> layers = {54873, 1024, 64, 10, 64, 1024, 54873};
-    NeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", .1f);
-    nn.loadBinary("../models/NeuralNetwork.bin");
+    std::vector<size_t> layers = {54873, 512, 64, 10, 64, 512, 54873};
+    LinearOutputNeuralNetwork<float> nn(layers, "ReLu", "meanSquaredError", .1f);
 
     
     // Training NN
 
     std::cout << "\nTraining the Neural Network..." << std::endl;
-    std::vector<float> losses = nn.train(training_data, training_data, 0, true);
+    std::vector<float> losses = nn.train(training_data_standardized, training_data_unstandardized, 30, true);
     
     std::cout << "\n✓ Training Complete" << std::endl;
 
