@@ -146,56 +146,66 @@ class ActivationFunction {
          * @return Collection of vectors with tanh derivative applied
          */
         std::vector<Vector<T>> tanhDerivative(const std::vector<Vector<T>>& vecs);
-        T ReLu(T x);
+
         /**
-         * @brief Applies the derivative of the hyperbolic tangent function to a scalar
+         * @brief Applies the Rectified Linear Unit (ReLU) activation function to a scalar
          * 
-         * Computes tanh'(x) = 1 - tanh(x)², used for backpropagation.
-         * 
+         * Computes ReLU(x) = max(0, x), mapping the input to [0, +infinity).
+         *
          * @param x Input scalar value
-         * @return Derivative value
+         * @return Activated value in range [0, +infinity)
          */
-        T ReLuDerivative(T x);
+        T ReLU(T x);
 
         /**
-         * @brief Applies the hyperbolic tangent activation function to a vector
+         * @brief Applies the derivative of the Rectified Linear Unit function to a scalar
          * 
-         * Applies tanh element-wise to each component of the input vector.
-         * 
+         * Computes ReLU'(x) = 1 if x > 0, else 0. Used for backpropagation.
+         *
+         * @param x Input scalar value
+         * @return Derivative value (1 if x > 0, else 0)
+         */
+        T ReLUDerivative(T x);
+
+        /**
+         * @brief Applies the Rectified Linear Unit (ReLU) activation function to a vector
+         *
+         * Applies ReLU element-wise to each component of the input vector.
+         *
          * @param vec Input vector
-         * @return Vector with tanh applied to each element
+         * @return Vector with ReLU applied to each element
          */
-        Vector<T> ReLu(const Vector<T>& vec);
+        Vector<T> ReLU(const Vector<T>& vec);
 
         /**
-         * @brief Applies the derivative of tanh to a vector
-         * 
-         * Applies tanh derivative element-wise to each component of the input vector.
-         * 
+         * @brief Applies the derivative of the Rectified Linear Unit function to a vector
+         *
+         * Applies ReLU derivative element-wise to each component of the input vector.
+         *
          * @param vec Input vector
-         * @return Vector with tanh derivative applied to each element
+         * @return Vector with ReLU derivative applied to each element
          */
-        Vector<T> ReLuDerivative(const Vector<T>& vec);
+        Vector<T> ReLUDerivative(const Vector<T>& vec);
 
         /**
-         * @brief Applies tanh to a collection of vectors
-         * 
-         * Applies tanh function to each vector in the collection.
-         * 
+         * @brief Applies the Rectified Linear Unit (ReLU) activation function to a collection of vectors
+         *
+         * Applies ReLU function to each vector in the collection.
+         *
          * @param vecs Collection of input vectors
-         * @return Collection of vectors with tanh applied
+         * @return Collection of vectors with ReLU applied
          */
-        std::vector<Vector<T>> ReLu(const std::vector<Vector<T>>& vecs);
+        std::vector<Vector<T>> ReLU(const std::vector<Vector<T>>& vecs);
 
         /**
-         * @brief Applies tanh derivative to a collection of vectors
-         * 
-         * Applies tanh derivative to each vector in the collection.
-         * 
+         * @brief Applies the derivative of the Rectified Linear Unit function to a collection of vectors
+         *
+         * Applies ReLU derivative to each vector in the collection.
+         *
          * @param vecs Collection of input vectors
-         * @return Collection of vectors with tanh derivative applied
+         * @return Collection of vectors with ReLU derivative applied
          */
-        std::vector<Vector<T>> ReLuDerivative(const std::vector<Vector<T>>& vecs);
+        std::vector<Vector<T>> ReLUDerivative(const std::vector<Vector<T>>& vecs);
 };
 
 /**

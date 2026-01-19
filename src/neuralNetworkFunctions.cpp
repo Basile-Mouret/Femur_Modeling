@@ -99,48 +99,48 @@ std::vector<Vector<T>> ActivationFunction<T>::tanhDerivative(const std::vector<V
 }
 
 template <typename T>
-T ActivationFunction<T>::ReLu(T x) {
+T ActivationFunction<T>::ReLU(T x) {
     return (x>0 ? x : static_cast<T>(0));
 }
 
 template <typename T>
-T ActivationFunction<T>::ReLuDerivative(T x) {
-    T t = ReLu(x);
+T ActivationFunction<T>::ReLUDerivative(T x) {
+    T t = ReLU(x);
     return (x>0 ? static_cast<T>(1) : static_cast<T>(0));
 }
 
 template <typename T>
-Vector<T> ActivationFunction<T>::ReLu(const Vector<T>& vec) {
+Vector<T> ActivationFunction<T>::ReLU(const Vector<T>& vec) {
     Vector<T> result(vec.getSize());
     for (size_t i = 0; i < vec.getSize(); ++i) {
-        result.setCoeff(i, ReLu(vec(i)));
+        result.setCoeff(i, ReLU(vec(i)));
     }
     return result;
 }
 
 template <typename T>
-Vector<T> ActivationFunction<T>::ReLuDerivative(const Vector<T>& vec) {
+Vector<T> ActivationFunction<T>::ReLUDerivative(const Vector<T>& vec) {
     Vector<T> result(vec.getSize());
     for (size_t i = 0; i < vec.getSize(); ++i) {
-        result.setCoeff(i, ReLuDerivative(vec(i)));
+        result.setCoeff(i, ReLUDerivative(vec(i)));
     }
     return result;
 }
 
 template <typename T>
-std::vector<Vector<T>> ActivationFunction<T>::ReLu(const std::vector<Vector<T>>& vecs) {
+std::vector<Vector<T>> ActivationFunction<T>::ReLU(const std::vector<Vector<T>>& vecs) {
     std::vector<Vector<T>> result;
     for (const auto& vec : vecs) {
-        result.push_back(ReLu(vec));
+        result.push_back(ReLU(vec));
     }
     return result;
 }
 
 template <typename T>
-std::vector<Vector<T>> ActivationFunction<T>::ReLuDerivative(const std::vector<Vector<T>>& vecs) {
+std::vector<Vector<T>> ActivationFunction<T>::ReLUDerivative(const std::vector<Vector<T>>& vecs) {
     std::vector<Vector<T>> result;
     for (const auto& vec : vecs) {
-        result.push_back(ReLuDerivative(vec));
+        result.push_back(ReLUDerivative(vec));
     }
     return result;
 }
