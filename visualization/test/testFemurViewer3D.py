@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from viewer3D import Viewer3D
 
 DATA_DIR = "../../build"
-FEMUR_FILE = "reconstructed_femur2.obj"
+FEMUR_FILE = "reconstructed_femur1.obj"
 
 if __name__ == "__main__":
     viewer = Viewer3D(os.path.join(DATA_DIR, FEMUR_FILE))
