@@ -16,6 +16,10 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 
+# Add 'lib' directory to sys.path for femur_rdn import
+lib_dir = os.path.abspath(os.path.join(script_dir, 'lib'))
+sys.path.insert(0, lib_dir)
+
 try:
     import femur_rdn
 except ImportError as e:
@@ -138,7 +142,13 @@ class LatentExplorer:
             self.latent_values[idx] = value
             self._update_mesh_data()
             self.mesh.points = self.vertices
-            self.plotter.update()
+            # Only call update if the interactor is initialized
+            try:
+                if hasattr(self.plotter, 'iren') and hasattr(self.plotter.iren, 'GetInitialized'):
+                    if self.plotter.iren.GetInitialized():
+                        self.plotter.update()
+            except Exception:
+                pass  # Silently ignore update errors
         return callback
     
     def _add_sliders(self):
@@ -174,9 +184,12 @@ class LatentExplorer:
 
 def main():
     # Paths
-    project_root = os.path.dirname(script_dir)
-    model_path = os.path.join(project_root, "models", "NeuralNetwork.bin")
-    faces_obj_path = os.path.join(script_dir, "data_visu", "base_femur_for_visu.obj")
+    project_root = os.path.dirname(script_dir) + "/../"
+    if len(sys.argv) != 2:
+        print("Usage: ./latent_explorer.py <path_to_neural_network.bin>")
+        sys.exit(1)
+    model_path = sys.argv[1]
+    faces_obj_path = os.path.join(script_dir, "reconstruction_data", "base_femur_for_visu.obj")
     
     # Use a real training femur for the baseline latent encoding
     training_femur_path = os.path.join(project_root, "data", "training", "L_Femur_11_DECIM.obj.FINAL.obj")

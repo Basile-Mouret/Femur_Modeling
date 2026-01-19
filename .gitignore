@@ -52,3 +52,5 @@ visualization/.venv
 cmake-build-debug/
 
 NeuralNetwork.bin
+
+latent_projections.*

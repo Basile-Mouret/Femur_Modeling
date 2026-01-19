@@ -12,10 +12,13 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent visualization directory to path for femur_rdn module
+# Add script directory to sys.path (for consistency)
 script_dir = Path(__file__).parent.absolute()
-visualization_dir = script_dir.parent
-sys.path.insert(0, str(visualization_dir))
+sys.path.insert(0, str(script_dir))
+
+# Add 'lib' directory to sys.path for femur_rdn import
+lib_dir = (script_dir / 'lib').resolve()
+sys.path.insert(0, str(lib_dir))
 
 try:
     import femur_rdn
@@ -68,7 +71,7 @@ def project_femur_to_latent(femur_path: Path) -> np.ndarray:
 
 def main():
     # Paths
-    project_root = visualization_dir.parent
+    project_root = script_dir.parent.parent
     model_path = project_root / "models" / "NeuralNetwork.bin"
     training_dir = project_root / "data" / "training"
     

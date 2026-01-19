@@ -10,7 +10,7 @@ import numpy as np
 import pyvista as pv
 
 # Reference femur for faces (same vertex order as neural network output)
-BASE_FEMUR_PATH = os.path.join(os.path.dirname(__file__), "data_visu", "base_femur_for_visu.obj")
+BASE_FEMUR_PATH = os.path.join(os.path.dirname(__file__), "../reconstruction_data", "base_femur_for_visu.obj")
 
 
 class Viewer3D:
