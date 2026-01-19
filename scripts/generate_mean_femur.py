@@ -40,7 +40,13 @@ def main():
         for v in mean_vertices:
             f.write(f"v {v[0]} {v[1]} {v[2]}\n")
     print(f"Mean femur saved to {out_path}")
+    # Compute the maximum absolute value difference from the mean femur
+    max_diff = 0.0
+    for obj_path in obj_files:
+        verts = load_vertices(obj_path)
+        diff = np.abs(verts - mean_vertices)
+        max_diff = max(max_diff, np.max(diff))
+    print(f"Maximum absolute value difference with mean femur: {max_diff}")
 
 if __name__ == '__main__':
     main()
-
