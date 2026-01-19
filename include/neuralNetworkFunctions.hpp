@@ -206,6 +206,78 @@ class ActivationFunction {
          * @return Collection of vectors with ReLU derivative applied
          */
         std::vector<Vector<T>> ReLUDerivative(const std::vector<Vector<T>>& vecs);
+
+        /**
+         * @brief Applies the Leaky Rectified Linear Unit (Leaky ReLU) activation function to a scalar
+         *
+         * Computes LeakyReLU(x) = x if x > 0, else alpha * x, mapping the input to (-infinity, +infinity).
+         * By default, alpha is 0.01.
+         *
+         * @param x Input scalar value
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Activated value
+         */
+        T LeakyReLU(T x, T alpha = static_cast<T>(0.01));
+
+        /**
+         * @brief Applies the derivative of the Leaky Rectified Linear Unit function to a scalar
+         *
+         * Computes LeakyReLU'(x) = 1 if x > 0, else alpha. Used for backpropagation.
+         * By default, alpha is 0.01.
+         *
+         * @param x Input scalar value
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Derivative value (1 if x > 0, else alpha)
+         */
+        T LeakyReLUDerivative(T x, T alpha = static_cast<T>(0.01));
+
+        /**
+         * @brief Applies the Leaky Rectified Linear Unit (Leaky ReLU) activation function to a vector
+         *
+         * Applies Leaky ReLU element-wise to each component of the input vector.
+         * By default, alpha is 0.01.
+         *
+         * @param vec Input vector
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Vector with Leaky ReLU applied to each element
+         */
+        Vector<T> LeakyReLU(const Vector<T>& vec, T alpha = static_cast<T>(0.01));
+
+        /**
+         * @brief Applies the derivative of the Leaky Rectified Linear Unit function to a vector
+         *
+         * Applies Leaky ReLU derivative element-wise to each component of the input vector.
+         * By default, alpha is 0.01.
+         *
+         * @param vec Input vector
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Vector with Leaky ReLU derivative applied to each element
+         */
+        Vector<T> LeakyReLUDerivative(const Vector<T>& vec, T alpha = static_cast<T>(0.01));
+
+        /**
+         * @brief Applies the Leaky Rectified Linear Unit (Leaky ReLU) activation function to a collection of vectors
+         *
+         * Applies Leaky ReLU function to each vector in the collection.
+         * By default, alpha is 0.01.
+         *
+         * @param vecs Collection of input vectors
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Collection of vectors with Leaky ReLU applied
+         */
+        std::vector<Vector<T>> LeakyReLU(const std::vector<Vector<T>>& vecs, T alpha = static_cast<T>(0.01));
+
+        /**
+         * @brief Applies the derivative of the Leaky Rectified Linear Unit function to a collection of vectors
+         *
+         * Applies Leaky ReLU derivative to each vector in the collection.
+         * By default, alpha is 0.01.
+         *
+         * @param vecs Collection of input vectors
+         * @param alpha Slope for x < 0 (default: 0.01)
+         * @return Collection of vectors with Leaky ReLU derivative applied
+         */
+        std::vector<Vector<T>> LeakyReLUDerivative(const std::vector<Vector<T>>& vecs, T alpha = static_cast<T>(0.01));
 };
 
 /**

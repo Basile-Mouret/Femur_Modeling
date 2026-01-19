@@ -146,6 +146,52 @@ std::vector<Vector<T>> ActivationFunction<T>::ReLUDerivative(const std::vector<V
 }
 
 template <typename T>
+T ActivationFunction<T>::LeakyReLU(T x, T alpha) {
+    return (x > 0 ? x : alpha * x);
+}
+
+template <typename T>
+T ActivationFunction<T>::LeakyReLUDerivative(T x, T alpha) {
+    return (x > 0 ? static_cast<T>(1) : alpha);
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::LeakyReLU(const Vector<T>& vec, T alpha) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, LeakyReLU(vec(i), alpha));
+    }
+    return result;
+}
+
+template <typename T>
+Vector<T> ActivationFunction<T>::LeakyReLUDerivative(const Vector<T>& vec, T alpha) {
+    Vector<T> result(vec.getSize());
+    for (size_t i = 0; i < vec.getSize(); ++i) {
+        result.setCoeff(i, LeakyReLUDerivative(vec(i), alpha));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::LeakyReLU(const std::vector<Vector<T>>& vecs, T alpha) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(LeakyReLU(vec, alpha));
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<Vector<T>> ActivationFunction<T>::LeakyReLUDerivative(const std::vector<Vector<T>>& vecs, T alpha) {
+    std::vector<Vector<T>> result;
+    for (const auto& vec : vecs) {
+        result.push_back(LeakyReLUDerivative(vec, alpha));
+    }
+    return result;
+}
+
+template <typename T>
 T LossFunction<T>::meanSquaredError(const Vector<T>& predicted, const Vector<T>& actual) {
     if (predicted.getSize() != actual.getSize()) {
         std::cout << "Vectors must be of the same size." << std::endl;
