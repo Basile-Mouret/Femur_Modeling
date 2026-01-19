@@ -52,6 +52,7 @@ protected:
     // For forward propagation (stores activations and pre-activation values)
     std::vector<Vector<T>> m_activations;           ///< Layer activations during forward pass
     std::vector<Vector<T>> m_preActivations;        ///< Pre-activation values (z = Wx + b)
+    std::vector<Vector<T>> m_deltas;
 
 public:
     // Constructors

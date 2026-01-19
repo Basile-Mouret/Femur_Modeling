@@ -225,6 +225,22 @@ class Vector{
          * @return Matrix2D<T> containing the outer product result
          */
         Matrix2D<T> outerProduct(const Vector<T>& other) const;
+
+        /**
+         * @brief In place Vector subtraction operator
+         * 
+         * Subtracts another vector to this one element-wise. If sizes do not match,
+         * no operation is performed.
+         * 
+         * @param other Vector to subtract
+         * @return nothing
+         */
+        void operator-=(const Vector<T>& other) {
+            // Column-major loop order for speed
+            for (size_t i = 0; i < m_size; ++i) {
+                m_data(i) -= other.m_data(i);
+            }
+        }
 };
 
 
@@ -469,6 +485,52 @@ class Matrix2D{
          * @return Transposed matrix
          */
         Matrix2D<T> transpose() const;
+
+        /**
+         * @brief in place supstraction operator
+         */
+        void operator-=(const Matrix2D<T>& other) {
+            // Column-major loop order for speed
+            for (size_t j = 0; j < m_cols; ++j) {
+                for (size_t i = 0; i < m_rows; ++i) {
+                    m_data(i, j) -= other.m_data(i, j);
+                }
+            }
+        }
+        void rank1Update(const Vector<T>& vec1, const Vector<T>& vec2, T scalar) {
+            if (m_rows != vec1.getSize() || m_cols != vec2.getSize()) {
+                std::cout << "ERROR: Dimension mismatch in rank1Update" << std::endl;
+                return;
+            }
+
+            for (size_t j = 0; j < m_cols; ++j) {
+                T factor = scalar * vec2(j); // Calculate this once per column
+                for (size_t i = 0; i < m_rows; ++i) {
+                    m_data(i, j) -= factor * vec1(i);
+                }
+            }
+        }
+        Vector<T> multiplyTranspose(const Vector<T>& vec) const {
+            if (m_rows != vec.getSize()) {
+                 std::cout << "ERROR: Dimension mismatch in multiplyTranspose" << std::endl;
+                 return Vector<T>(0);
+            }
+
+            Vector<T> result(m_cols);
+            
+            // OPTIMIZED: Computing y = A^T * x
+            for (size_t j = 0; j < m_cols; ++j) {
+                T dot = 0;
+                for (size_t i = 0; i < m_rows; ++i) {
+                    dot += m_data(i, j) * vec(i);
+                }
+                result(j) = dot;
+            }
+            return result;
+        }
+
+
+
 };
 
 /**

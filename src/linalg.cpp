@@ -2,32 +2,8 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
-#include <thread>
 #include <cstdlib>
 #include <math.h>
-
-static size_t initNumThreads() {
-    const char* env = std::getenv("RDN_THREADS");
-    if (env) {
-        int num = std::atoi(env);
-        if (num > 0) return static_cast<size_t>(num);
-    }
-    return std::thread::hardware_concurrency();
-}
-
-static size_t initParallelThreshold() {
-    const char* env = std::getenv("RDN_PARALLEL_THRESHOLD"); // Environment variable to set parallel threshold for testing
-    if (env) {
-        int num = std::atoi(env);
-        if (num > 0) return static_cast<size_t>(num);
-    }
-    return 10000; // Default threshold
-}
-
-namespace Config {
-    size_t NUM_THREADS = initNumThreads();
-    size_t PARALLEL_THRESHOLD = initParallelThreshold();
-}
 
 // Vector class method implementations
 template<typename T>
@@ -117,7 +93,7 @@ template<typename T>
 Vector<T> Vector<T>::operator*(const T scalar){
     Vector<T> result(m_size);
     for (size_t i = 0; i < m_size; ++i) {
-        result.setCoeff(i, m_data(i) * scalar);
+        result(i) = m_data(i) * scalar;
     }
     return result;
 }
@@ -131,7 +107,7 @@ Vector<T> Vector<T>::operator+(const Vector<T> &other){
     Vector<T> result(m_size);
 
     for (size_t i = 0; i < m_size; ++i) {
-        result.setCoeff(i, m_data(i) + other.m_data(i));
+        result(i)= m_data(i) + other.m_data(i);
     }
 
     return result;
@@ -145,7 +121,7 @@ Vector<T> Vector<T>::operator-(const Vector<T> &other){
     }
     Vector<T> result(m_size);
     for (size_t i = 0; i < m_size; ++i) {
-        result.setCoeff(i, m_data(i) - other.m_data(i));
+        result(i) = m_data(i) - other.m_data(i);
     }
     return result;
 }
@@ -171,7 +147,7 @@ Vector<T> Vector<T>::hadamard(const Vector<T>& other) const {
     }
     Vector<T> result(m_size);
     for(size_t i = 0; i < m_size; ++i) {
-        result.setCoeff(i, m_data(i) * other.m_data(i));
+        result(i) = m_data(i) * other.m_data(i);
     }
     return result;
 }
@@ -181,7 +157,7 @@ Matrix2D<T> Vector<T>::outerProduct(const Vector<T>& other) const {
     Matrix2D<T> result(m_size, other.m_size);
     for(size_t i = 0; i < m_size; ++i) {
         for(size_t j = 0; j < other.m_size; ++j) {
-            result.setCoeff(i, j, m_data(i) * other.m_data(j));
+            result(i, j) = m_data(i) * other.m_data(j);
         }
     }
     return result;
@@ -239,7 +215,7 @@ Vector<T> Matrix2D<T>::getRow(size_t i_row) const {
     }
     Vector<T> rowVec(m_cols);
     for(size_t j = 0; j < m_cols; ++j) {
-        rowVec.setCoeff(j, m_data(i_row, j));
+        rowVec(j)= m_data(i_row, j);
     }
     return rowVec;
 }
@@ -252,7 +228,7 @@ Vector<T> Matrix2D<T>::getCol(size_t i_col) const {
     }
     Vector<T> colVec(m_rows);
     for(size_t i = 0; i < m_rows; ++i) {
-        colVec.setCoeff(i, m_data(i, i_col));
+        colVec(i) =  m_data(i, i_col);
     }
     return colVec;
 }
@@ -332,9 +308,9 @@ T &Matrix2D<T>::operator()(size_t i_row, size_t i_col){
 template<typename T>
 Matrix2D<T> Matrix2D<T>::operator*(const float scalar){
     Matrix2D<T> result(m_rows, m_cols);
-    for (size_t i = 0; i < m_rows; ++i) {
         for (size_t j = 0; j < m_cols; ++j) {
-            result.setCoeff(i, j, m_data(i, j) * scalar);
+    for (size_t i = 0; i < m_rows; ++i) {
+            result(i, j) = m_data(i, j) * scalar;
         }
     }
     return result;
@@ -347,9 +323,9 @@ Matrix2D<T> Matrix2D<T>::operator+(const  Matrix2D<T> &other){
         return *this;
     }
     Matrix2D<T> result(m_rows, m_cols);
-    for (size_t i = 0; i < m_rows; ++i) {
         for (size_t j = 0; j < m_cols; ++j) {
-            result.setCoeff(i, j, m_data(i, j) + other.m_data(i, j));
+    for (size_t i = 0; i < m_rows; ++i) {
+            result(i, j) = m_data(i, j) + other.m_data(i, j);
         }
     }
     return result;
@@ -362,9 +338,9 @@ Matrix2D<T> Matrix2D<T>::operator-(const  Matrix2D<T> &other){
         return *this;
     }
     Matrix2D<T> result(m_rows, m_cols);
-    for (size_t i = 0; i < m_rows; ++i) {
         for (size_t j = 0; j < m_cols; ++j) {
-            result.setCoeff(i, j, m_data(i, j) - other.m_data(i, j));
+    for (size_t i = 0; i < m_rows; ++i) {
+            result(i, j) = m_data(i, j) - other.m_data(i, j);
         }
     }
     return result;
@@ -377,13 +353,13 @@ Matrix2D<T> Matrix2D<T>::operator*(const Matrix2D<T> &other){
         return Matrix2D<T>(0, 0);
     }
     Matrix2D<T> result(m_rows, other.m_cols);
-    for (size_t i = 0; i < m_rows; ++i) {
         for (size_t j = 0; j < other.m_cols; ++j) {
+    for (size_t i = 0; i < m_rows; ++i) {
             T sum = 0;
             for (size_t k = 0; k < m_cols; ++k) {
                 sum += m_data(i, k) * other.m_data(k, j);
             }
-            result.setCoeff(i, j, sum);
+            result(i, j) = sum;
         }
     }
     return result;
@@ -401,7 +377,7 @@ void mult(size_t begin_rows,
         for (size_t i = 0; i < mat.getSizeCols(); ++i) {
             sum += mat(j, i) * vec(i);
         }
-        result.setCoeff(j, sum);
+        result(j) = sum;
     }
 }
 
@@ -414,42 +390,23 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
 
     Vector<T> result(m_rows);
 
-    if (m_rows * vec.getSize() > Config::PARALLEL_THRESHOLD) { // Parallel multiplication
-        std::vector<std::thread> threads;
 
-        size_t gap_threads = (m_rows > Config::NUM_THREADS) ? (m_rows + Config::NUM_THREADS - 1) / Config::NUM_THREADS : 1;
-
-        size_t num_max = std::min(Config::NUM_THREADS, m_rows);
-
-        for (size_t i = 0; i < num_max; i++) {
-            size_t begin_rows = gap_threads * i;
-            size_t end_rows  = (i == num_max - 1) ? m_rows : begin_rows + gap_threads;
-            threads.push_back(std::thread(mult<T>, begin_rows, end_rows, std::ref(*this), std::ref(vec), std::ref(result)));
-        }
-
-        for (auto& t : threads) {
-            t.join();
-        }
-    }
-
-    else { // Single-threaded multiplication
         for (size_t j = 0; j < m_rows; ++j) {
             T sum = 0;
             for (size_t i = 0; i < m_cols; ++i) {
                 sum += m_data(j, i) * vec(i);
             }
-            result.setCoeff(j, sum);
+            result(j) = sum;
         }
-    }
     return result;
 }
 
 template<typename T>
 Matrix2D<T> Matrix2D<T>::transpose() const {
     Matrix2D<T> result(m_cols, m_rows);
-    for (size_t i = 0; i < m_rows; ++i) {
         for (size_t j = 0; j < m_cols; ++j) {
-            result.setCoeff(j, i, m_data(i, j));
+    for (size_t i = 0; i < m_rows; ++i) {
+            result(j, i) = m_data(i, j);
         }
     }
     return result;

@@ -26,7 +26,20 @@ NeuralNetwork<T>::NeuralNetwork(const std::vector<size_t>& layers, const std::st
         Vector<T> bias(layers[i + 1]);
         m_biases.push_back(bias);
     }
-    
+    // Pre allocation of the vectors
+    m_activations.resize(m_layers.size(), Vector<T>(0));
+    m_deltas.resize(m_layers.size(), Vector<T>(0));
+    m_preActivations.resize(m_layers.size() - 1, Vector<T>(0));
+
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        m_activations[i] = Vector<T>(m_layers[i]);
+        m_deltas[i] = Vector<T>(m_layers[i]);
+        
+        // Pre-activations correspond to the output of weights (layers 1 to N)
+        if (i < m_layers.size() - 1) {
+            m_preActivations[i] = Vector<T>(m_layers[i+1]);
+        }
+    } 
     // Initialize weights
     initializeWeights();
 }
@@ -85,7 +98,7 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
             for (size_t j = 0; j < cols; ++j) {
                 T value;
                 file >> value;
-                weights.setCoeff(i, j, value);
+                weights(i, j) = value;
             }
         }
         m_weights.push_back(weights);
@@ -95,7 +108,7 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
         for (size_t i = 0; i < rows; ++i) {
             T value;
             file >> value;
-            bias.setCoeff(i, value);
+            bias(i) = value;
         }
         m_biases.push_back(bias);
     }
@@ -127,13 +140,13 @@ void NeuralNetwork<T>::initializeWeights(int seed) {
         // Initialize weights
         for (size_t i = 0; i < outputSize; ++i) {
             for (size_t j = 0; j < inputSize; ++j) {
-                m_weights[layer].setCoeff(i, j, dist(gen));
+                m_weights[layer](i, j) = dist(gen);
             }
         }
         
         // Initialize biases to 0
         for (size_t i = 0; i < outputSize; ++i) {
-            m_biases[layer].setCoeff(i, 0.0);
+            m_biases[layer](i) = 0.0;
         }
     }
 }
@@ -148,37 +161,32 @@ Vector<T> NeuralNetwork<T>::forward(const Vector<T>& input, size_t layerIndex) {
         return Vector<T>(m_layers.back());  // Return zero vector
     }
     
-    // Reset activation vectors
-    m_activations.clear();
-    m_preActivations.clear();
     
-    // First activation is the input itself
-    m_activations.push_back(input);
+    m_activations[0] = input;
     
     Vector<T> currentActivation = input;
     
     // Propagate through all layers starting from layerIndex
     for (size_t layer = layerIndex; layer < m_weights.size(); ++layer) {
         // Compute z = W * a + b
-        Vector<T> z = m_weights[layer] * currentActivation;
-        z = z + m_biases[layer];
+        Vector<T> z = m_weights[layer] * currentActivation + m_biases[layer];
         
-        m_preActivations.push_back(z);
+        m_preActivations[layer] = z;
         
         // Apply activation function (sigmoid)
         if(m_activation == "sigmoid")
             currentActivation = m_activationFunction.sigmoid(z);
         else if(m_activation == "tanh")
-             currentActivation = m_activationFunction.tanh(z);
+            currentActivation = m_activationFunction.tanh(z);
         else if(m_activation == "ReLU")
-             currentActivation = m_activationFunction.ReLU(z);
+            currentActivation = m_activationFunction.ReLU(z);
         else if(m_activation == "LeakyReLU")
-             currentActivation = m_activationFunction.LeakyReLU(z);
+            currentActivation = m_activationFunction.LeakyReLU(z);
         else {
             std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
             return Vector<T>(m_layers.back());
         }
-        m_activations.push_back(currentActivation);
+        m_activations[layer+1] = currentActivation;
     }
     
     return currentActivation;
@@ -210,71 +218,63 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
         return T(0);
     }
     // Backpropagation
-    std::vector<Vector<T>> deltas;
     
     // Output layer
-    size_t lastLayer = m_weights.size() - 1;
+    size_t lastLayerIdx = m_layers.size() - 1;
+
     Vector<T> deriv(m_layers.back());
     if(m_activation == "sigmoid") {
-        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayer]);
+        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayerIdx]);
     }
     else if(m_activation == "tanh") {
-        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayer]);
+        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayerIdx]);
     }
     else if(m_activation == "ReLU") {
-        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayer]);
+        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayerIdx]);
     }
     else if(m_activation == "LeakyReLU") {
-        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayer]);
+        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayerIdx]);
     }
     else {
         std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
         return loss;
     }
     
-    // Delta of the last layer: dLoss * sigmoid'(z) - using Hadamard product
-    Vector<T> delta = dLoss.hadamard(deriv);
-    deltas.push_back(delta);
+    // Delta of the last layer: dLoss * activation'(z) - using Hadamard product
+    m_deltas[lastLayerIdx] = dLoss.hadamard(deriv);
     
     // Backpropagation to hidden layers
-    for (int layer = lastLayer - 1; layer >= 0; --layer) {
+    for (int i = lastLayerIdx - 1; i > 0; --i) {
         // delta[layer] = (W[layer+1]^T * delta[layer+1]) * sigmoid'(z[layer])
         
-        // Compute W^T * delta using transpose
-        Matrix2D<T> W_transpose = m_weights[layer + 1].transpose();
-        Vector<T> weightedDelta = W_transpose * deltas[lastLayer - layer - 1];
+        // Compute W^T * delta using mutltiplyTranspose
+        Vector<T> weightedDelta = m_weights[i].multiplyTranspose(m_deltas[i+1]);
         
-        // Multiply by sigmoid'(z) using Hadamard product
-        Vector<T> deriv(m_layers[layer + 1]);
+        // Multiply by activation'(z) using Hadamard product
+        Vector<T> deriv(m_layers[i]);
         if(m_activation == "sigmoid")
-            deriv = m_activationFunction.sigmoidDerivative(m_preActivations[layer]);
+            deriv = m_activationFunction.sigmoidDerivative(m_preActivations[i-1]);
         else if(m_activation == "tanh")
-            deriv = m_activationFunction.tanhDerivative(m_preActivations[layer]);
+            deriv = m_activationFunction.tanhDerivative(m_preActivations[i-1]);
         else if(m_activation == "ReLU")
-            deriv = m_activationFunction.ReLUDerivative(m_preActivations[layer]);
+            deriv = m_activationFunction.ReLUDerivative(m_preActivations[i-1]);
         else if(m_activation == "LeakyReLU")
-            deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[layer]);
+            deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[i-1]);
         else {
             std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
         }
 
         Vector<T> currentDelta = weightedDelta.hadamard(deriv);
-        deltas.push_back(currentDelta);
+        m_deltas[i] = currentDelta;
     }
-    
-    // Reverse deltas order (computed from end to beginning)
-    std::reverse(deltas.begin(), deltas.end());
     
     // Update weights and biases
     for (size_t layer = 0; layer < m_weights.size(); ++layer) {
         // Update weights: W -= learningRate * (delta * a^T)
         // delta * a^T is the outer product of delta and activation
-        Matrix2D<T> gradient = deltas[layer].outerProduct(m_activations[layer]);
-        Matrix2D<T> weightUpdate = gradient * m_learningRate;
-        m_weights[layer] = m_weights[layer] - weightUpdate;
+        m_weights[layer].rank1Update(m_deltas[layer + 1], m_activations[layer], m_learningRate);
         
-        // Update biases: b -= learningRate * delta
-        m_biases[layer] = m_biases[layer] - (deltas[layer] * m_learningRate);
+        m_biases[layer] -= (m_deltas[layer + 1] * m_learningRate);
     }
     
     return loss;
@@ -548,22 +548,17 @@ Vector<T> LinearOutputNeuralNetwork<T>::forward(const Vector<T>& input, size_t l
         return Vector<T>(this->m_layers.back());
     }
     
-    // Reset activation vectors
-    this->m_activations.clear();
-    this->m_preActivations.clear();
-    
     // First activation is the input itself
-    this->m_activations.push_back(input);
+    this->m_activations[0] = input;
     
     Vector<T> currentActivation = input;
     
     // Propagate through all layers starting from layerIndex
     for (size_t layer = layerIndex; layer < this->m_weights.size(); ++layer) {
         // Compute z = W * a + b
-        Vector<T> z = this->m_weights[layer] * currentActivation;
-        z = z + this->m_biases[layer];
+        Vector<T> z = this->m_weights[layer] * currentActivation + this->m_biases[layer];;
         
-        this->m_preActivations.push_back(z);
+        this->m_preActivations[layer] = z;
         
         // Check if this is the last layer
         bool isLastLayer = (layer == this->m_weights.size() - 1);
@@ -586,7 +581,7 @@ Vector<T> LinearOutputNeuralNetwork<T>::forward(const Vector<T>& input, size_t l
                 return Vector<T>(this->m_layers.back());
             }
         }
-        this->m_activations.push_back(currentActivation);
+        this->m_activations[layer+1] = currentActivation;
     }
     
     return currentActivation;
@@ -617,52 +612,45 @@ T LinearOutputNeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>
     }
     
     // Backpropagation
-    std::vector<Vector<T>> deltas;
     
     // Output layer - linear activation, so derivative is 1
     // Delta of the last layer: dLoss * 1 = dLoss (no activation derivative)
-    size_t lastLayer = this->m_weights.size() - 1;
+    size_t lastLayerIdx = this->m_layers.size() - 1;
+    size_t weightIdx = this->m_weights.size() - 1;
     Vector<T> delta = dLoss;  // Linear output: derivative = 1
-    deltas.push_back(delta);
+    this->m_deltas[lastLayerIdx] = delta;
     
     // Backpropagation to hidden layers
-    for (int layer = lastLayer - 1; layer >= 0; --layer) {
+    for (int i = lastLayerIdx - 1; i > 0; --i) {
         // delta[layer] = (W[layer+1]^T * delta[layer+1]) * activation'(z[layer])
         
         // Compute W^T * delta using transpose
-        Matrix2D<T> W_transpose = this->m_weights[layer + 1].transpose();
-        Vector<T> weightedDelta = W_transpose * deltas[lastLayer - layer - 1];
+        Vector<T> weightedDelta = this->m_weights[i].multiplyTranspose(this->m_deltas[i+1]);
         
         // Multiply by activation'(z) using Hadamard product
-        Vector<T> deriv(this->m_layers[layer + 1]);
+        Vector<T> deriv(this->m_layers[i]);
         if (this->m_activation == "sigmoid")
-            deriv = this->m_activationFunction.sigmoidDerivative(this->m_preActivations[layer]);
+            deriv = this->m_activationFunction.sigmoidDerivative(this->m_preActivations[i-1]);
         else if (this->m_activation == "tanh")
-            deriv = this->m_activationFunction.tanhDerivative(this->m_preActivations[layer]);
+            deriv = this->m_activationFunction.tanhDerivative(this->m_preActivations[i-1]);
         else if (this->m_activation == "ReLU")
-            deriv = this->m_activationFunction.ReLUDerivative(this->m_preActivations[layer]);
+            deriv = this->m_activationFunction.ReLUDerivative(this->m_preActivations[i-1]);
         else if (this->m_activation == "LeakyReLU")
-            deriv = this->m_activationFunction.LeakyReLUDerivative(this->m_preActivations[layer]);
+            deriv = this->m_activationFunction.LeakyReLUDerivative(this->m_preActivations[i-1]);
         else {
             std::cerr << "Error: Unknown activation function " << this->m_activation << std::endl;
         }
 
-        Vector<T> currentDelta = weightedDelta.hadamard(deriv);
-        deltas.push_back(currentDelta);
+        this->m_deltas[i] = weightedDelta.hadamard(deriv);
     }
-    
-    // Reverse deltas order (computed from end to beginning)
-    std::reverse(deltas.begin(), deltas.end());
     
     // Update weights and biases
     for (size_t layer = 0; layer < this->m_weights.size(); ++layer) {
         // Update weights: W -= learningRate * (delta * a^T)
-        Matrix2D<T> gradient = deltas[layer].outerProduct(this->m_activations[layer]);
-        Matrix2D<T> weightUpdate = gradient * this->m_learningRate;
-        this->m_weights[layer] = this->m_weights[layer] - weightUpdate;
+        this->m_weights[layer].rank1Update(this->m_deltas[layer+1], this->m_activations[layer], this->m_learningRate);
         
         // Update biases: b -= learningRate * delta
-        this->m_biases[layer] = this->m_biases[layer] - (deltas[layer] * this->m_learningRate);
+        this->m_biases[layer] -= (this->m_deltas[layer+1] * this->m_learningRate);
     }
     
     return loss;
