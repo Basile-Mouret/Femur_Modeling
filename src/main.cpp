@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include  <chrono>
 #include "neuralNetwork.hpp"
 #include "femur.hpp"
 
@@ -24,12 +25,16 @@ int main() {
 
     std::cout << "Loading Neural Network" << std::endl;
     std::vector<size_t> layers = {54873, 512, 64, 10, 64, 512, 54873};
-    LinearOutputNeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", 10.f);
-    //nn.loadBinary("../models/NeuralNetwork_1.obj");
+    LinearOutputNeuralNetwork<float> nn(layers, "LeakyReLU", "meanSquaredError", 10.f);
+    nn.loadBinary("../models/NeuralNetwork_centered_LReLU.bin");
+    nn.setLearningRate(1.f);
 
     std::cout << "\nTraining the Neural Network..." << std::endl;
+    auto start = std::chrono::high_resolution_clock::now(); // Start
     std::vector<float> losses = nn.train(training_data, training_data, 100, true);
-    std::cout << "\n✓ Training Complete" << std::endl;
+    auto end = std::chrono::high_resolution_clock::now();   // End
+    std::chrono::duration<double> diff = end - start;
+    std::cout << "\n✓ Training Complete in " << diff.count() << " seconds." << std::endl;
 
     if (nn.saveBinary("NeuralNetwork.bin"))
         std::cout << "Network saved successfully (binary)." << std::endl;
