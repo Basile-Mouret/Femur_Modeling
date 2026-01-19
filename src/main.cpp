@@ -128,7 +128,7 @@ int main() {
     }
     std::cout << "Loading Neural Network" << std::endl;
     std::vector<size_t> layers = {54873, 512, 64, 10, 64, 512, 54873};
-    LinearOutputNeuralNetwork<float> nn(layers, "ReLu", "meanSquaredError", .1f);
+    LinearOutputNeuralNetwork<float> nn(layers, "ReLU", "meanSquaredError", .1f);
 
     
     // Training NN
