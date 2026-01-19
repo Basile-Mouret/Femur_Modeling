@@ -1,14 +1,3 @@
-## Required Files and Data
-
-To run the scripts, you need the following files in the correct locations:
-
-- `models/NeuralNetwork.bin` — trained neural network model
-- OBJ meshes in `data/training/` — training femur meshes
-- `scripts/visualization/reconstruction_data/base_femur_for_visu.obj` — reference mesh for faces
-
-If your files are elsewhere, update the paths in the scripts accordingly.
-
-
 # Femur Latent Space Visualization
 
 This folder contains scripts to explore and visualize the latent space of the femur neural network autoencoder.
@@ -62,7 +51,7 @@ Run all scripts from scripts/visualization/ with the virtual environment activat
 
 - Interactive latent explorer:
   ```bash
-  ./latent_explorer.py <neural_network.bin>
+  ./latent_explorer.py <path_to_neural_network.bin> <path_to_base_femur.obj>  # The base_femur OBJ is encoded to initialize the sliders and is the femur shown at startup (basically the mean_femur)
   ```
 - Project all training femurs:
   ```bash
