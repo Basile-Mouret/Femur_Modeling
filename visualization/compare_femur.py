@@ -50,28 +50,42 @@ if __name__ == "__main__":
     min_dist = np.min(distances)
     max_dist = np.max(distances)
 
-    # If all distances are zero, show the femur with standard lighting using Viewer3D
-    if np.allclose(distances, 0):
-        print("All distances are zero. Displaying femur with standard lighting.")
+    # Compute per-vertex signed error (difference along vector direction)
+    signed_error = np.sum((femur_vertices - mean_vertices), axis=1)
+    mean_signed = np.mean(signed_error)
+    min_signed = np.min(signed_error)
+    max_signed = np.max(signed_error)
+
+    # If all errors are zero, show the femur with standard lighting using Viewer3D
+    if np.allclose(signed_error, 0):
+        print("All signed errors are zero. Displaying femur with standard lighting.")
         from viewer3D import Viewer3D
         viewer = Viewer3D(femur_path)
         viewer.run(title="Standard Femur", color="beige", smooth_shading=True, show_edges=False, show_axes=True, show_grid=False, window_size=(1200, 800))
         sys.exit(0)
 
-    # Gradient color: blue (no change) to red (max change)
-    if max_dist > min_dist:
-        t = (distances - min_dist) / (max_dist - min_dist)
-    else:
-        t = np.zeros_like(distances)
-    colors = np.stack([t, np.zeros_like(t), 1-t], axis=1)
-
     # Load faces
     faces = load_faces(ref_faces_path)
     pv_faces = np.hstack([[len(f)] + f for f in faces])
     mesh = pv.PolyData(femur_vertices, pv_faces)
-    mesh["ComparisonColor"] = colors  # Per-vertex RGB gradient
+    mesh["SignedError"] = signed_error  # Per-vertex scalar for coloring
 
-    plotter = pv.Plotter(title="Femur Comparison (Gradient)", window_size=(1200,800))
-    plotter.add_mesh(mesh, scalars="ComparisonColor", rgb=True, smooth_shading=True)
+    plotter = pv.Plotter(title="Femur Comparison", window_size=(1200,800))
+    # Use 'coolwarm' diverging colormap for signed error visualization
+    plotter.add_mesh(
+        mesh,
+        scalars="SignedError",
+        cmap="coolwarm",
+        smooth_shading=True,
+        show_edges=False,
+        clim=[min_signed, max_signed],
+        scalar_bar_args={
+            "title": "Signed Vertex Error",
+            "title_font_size": 16,
+            "label_font_size": 12,
+            "n_labels": 5,
+            "fmt": "%.3f"
+        }
+    )
     plotter.add_axes()
     plotter.show()
