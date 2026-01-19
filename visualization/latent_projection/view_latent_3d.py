@@ -73,10 +73,67 @@ def reduce_to_3d(latents, method='pca', center=True, global_mean=None):
         raise ValueError(f"Unknown method: {method}")
 
 
+def fit_plane(points_3d):
+    """
+    Fit a plane to 3D points using PCA (best-fit plane minimizing orthogonal distances).
+    
+    The plane passes through the centroid and is spanned by the two principal components
+    with the largest variance. The normal is the third component (smallest variance).
+    
+    Args:
+        points_3d: Array of shape (N, 3)
+        
+    Returns:
+        centroid: Center of the plane (3,)
+        normal: Unit normal vector to the plane (3,)
+        basis1, basis2: Two orthonormal vectors spanning the plane (3,) each
+        explained_variance: Variance explained by each component
+        residual_variance: Variance in the normal direction (how "planar" the data is)
+    """
+    centroid = np.mean(points_3d, axis=0)
+    centered = points_3d - centroid
+    
+    # PCA to find principal directions
+    pca = PCA(n_components=3)
+    pca.fit(centered)
+    
+    # The plane is spanned by the first two principal components
+    # The normal is the third (smallest variance direction)
+    basis1 = pca.components_[0]  # First principal direction (most variance)
+    basis2 = pca.components_[1]  # Second principal direction
+    normal = pca.components_[2]  # Third principal direction (least variance = normal)
+    
+    explained_variance = pca.explained_variance_ratio_
+    residual_variance = explained_variance[2]  # Variance in normal direction
+    
+    # Calculate planarity score (how well data fits to a plane)
+    # High value = data lies close to a plane
+    planarity = 1.0 - residual_variance
+    
+    # Calculate average distance to plane
+    distances = np.abs(centered @ normal)
+    avg_distance = np.mean(distances)
+    max_distance = np.max(distances)
+    
+    print("\n=== Best-Fit Plane Analysis ===")
+    print(f"Centroid: [{centroid[0]:.4f}, {centroid[1]:.4f}, {centroid[2]:.4f}]")
+    print(f"Normal vector: [{normal[0]:.4f}, {normal[1]:.4f}, {normal[2]:.4f}]")
+    print(f"Plane equation: {normal[0]:.4f}(x-{centroid[0]:.4f}) + {normal[1]:.4f}(y-{centroid[1]:.4f}) + {normal[2]:.4f}(z-{centroid[2]:.4f}) = 0")
+    print(f"\nVariance explained:")
+    print(f"  PC1 (in-plane): {explained_variance[0]:.2%}")
+    print(f"  PC2 (in-plane): {explained_variance[1]:.2%}")
+    print(f"  PC3 (normal):   {explained_variance[2]:.2%}")
+    print(f"\nPlanarity score: {planarity:.2%} (100% = perfectly planar)")
+    print(f"Average distance to plane: {avg_distance:.4f}")
+    print(f"Maximum distance to plane: {max_distance:.4f}")
+    
+    return centroid, normal, basis1, basis2, explained_variance, residual_variance
+
+
 class LatentSpace3DViewer:
     """Interactive 3D viewer for latent space."""
     
-    def __init__(self, latents, femur_names, method='pca', global_mean=None):
+    def __init__(self, latents, femur_names, method='pca', global_mean=None, show_plane=True):
         """
         Initialize the viewer.
         
@@ -85,10 +142,12 @@ class LatentSpace3DViewer:
             femur_names: Array of femur names
             method: Dimensionality reduction method ('pca' or 'first3')
             global_mean: Pre-computed global mean for consistent centering
+            show_plane: Whether to fit and display the best-fit plane
         """
         self.latents = latents
         self.femur_names = femur_names
         self.method = method
+        self.show_plane = show_plane
         
         # Reduce to 3D
         print(f"Reducing {latents.shape[1]}D latent space to 3D using {method}...")
@@ -97,6 +156,11 @@ class LatentSpace3DViewer:
         if self.explained_var is not None:
             print(f"Explained variance ratio: {self.explained_var}")
             print(f"Total explained: {sum(self.explained_var):.2%}")
+        
+        # Fit plane if requested
+        self.plane_info = None
+        if show_plane and len(self.points_3d) >= 3:
+            self.plane_info = fit_plane(self.points_3d)
         
         # Separate left and right femurs
         self.left_mask = np.array(['L_' in str(name) for name in femur_names])
@@ -178,6 +242,59 @@ class LatentSpace3DViewer:
             label='Mean'
         )
         
+        # Add best-fit plane if computed
+        if self.plane_info is not None:
+            centroid, normal, basis1, basis2, explained_var, residual_var = self.plane_info
+            
+            # Determine plane size based on data spread
+            centered = self.points_3d - centroid
+            proj1 = centered @ basis1
+            proj2 = centered @ basis2
+            extent1 = max(abs(proj1.min()), abs(proj1.max())) * 1.3
+            extent2 = max(abs(proj2.min()), abs(proj2.max())) * 1.3
+            
+            # Create plane mesh as a rectangle
+            corners = np.array([
+                centroid - extent1 * basis1 - extent2 * basis2,
+                centroid + extent1 * basis1 - extent2 * basis2,
+                centroid + extent1 * basis1 + extent2 * basis2,
+                centroid - extent1 * basis1 + extent2 * basis2,
+            ])
+            
+            # Create plane mesh
+            plane_mesh = pv.PolyData(corners)
+            plane_mesh.faces = np.array([4, 0, 1, 2, 3])  # Quad face
+            
+            # Add plane with transparency
+            planarity = 1.0 - residual_var
+            self.plotter.add_mesh(
+                plane_mesh,
+                color='cyan',
+                opacity=0.3,
+                show_edges=True,
+                edge_color='darkblue',
+                label=f'Best-fit Plane ({planarity:.1%})'
+            )
+            
+            # Add normal vector arrow
+            arrow_length = min(extent1, extent2) * 0.5
+            arrow_start = centroid
+            arrow_end = centroid + normal * arrow_length
+            
+            arrow = pv.Arrow(start=arrow_start, direction=normal, scale=arrow_length)
+            self.plotter.add_mesh(
+                arrow,
+                color='purple',
+                label='Plane Normal'
+            )
+            
+            # Add principal direction arrows (in-plane)
+            arrow1 = pv.Arrow(start=centroid, direction=basis1, scale=arrow_length * 0.8)
+            self.plotter.add_mesh(arrow1, color='orange', label='PC1 (in-plane)')
+            
+            arrow2 = pv.Arrow(start=centroid, direction=basis2, scale=arrow_length * 0.6)
+            self.plotter.add_mesh(arrow2, color='yellow', label='PC2 (in-plane)')
+        
         # Add axes
         self.plotter.add_axes()
         
@@ -249,6 +366,8 @@ def main():
                        help='Number of femurs to display (default: 1, use -1 for all)')
     parser.add_argument('--start', type=int, default=0,
                        help='Starting index (default: 0)')
+    parser.add_argument('--no-plane', action='store_true',
+                       help='Disable best-fit plane visualization')
     args = parser.parse_args()
     
     # Load data
@@ -276,7 +395,8 @@ def main():
         femur_names = all_femur_names[args.start:end_idx]
     
     # Create and show viewer
-    viewer = LatentSpace3DViewer(latents, femur_names, method=args.method, global_mean=global_mean)
+    show_plane = not args.no_plane
+    viewer = LatentSpace3DViewer(latents, femur_names, method=args.method, global_mean=global_mean, show_plane=show_plane)
     viewer.show()
 
 
