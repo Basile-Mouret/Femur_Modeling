@@ -26,7 +26,7 @@ add_executable(testNNFunctions tests/testNNFunctions.cpp src/linalg.cpp src/neur
 add_executable(testNeuralNetwork tests/testNeuralNetwork.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)
 add_executable(testNeuralNetworkLoadConstructor tests/testNeuralNetworkLoadConstructor.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)
 add_executable(testLinearOutputNeuralNetwork tests/testLinearOutputNeuralNetwork.cpp src/linalg.cpp src/neuralNetworkFunctions.cpp src/neuralNetwork.cpp)
-
+add_executable(test_train_timing tests/test_train_timing.cpp src/neuralNetwork.cpp src/neuralNetworkFunctions.cpp src/linalg.cpp src/femur.cpp)
 
 # Register tests
 add_test(NAME LinalgVectorTest COMMAND ${CMAKE_SOURCE_DIR}/bin/testLinalgVector)
@@ -36,7 +36,7 @@ add_test(NAME NNFunctionsTest  COMMAND ${CMAKE_SOURCE_DIR}/bin/testNNFunctions)
 add_test(NAME NeuralNetworkTest COMMAND ${CMAKE_SOURCE_DIR}/bin/testNeuralNetwork)
 add_test(NAME NNLoadTest       COMMAND ${CMAKE_SOURCE_DIR}/bin/testNeuralNetworkLoadConstructor)
 add_test(NAME LinearNNTest     COMMAND ${CMAKE_SOURCE_DIR}/bin/testLinearOutputNeuralNetwork)
-
+add_test(NAME TrainTimingTest  COMMAND ${CMAKE_SOURCE_DIR}/bin/test_train_timing)
 # Doxygen documentation target
 find_package(Doxygen)
 if(DOXYGEN_FOUND)

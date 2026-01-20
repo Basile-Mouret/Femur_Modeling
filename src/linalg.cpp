@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdlib>
 #include <math.h>
+#include <thread>
 
 // Vector class method implementations
 template<typename T>
@@ -390,7 +391,27 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
 
     Vector<T> result(m_rows);
 
+    return result;
 
+    if (m_rows * vec.getSize() > Config::PARALLEL_THRESHOLD) { // Parallel multiplication
+        std::vector<std::thread> threads;
+
+        size_t gap_threads = (m_rows > Config::NUM_THREADS) ? (m_rows + Config::NUM_THREADS - 1) / Config::NUM_THREADS : 1;
+
+        size_t num_max = std::min(Config::NUM_THREADS, m_rows);
+
+        for (size_t i = 0; i < num_max; i++) {
+            size_t begin_rows = gap_threads * i;
+            size_t end_rows  = (i == num_max - 1) ? m_rows : begin_rows + gap_threads;
+            threads.push_back(std::thread(mult<T>, begin_rows, end_rows, std::ref(*this), std::ref(vec), std::ref(result)));
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+    }
+
+    else { // Single-threaded multiplication
         for (size_t j = 0; j < m_rows; ++j) {
             T sum = 0;
             for (size_t i = 0; i < m_cols; ++i) {
@@ -398,6 +419,7 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
             }
             result(j) = sum;
         }
+    }
     return result;
 }
 
