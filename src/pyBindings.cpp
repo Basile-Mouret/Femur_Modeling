@@ -114,6 +114,16 @@ size_t get_num_points() {
 }
 
 /**
+ * @brief Get the activation function name used in the network
+ */
+std::string get_activation_function() {
+    if (!g_network) {
+        throw std::runtime_error("Decoder not initialized. Call init_decoder() first.");
+    }
+    return g_network->getActivation();
+}
+
+/**
  * @brief Encode 3D coordinates to latent vector
  * Takes vertices in real coordinates (not standardized) and returns latent vector
  */
@@ -142,12 +152,23 @@ std::vector<float> encode(py::array_t<float> vertices) {
     std::vector<Vector<float>> biases = g_network->getBiases();
     // Forward pass up to latent layer
     Vector<float> current = input;
+    std::string activation = g_network->getActivation();
     for (size_t layer = 0; layer < g_latentLayerIndex; ++layer) {
         Vector<float> z = weights[layer] * current + biases[layer];
-        // Apply activation (tanh)
+        // Apply activation based on network's activation function
         current = Vector<float>(z.getSize());
         for (size_t i = 0; i < z.getSize(); ++i) {
-            current(i) = std::tanh(z(i));
+            if (activation == "sigmoid") {
+                current(i) = 1.0f / (1.0f + std::exp(-z(i)));
+            } else if (activation == "tanh") {
+                current(i) = std::tanh(z(i));
+            } else if (activation == "ReLU") {
+                current(i) = std::max(0.0f, z(i));
+            } else if (activation == "LeakyReLU") {
+                current(i) = z(i) > 0 ? z(i) : 0.01f * z(i);
+            } else {
+                current(i) = std::tanh(z(i));  // fallback to tanh
+            }
         }
     }
     // current now contains the latent representation
@@ -177,4 +198,6 @@ PYBIND11_MODULE(femur_rdn, m) {
     m.def("encode", &encode,
           py::arg("vertices"),
           "Encode 3D vertices (N,3) to latent vector");
+    m.def("get_activation_function", &get_activation_function,
+          "Get the activation function name used in the network (sigmoid, tanh, ReLU, LeakyReLU)");
 }

@@ -92,6 +92,14 @@ class LatentExplorer:
         print(f"Latent space size: {self.latent_size}")
         print(f"Number of vertices: {self.num_points}")
         
+        # Get the activation function to determine slider ranges
+        self.activation_function = femur_rdn.get_activation_function()
+        print(f"Activation function: {self.activation_function}")
+        
+        # Set slider range based on activation function output bounds
+        self.slider_range = self._get_slider_range_for_activation()
+        print(f"Slider range: {self.slider_range}")
+        
         # Load faces from reference OBJ (for mesh connectivity)
         print(f"Loading faces from: {faces_obj_path}")
         self.faces = load_faces_from_obj(faces_obj_path)
@@ -136,6 +144,29 @@ class LatentExplorer:
         # decode() returns numpy array of shape (n_points, 3)
         self.vertices = femur_rdn.decode(self.latent_values.tolist())
     
+    def _get_slider_range_for_activation(self):
+        """
+        Return (min, max) slider bounds based on the activation function.
+        
+        - sigmoid: output in [0, 1]
+        - tanh: output in [-1, 1]
+        - ReLU: output in [0, +inf), use practical range [0, 5]
+        - LeakyReLU: output in (-inf, +inf), use practical range [-3, 5]
+        """
+        activation = self.activation_function.lower()
+        if activation == "sigmoid":
+            return (0.0, 1.0)
+        elif activation == "tanh":
+            return (-1.0, 1.0)
+        elif activation == "relu":
+            return (0.0, 5.0)
+        elif activation == "leakyrelu":
+            return (-3.0, 5.0)
+        else:
+            # Default fallback
+            print(f"Warning: Unknown activation '{self.activation_function}', using [-1, 1] range")
+            return (-1.0, 1.0)
+    
     def _on_slider_change(self, idx: int):
         """Factory function to create slider callbacks."""
         def callback(value):
@@ -152,17 +183,21 @@ class LatentExplorer:
         return callback
     
     def _add_sliders(self):
-        """Add sliders for each latent dimension, range [0, 1]."""
+        """Add sliders for each latent dimension with range based on activation function."""
         slider_height = 0.04
         spacing = 0.005
         start_y = 0.95
+        
+        min_val, max_val = self.slider_range
 
         for i in range(self.latent_size):
             y_pos = start_y - i * (slider_height + spacing)
+            # Clip baseline value to slider range
+            initial_value = np.clip(self.baseline_latent[i], min_val, max_val)
             self.plotter.add_slider_widget(
                 callback=self._on_slider_change(i),
-                rng=[0.0, 1.0],
-                value=np.clip(self.baseline_latent[i], 0.0, 1.0),
+                rng=[min_val, max_val],
+                value=initial_value,
                 title=f"z{i}",
                 pointa=(0.02, y_pos - slider_height),
                 pointb=(0.18, y_pos - slider_height),
