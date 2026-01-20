@@ -51,6 +51,13 @@ class Vector{
         // Constructors
         
         /**
+         * @brief Default constructor - creates an empty vector
+         * 
+         * Creates an empty vector with size 0.
+         */
+        Vector() : m_size(0), m_data() {}
+
+        /**
          * @brief Constructs a zero vector of given size
          * 
          * Creates a vector of specified size initialized to zero.
