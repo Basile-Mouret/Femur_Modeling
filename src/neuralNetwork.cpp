@@ -113,6 +113,18 @@ NeuralNetwork<T>::NeuralNetwork(const std::string& filename) {
         m_biases.push_back(bias);
     }
 
+    // Initialize activations, preActivations, and deltas vectors
+    m_activations.resize(numLayers);
+    m_preActivations.resize(numLayers - 1);
+    m_deltas.resize(numLayers);
+    for (size_t i = 0; i < numLayers; ++i) {
+        m_activations[i] = Vector<T>(m_layers[i]);
+        m_deltas[i] = Vector<T>(m_layers[i]);
+        if (i < numLayers - 1) {
+            m_preActivations[i] = Vector<T>(m_layers[i + 1]);
+        }
+    }
+
     file.close();
 
     std::cout << "Network loaded from " << filename << std::endl;
@@ -513,6 +525,18 @@ void NeuralNetwork<T>::loadBinary(const std::string& filename) {
         Vector<T> bias(rows);
         file.read(reinterpret_cast<char*>(bias.getData()), rows * sizeof(T));
         m_biases.push_back(bias);
+    }
+    
+    // Initialize activations, preActivations, and deltas vectors
+    m_activations.resize(numLayers);
+    m_preActivations.resize(numLayers - 1);
+    m_deltas.resize(numLayers);
+    for (size_t i = 0; i < numLayers; ++i) {
+        m_activations[i] = Vector<T>(m_layers[i]);
+        m_deltas[i] = Vector<T>(m_layers[i]);
+        if (i < numLayers - 1) {
+            m_preActivations[i] = Vector<T>(m_layers[i + 1]);
+        }
     }
     
     file.close();
