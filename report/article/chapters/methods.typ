@@ -80,47 +80,10 @@ After the training, we could use the encoder part of the network to obtain a low
 Since the NN is quiet slow to train, we implemented a multi-threading system to speed up the process. \
 Firstly we try to create a thread for each operation that can be parallelized. But the overhead created by the creation of threads is too important compared to the time saved (we began with vector addition):
 
-```cpp
-template<typename T>
-void add_elems(size_t i, const Vector<T>& a, const Vector<T>& b, Vector<T>& result) {
-    result.setCoeff(i, a.m_data(i) + b.m_data(i));
-}
-
-template<typename T>
-Vector<T> Vector<T>::operator+(const Vector<T> &other){
-    if (m_size != other.m_size) {
-        std::cout << "ERROR: Vectors must be of the same size for addition." << std::endl;
-        return *this;
-    }
-    Vector<T> result(m_size);
-    
-    std::vector<std::thread> threads;
-
-    for (size_t i = 0; i < m_size; ++i) {
-        threads.push_back(std::thread(add_elems<T>, i, std::ref(*this), std::ref(other), std::ref(result)));
-    }
-
-    for (auto& t : threads) {
-        t.join();
-    }
-
-    return result;
-}
-```
-
 With this approach, the time taken to train our network is too long because of the large number of threads created, we can't train in a reasonable time.
 
 So, we decided to split the operations in a fixed number of threads (depended of the computer threads, basically 4 or 8). Each thread will compute a part of the result vector.
 
-
-Notes :
-Pour testNeuralNetwork:
-- sans multithreading : backward 65% of all, forward 16% of all (25.5% de backward)
-- avec : backward 75% of all, forward 68% of all, 91% of parent
-pas utile --> plus lent
-
-Pour le forward
-Multithreading a faire sur la multiplicaton Matrice vecteur, vecteur + vecteur
 
 == PCA
 

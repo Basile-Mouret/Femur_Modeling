@@ -17,7 +17,7 @@
     //handout: true,
     //show-notes-on-second-screen: right,
   ),
-  progress-bar: false,
+  progress-bar: true,
 )
 
 #title-slide(
@@ -88,16 +88,55 @@
 
 = Optimization techniques
 
-#slide(title: "Optimization techniques")[
-  == Multithreading
+== Multithreading
+#slide(title: "Multithreading")[
 
-  == OpenMP
 
-  == Comparison with benchmarks
 
-  == Memory allocation
+#speaker-note()[
+  NN is quiet slow to train --> multi-threading system to speed up the process. \
+  
+  1. create a thread for each operation that can be parallelized. But the overhead created by the creation of threads is too important because of the large number of threads created compared to the time saved by parallelizing the operation. \
+  2. split the operations in a fixed number of threads (depended of the computer threads, basically 4 or 8). Each thread will compute a part of the result vector.
+    ]
+
+
+  === Motivation
+    - Speed up training process
+    - Efficiently utilize multi-core processors
+    - For Matrix x Vector multiplication
+
+  === `std::thread` approaches
+    1. For every parallelizable operation, create a thread
+    2. Create a fixed number of threads at the beginning
+    3. Thread pool
+  
+  === OpenMP
+    - Simple to implement with compiler directives
+    - Automatically manages thread creation and workload distribution
+
+  #speaker-note()[  3. thread pool: create a fixed number of threads at the beginning of the program.  This approach reduces the overhead of thread creation and destruction, leading to better performance. We didn't implement beacause of a lack of time. \
+
+  OpenMP expliquer brievement le principe et a quoi ca sert]
+#figure(
+  image("../fig/perf_multithreading.png", width: 100%),
+  caption: [
+    Performance comparison between single-threaded and multi-threaded training (with different values of the treshold parameter) // we don't see the caption in touying (here)
+  ],
+) <perf_multithreading>
+
 ]
 
+== Memory allocation
+#slide(title: "Memory allocation")[
+  TODO
+]
+
+= Visualizations
+
+#slide(title: "Python")[
+  - pybind11, pyvista...
+]
 
 = Live Demo
 
