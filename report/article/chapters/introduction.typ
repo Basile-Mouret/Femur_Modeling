@@ -1,3 +1,2 @@
 // general presentation of the context.
 
-The human brain is composed over 80 billion neurons, interconnected through trillions of synapses. This intricate network allows for complex processing and communication, enabling functions such as perception, cognition, and motor control. Artificial neural networks (ANNs) are computational models inspired by the structure and function of biological neural networks. They consist of layers of interconnected nodes, or "neurons," that process information in a manner similar to the human brain.
