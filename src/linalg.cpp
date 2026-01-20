@@ -20,6 +20,30 @@ std::ostream& operator<<(std::ostream& os, const Vector<T>& vec) {
     return os;
 }
 
+static size_t initNumThreads() {
+    const char* env = std::getenv("RDN_THREADS");
+    if (env) {
+        int num = std::atoi(env);
+        if (num > 0) return static_cast<size_t>(num);
+    }
+    return std::thread::hardware_concurrency();
+}
+
+static size_t initParallelThreshold() {
+    const char* env = std::getenv("RDN_PARALLEL_THRESHOLD"); // Environment variable to set parallel threshold for testing
+    if (env) {
+        int num = std::atoi(env);
+        if (num > 0) return static_cast<size_t>(num);
+    }
+    return 100; // Default threshold
+}
+
+namespace Config {
+    size_t NUM_THREADS = initNumThreads();
+    size_t PARALLEL_THRESHOLD = initParallelThreshold();
+}
+
+
 
 //Constructors
 template<typename T>
@@ -391,8 +415,6 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
 
     Vector<T> result(m_rows);
 
-    return result;
-
     if (m_rows * vec.getSize() > Config::PARALLEL_THRESHOLD) { // Parallel multiplication
         std::vector<std::thread> threads;
 
@@ -403,6 +425,8 @@ Vector<T> Matrix2D<T>::operator*(const Vector<T> &vec){
         for (size_t i = 0; i < num_max; i++) {
             size_t begin_rows = gap_threads * i;
             size_t end_rows  = (i == num_max - 1) ? m_rows : begin_rows + gap_threads;
+            if (begin_rows >= m_rows) break;
+            if (end_rows > m_rows) end_rows = m_rows;
             threads.push_back(std::thread(mult<T>, begin_rows, end_rows, std::ref(*this), std::ref(vec), std::ref(result)));
         }
 
