@@ -235,17 +235,18 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
     size_t lastLayerIdx = m_layers.size() - 1;
 
     Vector<T> deriv(m_layers.back());
+    // Use lastLayerIdx - 1 for m_preActivations (output layer pre-activation)
     if(m_activation == "sigmoid") {
-        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "tanh") {
-        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "ReLU") {
-        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "LeakyReLU") {
-        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else {
         std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
