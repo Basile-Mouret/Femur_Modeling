@@ -49,6 +49,13 @@ int main() {
     reconstructed2Femur.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
     reconstructed2Femur.saveToFile("reconstructed_femur2.obj");
 
+    Femur reconstructedFemur3("../data/training/L_Femur_11_DECIM.obj.FINAL.obj");
+    reconstructedFemur3.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
+    reconstructedFemur3.saveToFile("reconstructed_L_Femur_11.obj");
+
+    Femur reconstructedFemur4("../data/training/R_Femur_01_DECIM.obj.FINAL.obj");
+    reconstructedFemur4.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
+    reconstructedFemur4.saveToFile("reconstructed_R_Femur_01.obj");
     return 0;
 }
 

@@ -65,6 +65,8 @@ add_executable(testBinarySavePerformance tests/testBinarySavePerformance.cpp src
 # ============================================
 # Python bindings with pybind11
 # ============================================
+# Allow user to specify Python3 executable (e.g., from venv)
+set(Python3_EXECUTABLE "${Python3_EXECUTABLE}" CACHE FILEPATH "Python 3 interpreter")
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG)
 
