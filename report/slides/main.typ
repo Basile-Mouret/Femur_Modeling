@@ -37,11 +37,65 @@
 
 #components.adaptive-columns(outline(title: none))
 
-= First Section
+= Introduction
 
-#slide(title: "First Slide")[
-  This is the content of the first slide.
+#slide(title: "Introduction")[
+  This is the introduction slide.
+
+  == Goals of the Project
+  - Implement a autoencoder for 3D reconstruction of femurs
 ]
+
+= Linear Algebra Implementation
+
+#slide(title: "Linear Algebra Implementation")[
+  == Custom Library Design
+  - Built on top of *Eigen* for efficient internal storage
+  - Template-based classes: `Vector<T>`, `Matrix2D<T>`, `Matrix2DSquare<T>`
+  - Supports multiple numeric types: `float`, `double`, `int`, `long`, etc.
+
+  == Main Classes
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      *Vector<T>*
+      - Scalar/dot product
+      - Hadamard product
+      - Outer product
+    ],
+    [
+      *Matrix2D<T>*
+      - Matrix multiplication
+      - Transpose
+      - Row/column extraction
+    ]
+  )
+]
+
+= Neural Network Architecture
+
+#slide(title: "Neural Network Architecture")[
+  This is the neural network architecture slide.
+]
+
+
+= Training Process
+
+#slide(title: "Training Process")[
+  This is the training process slide.
+]
+
+= Optimization Techniques
+
+#slide(title: "Optimization Techniques")[
+  == Multithreading
+
+  == OpenMP
+
+  == Comprarison with Benchmarks
+]
+
 
 = Live Demo
 
