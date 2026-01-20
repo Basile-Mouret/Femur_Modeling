@@ -25,8 +25,8 @@ int main() {
 
     std::cout << "Loading Neural Network" << std::endl;
     std::vector<size_t> layers = {54873, 512, 64, 10, 64, 512, 54873};
-    LinearOutputNeuralNetwork<float> nn(layers, "LeakyReLU", "meanSquaredError", 10.f);
-    nn.loadBinary("../models/NeuralNetwork_centered_LReLU.bin");
+    LinearOutputNeuralNetwork<float> nn(layers, "ReLU", "meanSquaredError", 1.f);
+    nn.loadBinary("../models/NeuralNetwork_centered_tanh.bin");
     nn.setLearningRate(1.f);
 
     std::cout << "\nTraining the Neural Network..." << std::endl;
@@ -43,11 +43,11 @@ int main() {
 
     Femur reconstructedFemur("../data/validation/L_Femur_24_DECIM.obj.FINAL.obj");
     reconstructedFemur.setCoordsVect(nn.forward((reconstructedFemur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructedFemur.saveToFile("reconstructed_femur1.obj");
+    reconstructedFemur.saveToFile("reconstructed_femur_L_24.obj");
 
     Femur reconstructed2Femur("../data/validation/R_Femur_22_DECIM.obj.FINAL.obj");
     reconstructed2Femur.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructed2Femur.saveToFile("reconstructed_femur2.obj");
+    reconstructed2Femur.saveToFile("reconstructed_femur_R_22.obj");
 
     Femur reconstructedFemur3("../data/training/L_Femur_11_DECIM.obj.FINAL.obj");
     reconstructedFemur3.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
