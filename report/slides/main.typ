@@ -42,19 +42,19 @@
 #slide(title: "Introduction")[
   This is the introduction slide.
 
-  == Goals of the Project
+  == Goals of the project
   - Implement a autoencoder for 3D reconstruction of femurs
 ]
 
-= Linear Algebra Implementation
+= Linear algebra implementation
 
-#slide(title: "Linear Algebra Implementation")[
-  == Custom Library Design
+#slide(title: "Linear algebra implementation")[
+  == Custom library design
   - Built on top of *Eigen* for efficient internal storage
   - Template-based classes: `Vector<T>`, `Matrix2D<T>`, `Matrix2DSquare<T>`
   - Supports multiple numeric types: `float`, `double`, `int`, `long`, etc.
 
-  == Main Classes
+  == Main classes
   #grid(
     columns: (1fr, 1fr),
     gutter: 1em,
@@ -73,27 +73,29 @@
   )
 ]
 
-= Neural Network Architecture
+= Neural network architecture
 
-#slide(title: "Neural Network Architecture")[
+#slide(title: "Neural network architecture")[
   This is the neural network architecture slide.
 ]
 
 
-= Training Process
+= Training process
 
-#slide(title: "Training Process")[
+#slide(title: "Training process")[
   This is the training process slide.
 ]
 
-= Optimization Techniques
+= Optimization techniques
 
-#slide(title: "Optimization Techniques")[
+#slide(title: "Optimization techniques")[
   == Multithreading
 
   == OpenMP
 
-  == Comprarison with Benchmarks
+  == Comparison with benchmarks
+
+  == Memory allocation
 ]
 
 
