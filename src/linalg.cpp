@@ -35,7 +35,7 @@ static size_t initParallelThreshold() {
         int num = std::atoi(env);
         if (num > 0) return static_cast<size_t>(num);
     }
-    return 100; // Default threshold
+    return 10000; // Default threshold
 }
 
 namespace Config {
