@@ -1,7 +1,4 @@
-= Neural Network Structure
-#v(1em)
-
-The human brain is composed over 80 billion neurons, interconnected through trillions of synapses. This intricate network allows for complex processing and communication, enabling functions such as perception, cognition, and motor control. Artificial neural networks (ANNs) are computational models inspired by the structure and function of biological neural networks. They consist of layers of interconnected nodes, or "neurons," that process information in a manner similar to the human brain.
+// detailed description of the methods chosen to solve the challenge.
 
 == Modelisation of Neurons
 
@@ -14,7 +11,7 @@ However, this result is just a linear combination of the inputs. To introduce no
 #v(1em)
 
 #figure(
-  image("fig/sigmoid.png", width: 70%),
+  image("../../fig/sigmoid.png", width: 70%),
   caption: [Sigmoid activation function $Phi(x) = 1 / (1 + e^(-x))$]
 )
 
@@ -46,7 +43,7 @@ However, the weights and biases of the neurons are initially set to random value
 
 == Backpropagation and Training
 
-= Multi-threading
+== Multi-threading
 
 Since the NN is quiet slow to train, we implemented a multi-threading system to speed up the process. \
 Firstly we try to create a thread for each operation that can be parallelized. But the overhead created by the creation of threads is too important compared to the time saved (we began with vector addition):

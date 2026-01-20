@@ -1,6 +1,5 @@
 build/
 bin/
-lib/
 models/
 
 # --- CMake Generated Files ---
@@ -53,3 +52,5 @@ visualization/.venv
 cmake-build-debug/
 
 NeuralNetwork.bin
+
+latent_projections.*

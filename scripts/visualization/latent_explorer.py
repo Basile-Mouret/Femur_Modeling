@@ -16,6 +16,10 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 
+# Add 'lib' directory to sys.path for femur_rdn import
+lib_dir = os.path.abspath(os.path.join(script_dir, 'lib'))
+sys.path.insert(0, lib_dir)
+
 try:
     import femur_rdn
 except ImportError as e:
@@ -138,25 +142,27 @@ class LatentExplorer:
             self.latent_values[idx] = value
             self._update_mesh_data()
             self.mesh.points = self.vertices
-            self.plotter.update()
+            # Only call update if the interactor is initialized
+            try:
+                if hasattr(self.plotter, 'iren') and hasattr(self.plotter.iren, 'GetInitialized'):
+                    if self.plotter.iren.GetInitialized():
+                        self.plotter.update()
+            except Exception:
+                pass  # Silently ignore update errors
         return callback
     
     def _add_sliders(self):
-        """Add sliders for each latent dimension."""
-        # Calculate slider positions
+        """Add sliders for each latent dimension, range [0, 1]."""
         slider_height = 0.04
         spacing = 0.005
         start_y = 0.95
-        
+
         for i in range(self.latent_size):
             y_pos = start_y - i * (slider_height + spacing)
-            
-            # Center slider on baseline value with +/- 5.0 range
-            baseline_val = self.baseline_latent[i]
             self.plotter.add_slider_widget(
                 callback=self._on_slider_change(i),
-                rng=[baseline_val - 5.0, baseline_val + 5.0],  # Range centered on baseline
-                value=baseline_val,
+                rng=[0.0, 1.0],
+                value=np.clip(self.baseline_latent[i], 0.0, 1.0),
                 title=f"z{i}",
                 pointa=(0.02, y_pos - slider_height),
                 pointb=(0.18, y_pos - slider_height),
@@ -174,12 +180,14 @@ class LatentExplorer:
 
 def main():
     # Paths
-    project_root = os.path.dirname(script_dir)
-    model_path = os.path.join(project_root, "models", "NeuralNetwork.bin")
-    faces_obj_path = os.path.join(script_dir, "data_visu", "base_femur_for_visu.obj")
+    project_root = os.path.dirname(script_dir) + "/../"
+    if len(sys.argv) != 3:
+        print("Usage: ./latent_explorer.py <path_to_neural_network.bin> <path_to_base_femur.obj>")
+        sys.exit(1)
+    model_path = sys.argv[1]
+    faces_obj_path = os.path.join(script_dir, "reconstruction_data", "base_femur_for_visu.obj")
     
-    # Use a real training femur for the baseline latent encoding
-    training_femur_path = os.path.join(project_root, "data", "training", "L_Femur_11_DECIM.obj.FINAL.obj")
+    training_femur_path = sys.argv[2]
     
     # Check if files exist
     if not os.path.exists(model_path):
