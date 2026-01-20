@@ -40,7 +40,7 @@ Artificial neurons are organized into layers to form a neural network. A typical
 
 #v(1em)
 #figure(
-  [PLACEHOLDER for Neural Network Diagram],
+  image("../../fig/NN_Diagram.png", width: 70%),
   caption: [Structure of a Neural Network]
 )
 
