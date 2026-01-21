@@ -43,11 +43,10 @@ venv/
 
 # Pytest cache
 __pycache__/
+.pytest_cache/
 
 # Doxygen
 doc
-
-visualization/.venv
 
 cmake-build-debug/
 
