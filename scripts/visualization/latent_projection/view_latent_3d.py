@@ -82,10 +82,36 @@ def reduce_to_3d(latents, method='pca', center=True, global_mean=None):
         raise ValueError(f"Unknown method: {method}")
 
 
+def compute_best_fit_plane(points):
+    """
+    Compute the best-fit plane through a set of 3D points using PCA.
+    
+    Args:
+        points: Array of shape (N, 3)
+        
+    Returns:
+        centroid: Center of the plane
+        normal: Normal vector of the plane
+        plane_basis: Two vectors spanning the plane (u, v)
+    """
+    centroid = np.mean(points, axis=0)
+    centered = points - centroid
+    
+    # Use PCA to find the plane
+    pca = PCA(n_components=3)
+    pca.fit(centered)
+    
+    # The first two components span the plane, the third is the normal
+    plane_basis = pca.components_[:2]  # (2, 3) - two vectors in the plane
+    normal = pca.components_[2]  # Normal to the plane
+    
+    return centroid, normal, plane_basis
+
+
 class LatentSpace3DViewer:
     """Interactive 3D viewer for latent space."""
     
-    def __init__(self, latents, femur_names, method='pca', global_mean=None, model_name=''):
+    def __init__(self, latents, femur_names, method='pca', global_mean=None, model_name='', show_plane=False):
         """
         Initialize the viewer.
         
@@ -95,11 +121,13 @@ class LatentSpace3DViewer:
             method: Dimensionality reduction method ('pca' or 'first3')
             global_mean: Pre-computed global mean for consistent centering
             model_name: Name of the model used for title
+            show_plane: If True, display a best-fit plane through the points
         """
         self.latents = latents
         self.femur_names = femur_names
         self.method = method
         self.model_name = model_name
+        self.show_plane = show_plane
         
         # Reduce to 3D
         print(f"Reducing {latents.shape[1]}D latent space to 3D using {method}...")
@@ -189,6 +217,10 @@ class LatentSpace3DViewer:
             label='Mean'
         )
         
+        # Add best-fit plane if requested
+        if self.show_plane and len(self.points_3d) >= 3:
+            self._add_best_fit_plane()
+        
         # Add axes
         self.plotter.add_axes()
         
@@ -230,6 +262,59 @@ class LatentSpace3DViewer:
         self.plotter.camera_position = 'iso'
         self.plotter.reset_camera()
     
+    def _add_best_fit_plane(self):
+        """Add a semi-transparent best-fit plane through the points."""
+        centroid, normal, plane_basis = compute_best_fit_plane(self.points_3d)
+        
+        # Compute the extent of the plane based on point spread
+        centered = self.points_3d - centroid
+        # Project points onto the plane basis vectors
+        coords_u = centered @ plane_basis[0]
+        coords_v = centered @ plane_basis[1]
+        
+        # Add some margin (20%)
+        margin = 0.2
+        u_min, u_max = coords_u.min(), coords_u.max()
+        v_min, v_max = coords_v.min(), coords_v.max()
+        u_range = u_max - u_min
+        v_range = v_max - v_min
+        u_min -= margin * u_range
+        u_max += margin * u_range
+        v_min -= margin * v_range
+        v_max += margin * v_range
+        
+        # Create plane corners
+        corners = [
+            centroid + u_min * plane_basis[0] + v_min * plane_basis[1],
+            centroid + u_max * plane_basis[0] + v_min * plane_basis[1],
+            centroid + u_max * plane_basis[0] + v_max * plane_basis[1],
+            centroid + u_min * plane_basis[0] + v_max * plane_basis[1],
+        ]
+        corners = np.array(corners)
+        
+        # Create a plane mesh (two triangles forming a quad)
+        faces = np.array([[4, 0, 1, 2, 3]])  # One quad with 4 vertices
+        plane_mesh = pv.PolyData(corners, faces)
+        
+        # Add to plotter with transparency
+        self.plotter.add_mesh(
+            plane_mesh,
+            color='yellow',
+            opacity=0.3,
+            show_edges=True,
+            edge_color='orange',
+            label='Best-fit Plane'
+        )
+        
+        # Add normal vector at centroid
+        normal_length = max(u_range, v_range) * 0.3
+        arrow_start = centroid
+        arrow_end = centroid + normal * normal_length
+        arrow = pv.Arrow(start=arrow_start, direction=normal, scale=normal_length)
+        self.plotter.add_mesh(arrow, color='orange', label='Plane Normal')
+        
+        print(f"Best-fit plane added (normal: [{normal[0]:.3f}, {normal[1]:.3f}, {normal[2]:.3f}])")
+    
     def show(self):
         """Display the interactive viewer."""
         print("\n=== 3D Latent Space Viewer ===")
@@ -254,6 +339,8 @@ def main():
                        help='Starting index (default: 0)')
     parser.add_argument('--model', '-m', type=str, default=None,
                        help='Model name to load projections for')
+    parser.add_argument('--plane', '-p', action='store_true',
+                       help='Display a best-fit plane through the points')
     args = parser.parse_args()
     
     # Load data
@@ -283,7 +370,8 @@ def main():
     
     # Create and show viewer
     viewer = LatentSpace3DViewer(latents, femur_names, method=args.method, 
-                                  global_mean=global_mean, model_name=model_used)
+                                  global_mean=global_mean, model_name=model_used,
+                                  show_plane=args.plane)
     viewer.show()
 
 
