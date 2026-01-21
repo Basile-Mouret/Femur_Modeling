@@ -10,14 +10,13 @@ Results are printed and can be saved/visualized.
 import numpy as np
 import os
 import sys
+import argparse
 from pathlib import Path
 
-# Add script directory to sys.path (for consistency)
+# Add lib directory to path for femur_rdn module
 script_dir = Path(__file__).parent.absolute()
-sys.path.insert(0, str(script_dir))
-
-# Add 'lib' directory to sys.path for femur_rdn import
-lib_dir = (script_dir / 'lib').resolve()
+visualization_dir = script_dir.parent
+lib_dir = visualization_dir / 'lib'
 sys.path.insert(0, str(lib_dir))
 
 try:
@@ -69,68 +68,35 @@ def project_femur_to_latent(femur_path: Path) -> np.ndarray:
     return latent
 
 
-def list_available_models(models_dir: Path):
-    """List all available model files in the models directory."""
-    print("\nAvailable models:")
-    print("-" * 60)
-    for model_file in sorted(models_dir.glob("*.bin")):
-        size_mb = model_file.stat().st_size / (1024 * 1024)
-        print(f"  {model_file.name:<40} ({size_mb:.2f} MB)")
-    print()
-
-
-def parse_args():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Project training femurs to latent space using a neural network model.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python project_training_femurs.py
-  python project_training_femurs.py --model NeuralNetwork_centered_LReLU.bin
-  python project_training_femurs.py --list-models
-        """
-    )
-    parser.add_argument(
-        "--model", "-m",
-        type=str,
-        default="NeuralNetwork.bin",
-        help="Name of the model file in the models/ directory (default: NeuralNetwork.bin)"
-    )
-    parser.add_argument(
-        "--list-models", "-l",
-        action="store_true",
-        help="List all available models and exit"
-    )
-    parser.add_argument(
-        "--output-suffix", "-o",
-        type=str,
-        default="",
-        help="Optional suffix to add to output filenames (for distinguishing different model outputs)"
-    )
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Project training femurs to latent space')
+    parser.add_argument('--model', '-m', type=str, default='NeuralNetwork.bin',
+                       help='Model filename in models/ directory (default: NeuralNetwork.bin)')
+    parser.add_argument('--list-models', '-l', action='store_true',
+                       help='List available models and exit')
+    args = parser.parse_args()
     
     # Paths
-    project_root = script_dir.parent.parent
+    project_root = visualization_dir.parent.parent  # scripts/ -> Femur_Modeling/
     models_dir = project_root / "models"
     training_dir = project_root / "data" / "training"
     
     # List models if requested
     if args.list_models:
-        list_available_models(models_dir)
-        return None, None
+        print("Available models:")
+        for f in sorted(models_dir.glob("*.bin")):
+            print(f"  - {f.name}")
+        sys.exit(0)
     
     model_path = models_dir / args.model
     
     # Check if model exists
     if not model_path.exists():
         print(f"Error: Model file not found: {model_path}")
-        print("Please ensure the trained model exists at this location.")
-        list_available_models(models_dir)
+        print("Available models:")
+        for f in sorted(models_dir.glob("*.bin")):
+            print(f"  - {f.name}")
         sys.exit(1)
     
     # Check if training directory exists
@@ -138,10 +104,15 @@ def main():
         print(f"Error: Training directory not found: {training_dir}")
         sys.exit(1)
     
+    # Mean femur path
+    mean_femur_path = project_root / "data" / "mean_femur.obj"
+    if not mean_femur_path.exists():
+        print(f"Error: Mean femur not found: {mean_femur_path}")
+        sys.exit(1)
+    
     # Initialize the neural network
-    print(f"Loading model: {args.model}")
-    print(f"Model path: {model_path}")
-    femur_rdn.init_decoder(str(model_path))
+    print(f"Loading model from: {model_path}")
+    femur_rdn.init_decoder(str(model_path), 3, str(mean_femur_path))
     
     latent_size = femur_rdn.get_latent_size()
     num_points = femur_rdn.get_num_points()
@@ -203,25 +174,25 @@ def main():
     print("-" * 60)
     print()
     
-    # Determine output suffix based on model name
-    model_name_base = Path(args.model).stem  # e.g., "NeuralNetwork_centered_LReLU"
-    if args.output_suffix:
-        output_suffix = f"_{args.output_suffix}"
-    elif model_name_base != "NeuralNetwork":
-        output_suffix = f"_{model_name_base}"
-    else:
-        output_suffix = ""
-    
-    # Save results to file
-    output_file = script_dir / f"latent_projections{output_suffix}.npz"
+    # Save results to file (include model name in filename)
+    model_basename = Path(args.model).stem
+    output_file = script_dir / f"latent_projections_{model_basename}.npz"
     np.savez(output_file, 
              latents=all_latents,
              femur_names=np.array(list(results.keys())),
              model_name=args.model)
     print(f"✅ Results saved to: {output_file}")
     
+    # Also save as default name for backward compatibility
+    default_output = script_dir / "latent_projections.npz"
+    np.savez(default_output, 
+             latents=all_latents,
+             femur_names=np.array(list(results.keys())),
+             model_name=args.model)
+    print(f"✅ Also saved to: {default_output}")
+    
     # Also save as readable text file
-    txt_output = script_dir / f"latent_projections{output_suffix}.txt"
+    txt_output = script_dir / f"latent_projections_{model_basename}.txt"
     with open(txt_output, 'w') as f:
         f.write(f"Training Femurs Latent Space Projections\n")
         f.write(f"Model: {args.model}\n")
