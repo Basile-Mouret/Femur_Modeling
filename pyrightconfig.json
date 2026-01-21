@@ -1,0 +1,12 @@
+{
+  "include": [
+    "lddmm",
+    "scripts"
+  ],
+  "extraPaths": [
+    "lib/emlddmm",
+    "."
+  ],
+  "reportMissingImports": "warning",
+  "pythonVersion": "3.12"
+}
