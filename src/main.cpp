@@ -1,61 +1,61 @@
+#include "dataset.hpp"
+#include "neuralNetworkFunctions.hpp"
 #include <iostream>
 #include <filesystem>
 #include  <chrono>
 #include "neuralNetwork.hpp"
 #include "femur.hpp"
 
-
-int main() {
-    float maxDifference = 36.f;
-    std::cout << "Femur Modeling Project" << std::endl;
-
-    std::vector<Vector<float>> training_data;
-
-
-    std::cout << "Loading Femurs" << std::endl;
-    Femur meanFemur("../data/mean_femur.obj");
+// Calcule la MSE d'un modèle sur un dossier de fémurs
+float evaluate_model_on_folder(const std::string& modelPath, const std::string& femurFolder, const std::string& meanFemurPath, float maxDifference = 36.f) {
+    // Charger le fémur moyen
+    Femur meanFemur(meanFemurPath);
     Vector<float> meanFemurCoords(meanFemur.getCoordsVect<float>());
 
-    Femur femur;
-    std::string trainingFolderPath = "../data/training";
-    for (const auto& entry : std::filesystem::directory_iterator(trainingFolderPath)) {
-        femur = Femur(entry.path());
-        training_data.push_back((femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference));
+    // Charger le modèle
+    std::vector<size_t> layers = {meanFemurCoords.getSize(), 512, 64, 10, 64, 512, meanFemurCoords.getSize()};
+    LinearOutputNeuralNetwork<float> nn(layers, "tanh", "meanSquaredError", 1.f);
+    nn.loadBinary(modelPath);
+
+    // Parcourir le dossier de fémurs
+    size_t count = 0;
+    float mse_sum = 0.f;
+    LossFunction<float> lossFn;
+    for (const auto& entry : std::filesystem::directory_iterator(femurFolder)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".obj") {
+            Femur femur(entry.path().string());
+            Vector<float> gt = femur.getCoordsVect<float>();
+            // Normalisation
+            Vector<float> input = (gt - meanFemurCoords) * (1.f / maxDifference);
+            // Prédiction
+            Vector<float> output = nn.forward(input) * maxDifference + meanFemurCoords;
+            // Calcul MSE
+            float mse = lossFn.meanSquaredError(output, gt);
+            std::cout << "[" << entry.path().filename() << "] MSE = " << mse << std::endl;
+            mse_sum += mse;
+            count++;
+        }
     }
+    if (count == 0) {
+        std::cerr << "Aucun fémur trouvé dans le dossier." << std::endl;
+        return -1.f;
+    }
+    float mse_avg = mse_sum / count;
+    std::cout << "\nMSE MOYENNE sur " << count << " fémurs : " << mse_avg << std::endl;
+    return mse_avg;
+}
 
-    std::cout << "Loading Neural Network" << std::endl;
-    std::vector<size_t> layers = {54873, 512, 64, 10, 64, 512, 54873};
-    LinearOutputNeuralNetwork<float> nn(layers, "ReLU", "meanSquaredError", 1.f);
-    nn.loadBinary("../models/NeuralNetwork_centered_tanh.bin");
-    nn.setLearningRate(1.f);
 
-    std::cout << "\nTraining the Neural Network..." << std::endl;
-    auto start = std::chrono::high_resolution_clock::now(); // Start
-    std::vector<float> losses = nn.train(training_data, training_data, 100, true);
-    auto end = std::chrono::high_resolution_clock::now();   // End
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\n✓ Training Complete in " << diff.count() << " seconds." << std::endl;
 
-    if (nn.saveBinary("NeuralNetwork.bin"))
-        std::cout << "Network saved successfully (binary)." << std::endl;
-    else
-        std::cerr << "Failed to save network (binary)." << std::endl;
-
-    Femur reconstructedFemur("../data/validation/L_Femur_24_DECIM.obj.FINAL.obj");
-    reconstructedFemur.setCoordsVect(nn.forward((reconstructedFemur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructedFemur.saveToFile("reconstructed_femur_L_24.obj");
-
-    Femur reconstructed2Femur("../data/validation/R_Femur_22_DECIM.obj.FINAL.obj");
-    reconstructed2Femur.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructed2Femur.saveToFile("reconstructed_femur_R_22.obj");
-
-    Femur reconstructedFemur3("../data/training/L_Femur_11_DECIM.obj.FINAL.obj");
-    reconstructedFemur3.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructedFemur3.saveToFile("reconstructed_L_Femur_11.obj");
-
-    Femur reconstructedFemur4("../data/training/R_Femur_01_DECIM.obj.FINAL.obj");
-    reconstructedFemur4.setCoordsVect(nn.forward((reconstructed2Femur.getCoordsVect<float>()-meanFemurCoords)*(1.f/maxDifference))*maxDifference+meanFemurCoords);
-    reconstructedFemur4.saveToFile("reconstructed_R_Femur_01.obj");
+int main(int argc, char** argv) {
+    // Exemple d'utilisation :
+    // Remplace les chemins par ceux de ton modèle, dossier de validation et fémur moyen
+    std::string modelPath = argc > 1 ? argv[1] : "../models/NeuralNetwork.bin";
+    std::string trainingFolder = "../data/training";
+    std::string validationFolder = "../data/validation";
+    std::string meanFemurPath = "../data/mean_femur.obj";
+    evaluate_model_on_folder(modelPath, trainingFolder, meanFemurPath);
+    evaluate_model_on_folder(modelPath, validationFolder, meanFemurPath);
     return 0;
 }
 

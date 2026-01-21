@@ -318,7 +318,7 @@ std::vector<T> NeuralNetwork<T>::train(const std::vector<Vector<T>>& inputs,
         T avgLoss = totalLoss / inputs.size();
         lossHistory.push_back(avgLoss);
         
-        if (verbose && (epoch % 10 == 0 || epoch == epochs - 1)) {
+        if (verbose && (epoch % 50 == 0 || epoch == epochs - 1)) {
             std::cout << "Epoch " << std::setw(5) << epoch 
                       << " - Loss: " << std::fixed << std::setprecision(6) << avgLoss 
                       << std::endl;
