@@ -52,15 +52,18 @@
   - how we obtained the data ?
 ]
 
-== First approach : Linear PCA
-#slide(title: "First approach : Linear PCA")[
- TODO
-]
 
 == Description and goals of the project
 #slide(title: "Description and goals of the project")[
   - RDN for the non-linearity: from 54873 to 10 neurons to 54873 --> why 10 ?
   - Implement it from scratch in C++
+]
+
+
+= PCA
+
+#slide(title: "PCA")[
+  Quick explanation of PCA
 ]
 
 = Linear algebra implementation
@@ -90,10 +93,57 @@
   )
 ]
 
-= Neural network architecture
+= Neural network
 
-#slide(title: "Neural network architecture")[
-  This is the neural network architecture slide.
+#slide(title: "Neural network")[
+  == Neuron structure
+  Given an input $x in bb(R)^n$
+
+  The characteristics of a neuron are:  
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      - Weights vector $w = (w_1, w_2, dots , w_n)$
+      - Bias term
+      - Weighted sum function $f(x) = w . x + b$
+      - Activation function $Phi$
+    ],
+    [
+      PLACEHOLDER for Neuron Diagram
+    ]
+  )
+  
+  #v(2em)
+
+  *Output of a neuron:*
+
+  $ (Phi compose f)(x) = Phi(f(x)) $
+]
+
+#slide(title: "Neural network")[
+  == Neural network architecture
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      - Input layer
+      - Hidden layers
+      - Output layer
+      - Forward propagation
+    ],
+    [
+      PLACEHOLDER for Neural Network Diagram
+    ]
+  )
+
+  == Autoencoder structure
+  - Input layer: $54876$ neurons
+  - Encoder: series of fully connected layers reducing dimensionality
+  - Latent space: compressed representation of input data we choose size 10.
+  - Decoder: series of fully connected layers reconstructing the original data
+  - Output layer: reconstructed 3D point cloud
+
 ]
 
 
@@ -107,6 +157,10 @@
   - cost function : MSE because of point correspondance
   - non linear last layer
   
+  This is the training process slide.
+  == Backpropagation algorithm
+
+  == Choice of loss function
 ]
 
 = Optimization techniques
@@ -124,7 +178,7 @@
   === Motivation
     - Speed up training process
     - Efficiently utilize multi-core processors
-    - For Matrix x Vector multiplication
+    - For Matrix $times$ Vector multiplication
 
   === `std::thread` approaches
     1. For every parallelizable operation, create a thread
@@ -139,7 +193,7 @@
 
   OpenMP expliquer brievement le principe et a quoi ca sert]
 #figure(
-  image("../fig/perf_multithreading.png", width: 100%),
+  image("../fig/perf_multithreading.png", width: 80%),
   caption: [
     Performance comparison between single-threaded and multi-threaded training (with different values of the treshold parameter) // we don't see the caption in touying (here)
   ],
@@ -149,10 +203,12 @@
 
 == Memory allocation
 #slide(title: "Memory allocation")[
-  TODO
+  Cache allocation
+
+  Performance improvement
 ]
 
-= Visualizations
+= Visualization
 
 #slide(title: "First visualizations")[
   == `visuFemur.py`
@@ -164,6 +220,26 @@
 
   == `latent_explorer.py`
   - Interactive latent space explorer (sliders)
+]
+
+
+= PCA on the latent space
+
+#slide(title: "PCA on the latent space")[
+
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_tanh_5000.png", width: 100%)
+    ],
+    [
+      #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_LReLU.png", width: 100%)
+    ]
+  )
+
+
+
 ]
 
 = Live Demo

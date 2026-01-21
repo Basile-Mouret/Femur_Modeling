@@ -8,7 +8,7 @@ Even with this strong reduction, it's still complicated to visualize the results
 
 #v(1em)
 #figure(
-  image("../../fig/pca_cumulative_variance.png", width: 70%),
+  image("../../fig/pca_cumulative_variance_NeuralNetwork_centered_tanh_5000.png", width: 70%),
   caption: [Cumulative variance explained by PCA on the latent space]
 )
 #v(1em)
