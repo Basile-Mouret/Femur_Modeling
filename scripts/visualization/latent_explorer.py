@@ -82,9 +82,14 @@ class LatentExplorer:
             faces_obj_path: Path to OBJ file for face connectivity
             baseline_femur_path: Path to a real femur OBJ for baseline latent encoding
         """
-        # Initialize decoder
+        # Compute absolute path to mean_femur.obj (in data/ folder at project root)
+        project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
+        mean_femur_path = os.path.join(project_root, 'data', 'mean_femur.obj')
+        
+        # Initialize decoder with correct mean femur path
         print(f"Loading model from: {model_path}")
-        femur_rdn.init_decoder(model_path)
+        print(f"Using mean femur: {mean_femur_path}")
+        femur_rdn.init_decoder(model_path, 3, mean_femur_path)
         
         self.latent_size = femur_rdn.get_latent_size()
         self.num_points = femur_rdn.get_num_points()
