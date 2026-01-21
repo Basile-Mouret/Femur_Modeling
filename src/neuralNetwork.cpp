@@ -235,17 +235,18 @@ T NeuralNetwork<T>::backward(const Vector<T>& input, const Vector<T>& target) {
     size_t lastLayerIdx = m_layers.size() - 1;
 
     Vector<T> deriv(m_layers.back());
+    // Use lastLayerIdx - 1 for m_preActivations (output layer pre-activation)
     if(m_activation == "sigmoid") {
-        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.sigmoidDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "tanh") {
-        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.tanhDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "ReLU") {
-        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.ReLUDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else if(m_activation == "LeakyReLU") {
-        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayerIdx]);
+        deriv = m_activationFunction.LeakyReLUDerivative(m_preActivations[lastLayerIdx - 1]);
     }
     else {
         std::cerr << "Error: Unknown activation function " << m_activation << std::endl;
@@ -317,7 +318,7 @@ std::vector<T> NeuralNetwork<T>::train(const std::vector<Vector<T>>& inputs,
         T avgLoss = totalLoss / inputs.size();
         lossHistory.push_back(avgLoss);
         
-        if (verbose && (epoch % 10 == 0 || epoch == epochs - 1)) {
+        if (verbose && (epoch % 50 == 0 || epoch == epochs - 1)) {
             std::cout << "Epoch " << std::setw(5) << epoch 
                       << " - Loss: " << std::fixed << std::setprecision(6) << avgLoss 
                       << std::endl;
