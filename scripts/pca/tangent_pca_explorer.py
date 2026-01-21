@@ -12,6 +12,7 @@ Features:
 - Slider controls for each principal component
 - Variance explained display
 - Reset functionality
+- Heatmap mode showing deviation from mean (press H)
 
 Author: Femur Modeling Project
 Date: 2026
@@ -95,8 +96,13 @@ class TangentPCAExplorer:
         self.mean_shape = self.model.atlas + self.model.mean_momentum
         self.mesh = self._create_mesh(self.mean_shape)
         
+        # Heatmap mode settings
+        self.heatmap_mode = False
+        self.atlas = self.model.atlas  # Reference for deviation computation
+        
         # Plotter will be created in run()
         self.plotter: Optional[Plotter] = None
+        self.scalar_bar_actor = None  # Track scalar bar for removal
         
         print(f"[Tangent PCA Explorer] Initialized with {self.n_components} controllable components")
         print(f"[Tangent PCA Explorer] Model: {self.model.n_samples} samples, "
@@ -108,12 +114,80 @@ class TangentPCAExplorer:
         mesh.points = points
         return mesh
     
+    def _compute_deviation(self, points: np.ndarray) -> np.ndarray:
+        """Compute per-vertex deviation from the atlas (mean shape)."""
+        return np.linalg.norm(points - self.atlas, axis=1)
+    
     def _update_mesh(self, value: float = None) -> None:
         """Update mesh based on current weights."""
         shape = generate_tangent_shape(self.model, self.weights)
         self.mesh.points = shape
         
+        # Update heatmap if in heatmap mode
+        if self.heatmap_mode:
+            deviations = self._compute_deviation(shape)
+            self.mesh["Deviation (mm)"] = deviations
+            self._refresh_mesh_display()
+        
         # Update the render
+        if self.plotter is not None:
+            self.plotter.render()
+    
+    def _refresh_mesh_display(self) -> None:
+        """Refresh mesh display with current visualization mode."""
+        if self.plotter is None:
+            return
+            
+        # Remove old mesh actor
+        self.plotter.remove_actor('shape_mesh')
+        
+        # Remove old scalar bar if exists
+        if self.scalar_bar_actor is not None:
+            try:
+                self.plotter.remove_actor(self.scalar_bar_actor)
+            except Exception:
+                pass
+            self.scalar_bar_actor = None
+        
+        if self.heatmap_mode:
+            # Compute deviations
+            deviations = self._compute_deviation(self.mesh.points)
+            self.mesh["Deviation (mm)"] = deviations
+            
+            # Add mesh with heatmap
+            actor = self.plotter.add_mesh(
+                self.mesh,
+                scalars="Deviation (mm)",
+                cmap="coolwarm",
+                smooth_shading=True,
+                name='shape_mesh',
+                show_scalar_bar=True,
+                scalar_bar_args={
+                    "title": "Deviation from Mean (mm)",
+                    "n_labels": 5,
+                    "position_x": 0.05,
+                    "position_y": 0.05,
+                    "width": 0.3,
+                    "height": 0.05,
+                    "title_font_size": 10,
+                    "label_font_size": 8,
+                }
+            )
+        else:
+            # Add mesh with solid color
+            self.plotter.add_mesh(
+                self.mesh,
+                color=self.COLORS['mesh'],
+                smooth_shading=True,
+                name='shape_mesh'
+            )
+    
+    def _toggle_heatmap(self) -> None:
+        """Toggle between solid color and heatmap deviation mode."""
+        self.heatmap_mode = not self.heatmap_mode
+        mode_str = "HEATMAP (deviation from mean)" if self.heatmap_mode else "SOLID COLOR"
+        print(f"[Tangent PCA Explorer] Visualization mode: {mode_str}")
+        self._refresh_mesh_display()
         if self.plotter is not None:
             self.plotter.render()
     
@@ -138,13 +212,17 @@ class TangentPCAExplorer:
     
     def _get_controls_text(self) -> str:
         """Generate controls help text."""
+        mode_indicator = "🔥 HEATMAP" if self.heatmap_mode else "🦴 SOLID"
         lines = [
             "╔══════════════════════════════════╗",
             "║     TANGENT PCA EXPLORER         ║",
             "╠══════════════════════════════════╣",
             "║  Sliders: Adjust PC weights      ║",
+            "║  H: Toggle heatmap mode          ║",
             "║  R: Reset all to mean shape      ║",
             "║  Q: Quit                         ║",
+            "╠══════════════════════════════════╣",
+            f"║  Mode: {mode_indicator:<24} ║",
             "╠══════════════════════════════════╣",
             "║  Variance Explained:             ║",
         ]
@@ -227,8 +305,13 @@ class TangentPCAExplorer:
             self._reset_weights()
             print("[Tangent PCA Explorer] Reset to mean shape")
         
+        def on_key_h():
+            self._toggle_heatmap()
+        
         self.plotter.add_key_event('r', on_key_r)
         self.plotter.add_key_event('R', on_key_r)
+        self.plotter.add_key_event('h', on_key_h)
+        self.plotter.add_key_event('H', on_key_h)
         
         # Enable camera orbit by default
         self.plotter.enable_trackball_style()
@@ -242,6 +325,7 @@ class TangentPCAExplorer:
         # Show the plot
         print("[Tangent PCA Explorer] Starting interactive viewer...")
         print("[Tangent PCA Explorer] Use sliders on the right to explore shape variations")
+        print("[Tangent PCA Explorer] Press 'H' for heatmap mode (deviation from mean)")
         print("[Tangent PCA Explorer] Press 'R' to reset, 'Q' to quit")
         
         self.plotter.show()

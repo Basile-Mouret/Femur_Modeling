@@ -154,6 +154,76 @@ The percentage shown next to each PC label indicates how much variance that comp
 3. Move PC1 back to 0, then adjust PC2 to explore the second mode
 4. Combine multiple modes to create new shape variations
 
+---
+
+### Tangent PCA Explorer (LDDMM-based)
+
+The Tangent PCA Explorer provides an advanced shape space exploration using LDDMM-based geodesic analysis. It includes a **heatmap mode** to visualize which regions of the femur are affected by each principal component.
+
+```bash
+# From repository root
+python scripts/pca/tangent_pca_explorer.py \
+    --model scripts/pca/model/tangent_pca \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --components 5 \
+    --sigma 3.0
+```
+
+**Controls:**
+
+| Control | Action |
+|---------|--------|
+| **Sliders** | Adjust principal component weights (in units of σ) |
+| **H key** | **Toggle heatmap mode** (deviation from mean) |
+| **R key** | Reset all sliders to mean shape |
+| **Q key** | Quit the application |
+| **Left-click + drag** | Rotate the 3D view |
+| **Scroll wheel** | Zoom in/out |
+
+**Heatmap Mode (Press H):**
+
+When enabled, the mesh is colored by per-vertex deviation from the atlas (mean shape):
+
+- **Blue regions** = minimal change from mean
+- **Red regions** = high deviation from mean
+
+This is extremely useful for **interpreting what each PC represents anatomically**:
+
+1. Set all sliders to 0 (mean shape)
+2. Press **H** to enable heatmap mode
+3. Move a single slider (e.g., PC2) to ±2σ
+4. Observe which regions turn red — those are the areas modified by that component
+
+**Example: Interpreting PC2**
+
+```bash
+# Launch explorer
+python scripts/pca/tangent_pca_explorer.py \
+    --model scripts/pca/model/tangent_pca \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj
+```
+
+1. Press **H** to enable heatmap
+2. Move PC2 slider to +2σ
+3. Note which anatomical regions light up red (e.g., femoral head, greater trochanter, etc.)
+4. Move PC2 to -2σ to see the opposite deformation
+5. Press **R** to reset, then repeat for PC3, PC4, etc.
+
+**Note:** PC1 typically represents overall scale/size variation. Focus on PC2 onwards for shape-specific deformations.
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--model`, `-m` | Path to Tangent PCA model directory | required |
+| `--template`, `-t` | Path to template OBJ file | required |
+| `--components`, `-c` | Number of PCs to control | 5 |
+| `--sigma`, `-s` | Sigma range for sliders (±σ) | 3.0 |
+| `--width` | Window width | 1400 |
+| `--height` | Window height | 900 |
+
+---
+
 ### Reconstruction Analysis
 
 **Analyze a single shape:**

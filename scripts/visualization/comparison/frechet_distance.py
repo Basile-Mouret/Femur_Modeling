@@ -33,14 +33,14 @@ import pyvista as pv
 
 def load_obj_vertices(obj_path: str) -> np.ndarray:
     """Load vertices from OBJ file."""
-    mesh = trimesh.load(obj_path, process=False)
-    return np.array(mesh.vertices, dtype=np.float32)
+    mesh = trimesh.load(obj_path, process=False, force='mesh')
+    return np.array(mesh.vertices, dtype=np.float32)  # type: ignore
 
 
 def load_obj_mesh(obj_path: str) -> Tuple[np.ndarray, np.ndarray]:
     """Load vertices and faces from OBJ file."""
-    mesh = trimesh.load(obj_path, process=False)
-    return np.array(mesh.vertices, dtype=np.float32), np.array(mesh.faces)
+    mesh = trimesh.load(obj_path, process=False, force='mesh')
+    return np.array(mesh.vertices, dtype=np.float32), np.array(mesh.faces)  # type: ignore
 
 
 def gaussian_kernel(x: torch.Tensor, y: torch.Tensor, sigma: float) -> torch.Tensor:
@@ -89,7 +89,7 @@ def compute_rkhs_norm(momentum: torch.Tensor, points: torch.Tensor, sigma: float
     
     # <p, Kp> = sum over dimensions of p^T K p
     # For 3D: sum of p_x^T K p_x + p_y^T K p_y + p_z^T K p_z
-    norm_sq = 0.0
+    norm_sq: torch.Tensor = torch.tensor(0.0, device=points.device, dtype=points.dtype)
     for d in range(3):
         p_d = momentum[:, d]  # (N,)
         norm_sq = norm_sq + p_d @ K @ p_d
@@ -348,7 +348,7 @@ def visualize_comparison(
         mesh[name] = scalars
         return mesh
     
-    plotter = pv.Plotter(shape=(1, 2), window_size=(1400, 600))
+    plotter = pv.Plotter(shape=(1, 2), window_size=[1400, 600])
     
     # Shape 1
     plotter.subplot(0, 0)
