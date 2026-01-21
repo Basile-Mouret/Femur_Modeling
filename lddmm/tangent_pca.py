@@ -137,6 +137,70 @@ class TangentPCA:
         
         return M_flat @ components_flat.T
     
+    def project(self, shape: np.ndarray) -> np.ndarray:
+        """
+        Project a shape to the PCA coefficient space.
+        
+        First computes the momentum (log map) from atlas to shape,
+        then projects the momentum onto the principal components.
+        
+        Args:
+            shape: (N, 3) shape to project
+            
+        Returns:
+            coefficients: (n_components,) PCA coefficients
+            
+        Raises:
+            RuntimeError: If model is not fitted
+        """
+        if self.atlas is None:
+            raise RuntimeError("Model not fitted. Call fit() first.")
+        
+        # Linearized log map: momentum = shape - atlas
+        momentum = shape - self.atlas
+        
+        # Center and project
+        momentum_centered = momentum - self.mean_momentum
+        momentum_flat = momentum_centered.flatten()
+        
+        components_flat = self.components.reshape(self.n_components, -1)
+        
+        return momentum_flat @ components_flat.T
+    
+    def reconstruct(self, shape: np.ndarray, n_components: Optional[int] = None) -> np.ndarray:
+        """
+        Reconstruct a shape using PCA projection/reconstruction.
+        
+        Projects the shape to the latent space and reconstructs it
+        using the specified number of components.
+        
+        Args:
+            shape: (N, 3) shape to reconstruct
+            n_components: Number of components to use (default: all)
+            
+        Returns:
+            reconstructed: (N, 3) reconstructed shape
+            
+        Raises:
+            RuntimeError: If model is not fitted
+        """
+        if self.atlas is None:
+            raise RuntimeError("Model not fitted. Call fit() first.")
+        
+        if n_components is None:
+            n_components = self.n_components
+        n_components = min(n_components, self.n_components)
+        
+        # Project to get all coefficients
+        coefficients = self.project(shape)
+        
+        # Use only first n_components
+        coefficients_truncated = np.zeros(self.n_components)
+        coefficients_truncated[:n_components] = coefficients[:n_components]
+        
+        # Reconstruct
+        return self.synthesize_shape(coefficients_truncated)
+    
     def inverse_transform(self, coefficients: np.ndarray) -> np.ndarray:
         """
         Reconstruct momenta from coefficients.

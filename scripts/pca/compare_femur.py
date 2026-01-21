@@ -50,7 +50,6 @@ if __name__ == "__main__":
     min_dist = np.min(distances)
     max_dist = np.max(distances)
 
-<<<<<<<< HEAD:scripts/pca/compare_femur.py
     # Compute per-vertex signed error (difference along vector direction)
     signed_error = np.sum((femur_vertices - mean_vertices), axis=1)
     mean_signed = np.mean(signed_error)
@@ -60,13 +59,10 @@ if __name__ == "__main__":
     # If all errors are zero, show the femur with standard lighting using Viewer3D
     if np.allclose(signed_error, 0):
         print("All signed errors are zero. Displaying femur with standard lighting.")
-        from viewer3D import Viewer3D
-========
-    # If all distances are zero, show the femur with standard lighting using Viewer3D
-    if np.allclose(distances, 0):
-        print("All distances are zero. Displaying femur with standard lighting.")
-        from lib.viewer3D import Viewer3D
->>>>>>>> main:scripts/visualization/compare_femur_to_mean.py
+        try:
+            from viewer3D import Viewer3D
+        except ImportError:
+            from lib.viewer3D import Viewer3D
         viewer = Viewer3D(femur_path)
         viewer.run(title="Standard Femur", color="beige", smooth_shading=True, show_edges=False, show_axes=True, show_grid=False, window_size=(1200, 800))
         sys.exit(0)
