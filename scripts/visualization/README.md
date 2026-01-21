@@ -9,7 +9,7 @@ This folder contains scripts to explore and visualize the latent space of the fe
 | latent_explorer.py       | Interactive latent space explorer (sliders)  |
 | view_latent_3d.py        | 3D plot of all training femurs in latent space|
 | project_training_femurs.py | Project all training femurs to latent space |
-| compare_femur_to_mean.py | Compare a femur to the mean (per-vertex diff)|
+| compare_femur.py | Compare 2 femurs (per-vertex diff)|
 | visuFemur.py             | Quick OBJ mesh viewer                        |
 | lib/viewer3D.py          | 3D mesh viewer class (used by other scripts) |
 
@@ -63,7 +63,7 @@ Run all scripts from scripts/visualization/ with the virtual environment activat
   ```
 - Compare femur to mean:
   ```bash
-  ./compare_femur_to_mean.py <mean_femur.obj> <femur.obj>
+  ./compare_femur.py <mean_femur.obj> <femur.obj>
   ```
 - View OBJ mesh:
   ```bash
