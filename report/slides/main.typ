@@ -131,30 +131,80 @@
   )
 
   == Autoencoder structure
-  - Input layer: $54876$ neurons
-  - Encoder: series of fully connected layers reducing dimensionality
-  - Latent space: compressed representation of input data we choose size 10.
-  - Decoder: series of fully connected layers reconstructing the original data
-  - Output layer: reconstructed 3D point cloud
 
+
+#box(width: 100%)[
+  #grid(
+    columns: (auto, auto, auto, auto, auto),
+    align: (center + horizon),
+
+    // 1. Original (Smaller)
+    stack(dir: ttb, spacing: 0.5em,
+      image("../fig/original_L_Femur_11.png", height: 3.5cm),
+      [Original Femur]
+    ),
+
+    // 2. Preprocessing
+    stack(dir: ttb, spacing: 0.5em,
+      $arrow.long$, 
+      text(size: 0.8em)[Preprocessing]
+    ),
+
+    // 3. Network (Big)
+    stack(dir: ttb, spacing: 0.5em,
+      // Increased height to 7cm to make it dominant
+      image("../fig/autoencoder.svg", height: 6cm),
+      [Neural Network]
+    ),
+
+    // 4. Postprocessing
+    stack(dir: ttb, spacing: 0.5em,
+      $arrow.long$,
+      text(size: 0.8em)[Postprocessing]
+    ),
+
+    // 5. Reconstructed (Smaller)
+    stack(dir: ttb, spacing: 0.5em,
+      image("../fig/reconstructed_L_Femur_11.png", height: 3.5cm),
+      [Reconstructed Femur]
+    )
+  )
+]
+  
 ]
 
 
-= Training process
 
 #slide(title: "Training process")[
-  - pb of sigmoid fonction : vanishing gradient
-  - enregistrer le RDN dans un binaire au lieu d'un txt pour gagner en performance et place
-  - normalisation/standardisation des données d'entrée et de sortie
-  - differentes fonctions d'activation
-  - cost function : MSE because of point correspondance
-  - non linear last layer
-  
-  This is the training process slide.
-  == Backpropagation algorithm
 
-  == Choice of loss function
+  = First Model
+    - Layers: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - Activation function : Sigmoid
+    - Loss function : MSE
+    - Preprocessing : MinMax Normalization for each coordinate
+    - Training : 1000 epochs
+  = Problems
+    - Slow to train
+    - Vanishing gradient
+    - Loss distances aren't proportional to femur distance
+    - Boxed output
 ]
+
+#slide(title:"Training Process")[
+  = Solutions
+    - Use a *linear output layer* so the model can take every value
+    - Change the activation function for *Tanh* and *LeakyReLU*
+    - Reduce the layer sizes
+    - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
+  = Latest Models
+    - Layers: {54873, 512, 64, 10, 64, 512, 54873}
+    - Better activation functions: tanh and LeakyReLU
+    - Linear last layer
+    - New Preprocessing
+    - Longer training: 5000 epochs
+]
+
+
 
 = Optimization techniques
 
@@ -196,9 +246,12 @@
 
 == Memory allocation
 #slide(title: "Memory allocation")[
-  Cache allocation
+  = Memory Bandwidth Bottleneck
+   - improve cache locality by switching rows and columns acces (x2 speedup)
+   - Preallocation of variables and Memory optimized functions (MultiplyTranspose) (x4 speedup)
 
-  Performance improvement
+Total :  *8x speedup*, going from 56 seconds to 7 seconds per epoch
+
 ]
 
 = Visualization
