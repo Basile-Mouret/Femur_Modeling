@@ -335,20 +335,19 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 ]
   
 #slide(title: [Multithreading with `std::thread`])[
-1. For *every* parallelizable operation, create a thread
+1. For *every* parallelizable operation, create a thread \
+  --> naive implementation : time spent creating and destroying threads is *larger* than the time saved by parallelization !
 #pause
-2. Create a *fixed* number of threads at the beginning of the function
+2. Create a *fixed* number of threads at the beginning of the function \
+  --> better, but still a lot of thread creation/destruction !
 #image("../fig/btop2_opt.gif")
 
-#pause
-    #grid(
-    columns: (1fr, 1fr, 1fr, 1fr),
-    [
-3. *Thread pool*],[
-#image("../fig/Thread_pool.svg.png", width: 155%)
-])
-
 ]
+#slide(title: [Multithreading with `std::thread`])[
+3. *Thread pool*
+#image("../fig/Thread_pool.svg.png", width: 80%)
+]
+
 #slide(title: "OpenMP Multithreading")[
   - *Automatically* manages thread creation and workload distribution
   - *Simple to implement* (near to sequential code)
