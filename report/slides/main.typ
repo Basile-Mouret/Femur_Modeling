@@ -251,11 +251,11 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
 #slide(title: "Training process")[
 
   = First Model
-    - Layers: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
-    - Activation function : Sigmoid
-    - Loss function : MSE
-    - Preprocessing : MinMax Normalization for each coordinate
-    - Training : 1000 epochs
+    - #underline[*Layers*]: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - #underline[*Activation function*] : Sigmoid
+    - #underline[*Loss function*] : MSE
+    - #underline[*Preprocessing*] : MinMax Normalization for each coordinate
+    - #underline[*Training*] : 1000 epochs
   = Problems
     - Slow to train
     - Vanishing gradient
@@ -270,11 +270,11 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - Reduce the layer sizes
     - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
   = Latest Models
-    - Layers: {54873, 512, 64, 10, 64, 512, 54873}
-    - Better activation functions: tanh and LeakyReLU
-    - Linear last layer
-    - New Preprocessing
-    - Longer training: 5000 epochs
+    - *Layers*: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - *better activation functions*: tanh and LeakyReLU
+    - *Linear* last layer
+    - New *Preprocessing*
+    - Longer *training*: 5000 epochs
 ]
 
 
@@ -308,11 +308,20 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
 
 == Memory allocation
 #slide(title: "Memory allocation")[
-  = Memory Bandwidth Bottleneck
-   - improve cache locality by switching rows and columns acces (x2 speedup)
-   - Preallocation of variables and Memory optimized functions (MultiplyTranspose) (x4 speedup)
+  == Data Oriented Design
+  #grid(
+    columns: (auto, auto),
+    [
+   - improve *cache locality* by switching rows and columns acces (*$times 2$ speedup*)
+   - *Preallocation* of variables and Memory optimized functions (*$times 4$ speedup*)
+],
+    image("../fig/memory_speed.png"),
+    
 
-Total :  *8x speedup*, going from 56 seconds to 7 seconds per epoch
+  )
+
+In total $==>$  *$times 8$ speedup*, going from 58 seconds to 7 seconds per epoch
+
 
 ]
 
