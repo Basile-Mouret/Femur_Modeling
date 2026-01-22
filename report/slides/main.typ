@@ -214,11 +214,10 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
       image("../fig/original_L_Femur_11.png", height:70%),
       [Original Femur]
     ),
-
     // 2. Preprocessing
     stack(dir: ttb, spacing: 0.5em,
       $arrow.long$, 
-      text(size: 0.8em)[Preprocessing]
+      text(size: 0.7em)[Preprocessing]
     ),
 
     // 3. Network (Big)
@@ -227,7 +226,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     // 4. Postprocessing
     stack(dir: ttb, spacing: 0.5em,
       $arrow.long$,
-      text(size: 0.8em)[Postprocessing]
+      text(size: 0.7em)[Postprocessing]
     ),
 
     // 5. Reconstructed (Smaller)
@@ -250,6 +249,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - #underline[*Loss function*] : MSE
     - #underline[*Preprocessing*] : MinMax Normalization for each coordinate
     - #underline[*Training*] : 1000 epochs
+    #pause
   = Problems
     - Slow to train (> 100M parameters $approx$ 500Mb in memory)
     - Vanishing gradient
@@ -263,6 +263,8 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - Change the activation function for *Tanh* and *LeakyReLU*
     - Reduce the layer sizes
     - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
+
+  #pause
   = Latest Models
     - *Layers*: {54873, 512, 32, 10, 32, 512, 54873} $approx 250$Mb
     - *better activation functions*: tanh and LeakyReLU
