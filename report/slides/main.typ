@@ -270,8 +270,10 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 #slide(title: "Linear algebra implementation")[
   == Custom library design
   - Built on top of *Eigen* for efficient internal storage
-  - Template-based classes: `Vector<T>`, `Matrix2D<T>`, `Matrix2DSquare<T>`
+  - Template-based classes
   - Supports multiple numeric types: `float`, `double`, `int`, `long`, etc.
+
+  #pause 
 
   == Main classes
   #grid(
@@ -549,6 +551,6 @@ Since the manifold is curved, we cannot do PCA directly on shapes.
     top + left,
     dx: -2cm,
     dy: -2.5cm,
-    image("../fig/last_slide.gif", width: 125%, height: 125%)
+    image("../fig/last_slide.png", width: 125%, height: 125%)
   )
 ]

@@ -7,11 +7,12 @@ make femur_rdn
 # From scripts/visualization
 python visuFemur.py ../../data/validation/L_Femur_24_DECIM.obj.FINAL.obj
 python compare_femur.py ../../data/mean_femur.obj ../../data/validation/L_Femur_24_DECIM.obj.FINAL.obj
-python scripts/visualization/latent_pca_explorer_pca.py models/NeuralNetwork_centered_tanh_5000.bin mean_femur.obj -n 3 --start-at-mean
+
 
 
 # From main
 python scripts/visualization/latent_pca_explorer_pca.py models/NeuralNetwork_centered_tanh_5000.bin mean_femur.obj -n 3 --start-at-mean
+
 Linear PCA : 
 
 python scripts/pca/pca_explorer.py \
