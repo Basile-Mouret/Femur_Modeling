@@ -51,7 +51,7 @@
 #slide(title: "Data")[
   - 24 scans of femurs
   - 12 left and 12 right
-  - 18097 3D points corresponding to 54292
+  - 18097 3D points corresponding to 54292 parameters
 
   #v(2em)
   #figure(
