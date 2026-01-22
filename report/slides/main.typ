@@ -53,13 +53,6 @@
 ]
 
 
-== Description and goals of the project
-#slide(title: "Description and goals of the project")[
-  - RDN for the non-linearity: from 54873 to 10 neurons to 54873 --> why 10 ?
-  - Implement it from scratch in C++
-]
-
-
 = PCA
 
 #slide(title: "PCA")[
