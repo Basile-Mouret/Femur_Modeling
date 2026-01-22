@@ -8,9 +8,15 @@ make femur_rdn
 python visuFemur.py ../../data/validation/L_Femur_24_DECIM.obj.FINAL.obj
 python compare_femur.py ../../data/mean_femur.obj ../../data/validation/L_Femur_24_DECIM.obj.FINAL.obj
 python latent_explorer.py ../../models/NeuralNetwork_centered_tanh_10000.bin ../../data/mean_femur.obj 
+python scripts/visualization/latent_pca_explorer_pca.py models/NeuralNetwork_centered_tanh_5000.bin mean_femur.obj -n 3 --start-at-mean
 
-# From build
-./../bin/test_train_timing #open btop
 
 # From main
 python scripts/visualization/latent_pca_explorer_pca.py models/NeuralNetwork_centered_tanh_5000.bin mean_femur.obj -n 3 --start-at-mean
+Linear PCA : 
+
+python scripts/pca/pca_explorer.py \
+    --model scripts/pca/model/pca_femur_model.bin \
+    --template data/training/L_Femur_11_DECIM.obj.FINAL.obj \
+    --sliders 5 \
+    --range 3.0
