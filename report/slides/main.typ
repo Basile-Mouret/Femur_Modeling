@@ -37,12 +37,6 @@
 
 //#components.adaptive-columns(outline(title: none))
 
-= Introduction
-#slide(title: "Introduction")[
-== Context
-  
-]
-
 
 
 = Data
@@ -71,6 +65,20 @@
 
 
 = Linear PCA
+
+#slide(title: "Linear PCA : Principle")[
+  #figure(
+  grid(
+    columns: (1fr, 1fr, 1fr, 1fr, 1fr),
+    gutter: 1em, // Space between images
+    image("../fig/pca_start.gif", width: 100%),
+    $-->$,
+    image("../fig/pca_ellipse.gif", width: 100%),
+    image("../fig/pca_full.gif", width: 100%),
+  ),
+ // Optional: remove if no caption needed
+)
+]
 #slide(title: "Linear PCA : Foundation")[
   // Slide 1: Mathematical Foundation
 // Context: We treat each femur as a vector of landmark coordinates.
