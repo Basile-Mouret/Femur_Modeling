@@ -117,16 +117,18 @@
     gutter: 1em,
     [
       - Weights vector $w = (w_1, w_2, dots , w_n)$
-      - Bias term
+      - Bias term $b$
       - Weighted sum function $f(x) = w . x + b$
       - Activation function $Phi$
     ],
     [
-      PLACEHOLDER for Neuron Diagram
+      #align(center)[
+      #image("../fig/Neuron_diagram.png", width: 80%)
+      ]
     ]
   )
   
-  #v(2em)
+  #v(1em)
 
   *Output of a neuron:*
 
@@ -145,7 +147,7 @@
       - Forward propagation
     ],
     [
-      PLACEHOLDER for Neural Network Diagram
+      #image("../fig/NN_Diagram.png", width: 100%)
     ]
   )
 
