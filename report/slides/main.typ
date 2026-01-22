@@ -203,17 +203,15 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     ]
   )
 
-  == Autoencoder structure
-
 
 #box(width: 100%)[
   #grid(
-    columns: (auto, auto, auto, auto, auto),
+    columns: (auto, auto, 19em, auto, auto),
     align: (center + horizon),
 
     // 1. Original (Smaller)
     stack(dir: ttb, spacing: 0.5em,
-      image("../fig/original_L_Femur_11.png", height: 3.5cm),
+      image("../fig/original_L_Femur_11.png", height:70%),
       [Original Femur]
     ),
 
@@ -224,11 +222,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     ),
 
     // 3. Network (Big)
-    stack(dir: ttb, spacing: 0.5em,
-      // Increased height to 7cm to make it dominant
-      image("../fig/autoencoder.svg", height: 6cm),
-      [Neural Network]
-    ),
+    image("../fig/autoencoder.svg", width: 19em),
 
     // 4. Postprocessing
     stack(dir: ttb, spacing: 0.5em,
@@ -238,7 +232,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
 
     // 5. Reconstructed (Smaller)
     stack(dir: ttb, spacing: 0.5em,
-      image("../fig/reconstructed_L_Femur_11.png", height: 3.5cm),
+      image("../fig/reconstructed_L_Femur_11.png", height:65%),
       [Reconstructed Femur]
     )
   )
@@ -257,7 +251,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - #underline[*Preprocessing*] : MinMax Normalization for each coordinate
     - #underline[*Training*] : 1000 epochs
   = Problems
-    - Slow to train
+    - Slow to train (> 100M parameters $approx$ 500Mb in memory)
     - Vanishing gradient
     - Loss distances aren't proportional to femur distance
     - Boxed output
@@ -270,7 +264,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - Reduce the layer sizes
     - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
   = Latest Models
-    - *Layers*: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - *Layers*: {54873, 512, 32, 10, 32, 512, 54873} $approx 250$Mb
     - *better activation functions*: tanh and LeakyReLU
     - *Linear* last layer
     - New *Preprocessing*
