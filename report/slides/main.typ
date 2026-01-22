@@ -42,11 +42,11 @@
 == Context
   - Clustering
   - Shape analysis
-  - ... Malik TODO
 
-== Objectives
+== Methods
 - Linear PCA
 - Non-linear Neural Network
+- Medical applications
 ]
 
 
@@ -77,8 +77,51 @@
 
 
 = Linear PCA
-#slide(title: "Linear PCA")[
-  Quick explanation of PCA
+#slide(title: "Linear PCA : Foundation")[
+  // Slide 1: Mathematical Foundation
+// Context: We treat each femur as a vector of landmark coordinates.
+
+
+#v(1em)
+*1. Data Representation*
+We consider a set of $24$ femurs. Each femur $i$ is described by $P$ corresponding points (landmarks) in 3D.
+We represent each shape as a vector $x_i in RR^(3P)$ :
+$ x_i = (x_1, y_1, z_1, dots, x_P, y_P, z_P)^top $
+
+*2. Centering & Covariance*
+We compute the *Mean Femur* $bar(x)$ and the sample covariance matrix $S$:
+$ bar(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - bar(x)) (x_i - bar(x))^top $
+]
+
+#slide(title: "Linear PCA : Eigendecomposition")[
+  // Slide 2: Eigen decomposition and Principal Components
+*3. Eigendecomposition*
+PCA diagonalizes the covariance matrix to find the principal directions:
+$ S v_k = lambda_k v_k $
+- The *eigenvectors* $v_k$ are the *Principal Components* (directions of variance).
+- The *eigenvalues* $lambda_k$ represent the variance captured by component $k$.
+#v(1em)
+
+
+]
+
+#slide(title: "Linear PCA Interpretation: Modes of Variation")[
+
+*Generative Model*
+Any femur instance $x$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
+
+$ x approx bar(x) + sum_(k=1)^K omega_k v_k $
+
+- $bar(x)$: The average femur geometry.
+- $v_k$: The $k$-th *Mode of Variation* (a deformation vector field).
+- $omega_k$: The *score* (weight) specific to this individual.
+
+*Visualizing the Modes*
+To understand what a Principal Component represents physically, we visualize the mean shape deformed along the eigenvector direction:
+
+$ x_"mode" = bar(x) plus.minus 3 sqrt(lambda_k) v_k $
+
+
 ]
 
 = Linear algebra implementation
