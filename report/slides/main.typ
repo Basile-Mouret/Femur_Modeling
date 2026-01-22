@@ -40,13 +40,7 @@
 = Introduction
 #slide(title: "Introduction")[
 == Context
-  - Clustering
-  - Shape analysis
-  - ... Malik TODO
-
-== Objectives
-- Linear PCA
-- Non-linear Neural Network
+  
 ]
 
 
@@ -77,10 +71,65 @@
 
 
 = Linear PCA
-#slide(title: "Linear PCA")[
-  Quick explanation of PCA
+#slide(title: "Linear PCA : Foundation")[
+  // Slide 1: Mathematical Foundation
+// Context: We treat each femur as a vector of landmark coordinates.
+
+
+#v(1em)
+*1. Data Representation*
+We consider a set of $24$ femurs. Each femur $i$ is described by $P$ corresponding points (landmarks) in 3D.
+We represent each shape as a vector $x_i in RR^(3P)$ :
+$ x_i = (x_1, y_1, z_1, dots, x_P, y_P, z_P)^top $
+
+*2. Centering & Covariance*
+We compute the *Mean Femur* $macron(x)$ and the sample covariance matrix $S$:
+$ macron(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - macron(x)) (x_i - macron(x))^top $
 ]
 
+#slide(title: "Linear PCA : Eigendecomposition")[
+  // Slide 2: Eigen decomposition and Principal Components
+*3. Eigendecomposition*
+PCA diagonalizes the covariance matrix to find the principal directions:
+$ S v_k = lambda_k v_k $
+- The *eigenvectors* $v_k$ are the *Principal Components* (directions of variance).
+- The *eigenvalues* $lambda_k$ represent the variance captured by component $k$.
+#v(1em)
+
+
+]
+
+#slide(title: "Linear PCA Interpretation: Modes of Variation")[
+
+*Generative Model*
+Any femur instance $x$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
+
+$ x approx macron(x) + sum_(k=1)^K omega_k v_k $
+
+- $macron(x)$: The average femur geometry.
+- $v_k$: The $k$-th *Mode of Variation* (a deformation vector field).
+- $omega_k$: The *score* (weight) specific to this individual.
+
+*Visualizing the Modes*
+To understand what a Principal Component represents physically, we visualize the mean shape deformed along the eigenvector direction:
+
+$ x_"mode" = macron(x) plus.minus 3 sqrt(lambda_k) v_k $
+
+]
+
+#slide(title: "Linear PCA : Results and Limitations")[
+  *1. Assumption of Linearity*
+PCA assumes that the shape space is flat (a linear subspace).
+- *Issue:* Biological deformations can be non-linear (e.g., complex twisting or bending).
+
+*2. Gaussian Distribution Assumption*
+PCA relies entirely on the mean vector and covariance matrix (2nd order statistics).
+- *Issue:* It implicitly describes the data as a single multivariate Gaussian "cloud".
+
+*3. Global Support (Lack of Locality)*
+Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all* points simultaneously.
+- *Issue:* It is difficult to isolate *local* variations.
+]
 = Linear algebra implementation
 
 #slide(title: "Linear algebra implementation")[
@@ -155,30 +204,80 @@
   )
 
   == Autoencoder structure
-  - Input layer: $54876$ neurons
-  - Encoder: series of fully connected layers reducing dimensionality
-  - Latent space: compressed representation of input data with 10 neurons
-  - Decoder: series of fully connected layers reconstructing the original data
-  - Output layer: reconstructed 3D point cloud
 
+
+#box(width: 100%)[
+  #grid(
+    columns: (auto, auto, auto, auto, auto),
+    align: (center + horizon),
+
+    // 1. Original (Smaller)
+    stack(dir: ttb, spacing: 0.5em,
+      image("../fig/original_L_Femur_11.png", height: 3.5cm),
+      [Original Femur]
+    ),
+
+    // 2. Preprocessing
+    stack(dir: ttb, spacing: 0.5em,
+      $arrow.long$, 
+      text(size: 0.8em)[Preprocessing]
+    ),
+
+    // 3. Network (Big)
+    stack(dir: ttb, spacing: 0.5em,
+      // Increased height to 7cm to make it dominant
+      image("../fig/autoencoder.svg", height: 6cm),
+      [Neural Network]
+    ),
+
+    // 4. Postprocessing
+    stack(dir: ttb, spacing: 0.5em,
+      $arrow.long$,
+      text(size: 0.8em)[Postprocessing]
+    ),
+
+    // 5. Reconstructed (Smaller)
+    stack(dir: ttb, spacing: 0.5em,
+      image("../fig/reconstructed_L_Femur_11.png", height: 3.5cm),
+      [Reconstructed Femur]
+    )
+  )
+]
+  
 ]
 
 
-= Training process
 
 #slide(title: "Training process")[
-  - pb of sigmoid fonction : vanishing gradient
-  - enregistrer le RDN dans un binaire au lieu d'un txt pour gagner en performance et place
-  - normalisation/standardisation des données d'entrée et de sortie
-  - differentes fonctions d'activation
-  - cost function : MSE because of point correspondance
-  - non linear last layer
-  
-  This is the training process slide.
-  == Backpropagation algorithm
 
-  == Choice of loss function
+  = First Model
+    - Layers: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - Activation function : Sigmoid
+    - Loss function : MSE
+    - Preprocessing : MinMax Normalization for each coordinate
+    - Training : 1000 epochs
+  = Problems
+    - Slow to train
+    - Vanishing gradient
+    - Loss distances aren't proportional to femur distance
+    - Boxed output
 ]
+
+#slide(title:"Training Process")[
+  = Solutions
+    - Use a *linear output layer* so the model can take every value
+    - Change the activation function for *Tanh* and *LeakyReLU*
+    - Reduce the layer sizes
+    - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
+  = Latest Models
+    - Layers: {54873, 512, 64, 10, 64, 512, 54873}
+    - Better activation functions: tanh and LeakyReLU
+    - Linear last layer
+    - New Preprocessing
+    - Longer training: 5000 epochs
+]
+
+
 
 = Optimization techniques
 
@@ -209,9 +308,12 @@
 
 == Memory allocation
 #slide(title: "Memory allocation")[
-  Cache allocation
+  = Memory Bandwidth Bottleneck
+   - improve cache locality by switching rows and columns acces (x2 speedup)
+   - Preallocation of variables and Memory optimized functions (MultiplyTranspose) (x4 speedup)
 
-  Performance improvement
+Total :  *8x speedup*, going from 56 seconds to 7 seconds per epoch
+
 ]
 
 = First Visualization
@@ -278,6 +380,80 @@
   - Change the architecture : Variational Autoencoder (VAE)
 ]
 
+= LDDMM : Riemannian geometry to the rescue
+
+#slide(title: "Principles of LDDMMM")[
+
+  *The Core Idea*
+Instead of treating femurs as vectors in a flat space (Linear PCA), we treat them as points on a curved, nonlinear *Riemannian manifold*.
+
+*Why?*
+- *Linear operations* (adding shapes) can break anatomy (self-intersections).
+- *Diffeomorphisms* (smooth, invertible deformations) preserve topology.
+
+*The Framework*
+We analyze the "deformation" required to morph a source shape $S$ into a target $T$.
+- The "size" of this deformation is measured by a geodesic distance.
+- Statistics are computed on these deformations, not on the point coordinates directly.
+
+]
+
+#slide(title:"LDDMM : Equipping the shape space with a Riemannian metric")[
+We define a distance between shapes based on the *energy* required to deform one into the other.
+
+*Diffeomorphisms Group*
+We consider the group of diffeomorphisms $phi in "Diff" Omega)$
+
+The cost of a deformation is determined by the *velocity field* $v_t$ that generates it. We define a norm on velocity fields using a differential operator $L$ (enforcing smoothness):
+
+$ norm(V)^2 = integral_Omega |L v(x)|^2 d x $
+
+The higher the energy, the larger the deformation.
+
+]
+
+
+
+#slide(title:"LDDMM Algorithm" )[
+*1. Flow Equation (Generating Deformations)*
+A deformation $phi_1$ is generated by integrating a time-dependent velocity field $v_t$ over $t \in [0, 1]$:
+$ d phi/ ( d t) = v_t compose phi_t $
+
+*2. Energy Minimization (Geodesic Shooting)*
+We find the optimal flow $v_t$ that minimizes:
+It is uniquely determined by its **Initial Momentum** $m_0$.
+
+]
+
+#slide(title: "LDDMM for SSI")[
+  *1. Atlas Building (The Mean)*
+We compute the "Mean Femur" (Atlas $macron(S)$) as the shape that minimizes the sum of squared geodesic distances to all subjects in the population (Fréchet Mean).
+
+*2. Tangent Space PCA*
+Since the manifold is curved, we cannot do PCA directly on shapes.
+- We map all subjects $S_i$ to the *Tangent Space* of the Atlas (via the initial momenta $m_0^i$).
+- The Tangent Space is a vector space (linear).
+- We perform *PCA on the momenta*
+
+*Output:* Principal Geodesic Analysis (PGA). The "modes" are trajectories of deformation applied to the mean shape.
+
+]
+
+#slide(title: "Comparison with Linear PCA")[
+
+#table(
+  columns: (1fr, 1fr, 1fr),
+  inset: 10pt,
+  align: horizon,
+  [*Feature*], [*Linear PCA*], [*LDDMM (Tangent PCA)*],
+  [**Geometry**], [Flat (Euclidean)], [Curved (Riemannian)],
+  [**Deformation**], [Displacement vectors], [Diffeomorphic Flow],
+  [**Topology** preservation], [Not guaranteed (folding risk)], [Preserved (anatomical)],
+  [**Interpolation**], [Straight lines], [Geodesic curves],
+  [**Cost**], [Fast], [Computationally intensive]
+)
+]
+)
 #focus-slide()[
   Thank you for your attention !
 ]

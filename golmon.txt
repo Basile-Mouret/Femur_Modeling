@@ -1,0 +1,164 @@
+// Slide 1: Mathematical Foundation
+// Context: We treat each femur as a vector of landmark coordinates.
+
+= Linear PCA: Mathematical Foundation
+
+#v(1em)
+*1. Data Representation*
+We consider a set of $N$ femurs. Each femur $i$ is described by $P$ corresponding points (landmarks) in 3D.
+We represent each shape as a vector $x_i in RR^(3P)$ :
+$ x_i = (x_1, y_1, z_1, dots, x_P, y_P, z_P)^top $
+
+*2. Centering & Covariance*
+We compute the *Mean Femur* $bar(x)$ and the sample covariance matrix $S$:
+$ bar(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - bar(x)) (x_i - bar(x))^top $
+
+*3. Eigendecomposition*
+PCA diagonalizes the covariance matrix to find the principal directions:
+$ S v_k = lambda_k v_k $
+- The *eigenvectors* $v_k$ are the *Principal Components* (directions of variance).
+- The *eigenvalues* $lambda_k$ represent the variance captured by component $k$.
+#v(1em)
+_Note: We assume the femurs are already aligned (Procrustes Analysis) to remove rotation and translation._
+
+---
+
+// Slide 2: Interpretation
+// Context: Explaining how eigenvectors translate to biological deformations.
+
+= Interpretation: Modes of Variation
+
+*Generative Model*
+Any femur instance $x$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
+
+$ x approx bar(x) + sum_(k=1)^K omega_k v_k $
+
+- $bar(x)$: The average femur geometry.
+- $v_k$: The $k$-th *Mode of Variation* (a deformation vector field).
+- $omega_k$: The *score* (weight) specific to this individual.
+
+*Visualizing the Modes*
+To understand what a Principal Component represents physically, we visualize the mean shape deformed along the eigenvector direction:
+
+$ x_"mode" = bar(x) plus.minus 3 sqrt(lambda_k) v_k $
+
+*Femur Context examples:*
+- *PC1* often captures *Scale / Size* (if not removed during alignment) or overall *Length*.
+- *PC2/PC3* might capture *Shaft Curvature*, *Neck-Shaft Angle*, or *Condyle Width*.
+
+
+
+
+
+
+// Slide 3: Limitations of Linear PCA
+
+= Limitations of the Model
+
+*1. Assumption of Linearity*
+PCA assumes that the shape space is flat (a linear subspace).
+- *Issue:* Biological deformations can be non-linear (e.g., complex twisting or bending).
+- *Consequence:* Linear interpolation between valid shapes might produce *anatomically implausible* intermediate shapes (e.g., the "mean" of a bent knee and a straight knee might look like a shorter, thicker knee rather than an intermediate angle).
+
+*2. Gaussian Distribution Assumption*
+PCA relies entirely on the mean vector and covariance matrix (2nd order statistics).
+- *Issue:* It implicitly describes the data as a single multivariate Gaussian "cloud".
+- *Consequence:* It cannot model multi-modal distributions. If your dataset contains distinct clusters (e.g., pathological vs. healthy, or pediatric vs. adult), PCA will smear them into one average continuum.
+
+*3. Global Support (Lack of Locality)*
+Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all* points simultaneously.
+- *Issue:* It is difficult to isolate *local* variations.
+- *Consequence:* A mode describing "femoral head diameter" might also slightly modify the distal condyles just because of spurious correlations in the dataset.
+
+*4. High Dimension, Low Sample Size (HDLSS)*
+Medical datasets often have $N \ll 3P$ (e.g., 50 femurs, 10,000 points).
+- *Issue:* The sample covariance matrix is rank-deficient.
+- *Consequence:* We can only estimate $N-1$ modes. The results can be unstable and prone to overfitting the specific training set (poor generalization to new patients).
+
+
+
+
+
+
+// Slide 1: Global Principle
+= LDDMM: Global Principle
+
+*The Core Idea*
+Instead of treating femurs as vectors in a flat space (Linear PCA), we treat them as points on a curved, nonlinear *Riemannian manifold*.
+
+*Why?*
+- *Linear operations* (adding shapes) can break anatomy (self-intersections).
+- *Diffeomorphisms* (smooth, invertible deformations) preserve topology.
+
+*The Framework*
+We analyze the "deformation" required to morph a source shape $S$ into a target $T$.
+- The "size" of this deformation is measured by a geodesic distance.
+- Statistics are computed on these deformations, not on the point coordinates directly.
+
+---
+
+// Slide 2: The Riemannian Metric
+= The Metric on Shape Space
+
+We define a distance between shapes based on the *energy* required to deform one into the other.
+
+*Diffeomorphisms Group*
+We consider the group of diffeomorphisms $\phi \in \text{Diff}(\Omega)$.
+
+*Right-Invariant Metric*
+The cost of a deformation is determined by the *velocity field* $v_t$ that generates it. We define a norm on velocity fields using a differential operator $L$ (enforcing smoothness):
+
+$ \|v\|_V^2 = \int_\Omega \|L v(x)\|^2 dx $
+
+- High energy $\to$ "Rough" or extreme deformation.
+- Low energy $\to$ Smooth, physically plausible deformation.
+
+---
+
+// Slide 3: The LDDMM Algorithm
+= The LDDMM Algorithm
+
+*1. Flow Equation (Generating Deformations)*
+A deformation $\phi_1$ is generated by integrating a time-dependent velocity field $v_t$ over $t \in [0, 1]$:
+$ \frac{d\phi_t}{dt} = v_t \circ \phi_t $
+
+*2. Energy Minimization (Geodesic Shooting)*
+We find the optimal flow $v_t$ that minimizes:
+$ E(v) = \underbrace{\int_0^1 \|v_t\|_V^2 dt}_{\text{Regularity}} + \frac{1}{\sigma^2} \underbrace{\sum_{i=1}^N \|\phi_1(S_i) - T_i\|^2}_{\text{Point Cloud Matching}} $
+
+*Result:* The optimal path is a *Geodesic*. It is uniquely determined by its **Initial Momentum** $m_0$ (velocity dual).
+
+---
+
+// Slide 4: Statistical Shape Analysis (SSM)
+= LDDMM for Statistical Analysis
+
+*1. Atlas Building (The Mean)*
+We compute the "Mean Femur" (Atlas $\bar{S}$) as the shape that minimizes the sum of squared geodesic distances to all subjects in the population (Fréchet Mean).
+
+*2. Tangent Space PCA*
+Since the manifold is curved, we cannot do PCA directly on shapes.
+- We map all subjects $S_i$ to the **Tangent Space** of the Atlas (via the initial momenta $m_0^i$).
+- The Tangent Space is a vector space (linear).
+- We perform **PCA on the momenta** $\{m_0^i\}$.
+
+*Output:* Principal Geodesic Analysis (PGA). The "modes" are trajectories of deformation applied to the mean shape.
+
+---
+
+// Slide 5: Comparison
+= Comparison: LDDMM vs. Linear PCA
+
+#table(
+  columns: (1fr, 1fr, 1fr),
+  inset: 10pt,
+  align: horizon,
+  [*Feature*], [*Linear PCA*], [*LDDMM (Tangent PCA)*],
+  [**Geometry**], [Flat (Euclidean)], [Curved (Riemannian)],
+  [**Deformation**], [Displacement vectors], [Diffeomorphic Flow],
+  [**Topology**], [Not guaranteed (folding risk)], [Preserved (anatomical)],
+  [**Interpolation**], [Straight lines], [Geodesic curves],
+  [**Cost**], [Fast], [Computationally intensive]
+)
+
+*Conclusion:* LDDMM provides a mathematically rigorous and anatomically valid framework, essential for large deformations, at the cost of higher computational complexity.
