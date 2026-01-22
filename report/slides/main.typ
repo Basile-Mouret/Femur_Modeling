@@ -463,13 +463,13 @@ Since the manifold is curved, we cannot do PCA directly on shapes.
 )
 ]
 )
-#focus-slide()[
-  Thank you for your attention !
+
+#slide[
+  // Lien canva: https://www.canva.com/design/DAG_JSW4-ug/irIZxhoOdvJ4ilOG2dz6YQ/edit
+  #place(
+    top + left,
+    dx: -2cm,
+    dy: -2.5cm,
+    image("../fig/last_slide.gif", width: 125%, height: 125%)
+  )
 ]
-
-// #show: appendix
-
-// = References
-// #slide(title: "References")[
-//   #bibliography("../bibliography.bib", title: none)
-// ]
