@@ -89,8 +89,8 @@ We represent each shape as a vector $x_i in RR^(3P)$ :
 $ x_i = (x_1, y_1, z_1, dots, x_P, y_P, z_P)^top $
 
 *2. Centering & Covariance*
-We compute the *Mean Femur* $bar(x)$ and the sample covariance matrix $S$:
-$ bar(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - bar(x)) (x_i - bar(x))^top $
+We compute the *Mean Femur* $macron(x)$ and the sample covariance matrix $S$:
+$ macron(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - macron(x)) (x_i - macron(x))^top $
 ]
 
 #slide(title: "Linear PCA : Eigendecomposition")[
@@ -110,20 +110,32 @@ $ S v_k = lambda_k v_k $
 *Generative Model*
 Any femur instance $x$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
 
-$ x approx bar(x) + sum_(k=1)^K omega_k v_k $
+$ x approx macron(x) + sum_(k=1)^K omega_k v_k $
 
-- $bar(x)$: The average femur geometry.
+- $macron(x)$: The average femur geometry.
 - $v_k$: The $k$-th *Mode of Variation* (a deformation vector field).
 - $omega_k$: The *score* (weight) specific to this individual.
 
 *Visualizing the Modes*
 To understand what a Principal Component represents physically, we visualize the mean shape deformed along the eigenvector direction:
 
-$ x_"mode" = bar(x) plus.minus 3 sqrt(lambda_k) v_k $
-
+$ x_"mode" = macron(x) plus.minus 3 sqrt(lambda_k) v_k $
 
 ]
 
+#slide(title: "Linear PCA : Results and Limitations")[
+  *1. Assumption of Linearity*
+PCA assumes that the shape space is flat (a linear subspace).
+- *Issue:* Biological deformations can be non-linear (e.g., complex twisting or bending).
+
+*2. Gaussian Distribution Assumption*
+PCA relies entirely on the mean vector and covariance matrix (2nd order statistics).
+- *Issue:* It implicitly describes the data as a single multivariate Gaussian "cloud".
+
+*3. Global Support (Lack of Locality)*
+Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all* points simultaneously.
+- *Issue:* It is difficult to isolate *local* variations.
+]
 = Linear algebra implementation
 
 #slide(title: "Linear algebra implementation")[
