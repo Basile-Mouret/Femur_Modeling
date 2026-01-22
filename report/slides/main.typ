@@ -39,18 +39,37 @@
 
 = Introduction
 
-== Context
 #slide(title: "Context")[
   - Clustering
   - Shape analysis
   - ... Malik TODO
 ]
 
-== Data description
-#slide(title: "Data description")[
-  - use the `visuFemur.py` to show some femur meshes: the femur, the grid (triangle mesh), ... (there is different parameters in the script to show or hide some elements)
-  - how we obtained the data ?
+
+
+= Data
+#slide(title: "Data")[
+  - 24 scans of femurs
+  - 12 left and 12 right
+  - 18097 3D points corresponding to 54292
+
+  #v(2em)
+  #figure(
+    grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      [
+        #image("../fig/femur_3D.png", width: 70%)
+      ],
+      [
+        #image("../fig/femur_3D_edges.png", width: 66%)
+      ]
+    ),
+    
+    caption: [Example of a femur mesh],
+  ) <femur_pointcloud>
 ]
+
 
 
 = PCA
@@ -219,16 +238,33 @@
 = PCA on the latent space
 
 #slide(title: "PCA on the latent space")[
+  Using the latent space we plot the data in 3D using only 3 components.
 
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 1em,
-    [
-      #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_tanh_5000.png", width: 100%)
-    ],
-    [
-      #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_LReLU.png", width: 100%)
-    ]
+#v(1em)
+
+#figure(
+  image("../fig/latent_space_plane_comparison.pdf", width: 60%),
+  caption: [Latent space visualization in 3D
+  
+  We remark that the data seems organized in a plane.
+  ]
+)
+]
+
+
+#slide(title: "PCA on the latent space")[
+  #figure(
+    grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      [
+        #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_tanh_5000.png", width: 100%)
+      ],
+      [
+        #image("../fig/pca_cumulative_variance_NeuralNetwork_centered_LReLU.png", width: 100%)
+      ]
+    ),
+    caption: [Cumulative variance with PCA on the latent space.]
   )
 
 
