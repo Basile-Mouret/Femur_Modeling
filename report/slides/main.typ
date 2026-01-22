@@ -336,16 +336,21 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 1. For *every* parallelizable operation, create a thread
 #pause
 2. Create a *fixed* number of threads at the beginning of the function
-#pause
 #image("../fig/btop2_opt.gif")
+
 #pause
-3. *Thread pool*
+    #grid(
+    columns: (1fr, 1fr, 1fr, 1fr),
+    [
+3. *Thread pool*],[
+#image("../fig/Thread_pool.svg.png", width: 155%)
+])
+
 ]
 #slide(title: "OpenMP Multithreading")[
   - *Automatically* manages thread creation and workload distribution
-  #pause
-    - *Simple to implement* (near to sequential code)
-#pause
+  - *Simple to implement* (near to sequential code)
+
 ```cpp
 omp_set_num_threads(omp_get_max_threads());
 #pragma omp parallel for
@@ -364,7 +369,11 @@ return result;
 
 ]
 #slide(title: "Performance Graph")[
-  #image("../fig/perf_multithreading.png", width: 100%)
+#align(center)[
+  #image("../fig/perf_multithreading.png", width: 82%)
+  - Treshold parameter = number of parameters in the weitght matrix above which we use multithreading.
+
+]
 
 ]
 
@@ -390,14 +399,23 @@ return result;
 = First Visualization
 
 #slide(title: "First visualizations")[
+  #grid(
+    columns: (1fr, 1fr, 1fr),
+    gutter: 1em,
+    [
   == `visuFemur.py`
-PLACEHOLDER image
+  #image("../fig/bone_visu.png", width: 100%)
+  #pause
+],[
   == `compare_femur.py`
-PLACEHOLDER image
 
+  #image("../fig/heat_map.png", width: 100%)
+  #pause
+],[
   == `latent_explorer.py`
-PLACEHOLDER image
-
+#image("../fig/10sliders.jpeg", width: 150%)
+]
+  )
 ]
 
 
@@ -434,12 +452,13 @@ PLACEHOLDER image
   )
 ]
 
-= Possible ameliorations and applications
-#slide(title: "Possible ameliorations and applications")[
-== Conclusion
+= Results and limitations
+#slide(title: "Results and limitations")[
+== Results
   - Neural Network captured *components* of the dataset
   - It can be used to *generate* visually plausible femurs
   - PCA on the latent space shows that the data is organized in a *subspace* of lower dimension
+#pause
 
 == Future work
   - *Augment* dataset using PCA
