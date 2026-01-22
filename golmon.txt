@@ -45,3 +45,32 @@ $ x_"mode" = bar(x) plus.minus 3 sqrt(lambda_k) v_k $
 *Femur Context examples:*
 - *PC1* often captures *Scale / Size* (if not removed during alignment) or overall *Length*.
 - *PC2/PC3* might capture *Shaft Curvature*, *Neck-Shaft Angle*, or *Condyle Width*.
+
+
+
+
+
+
+// Slide 3: Limitations of Linear PCA
+
+= Limitations of the Model
+
+*1. Assumption of Linearity*
+PCA assumes that the shape space is flat (a linear subspace).
+- *Issue:* Biological deformations can be non-linear (e.g., complex twisting or bending).
+- *Consequence:* Linear interpolation between valid shapes might produce *anatomically implausible* intermediate shapes (e.g., the "mean" of a bent knee and a straight knee might look like a shorter, thicker knee rather than an intermediate angle).
+
+*2. Gaussian Distribution Assumption*
+PCA relies entirely on the mean vector and covariance matrix (2nd order statistics).
+- *Issue:* It implicitly describes the data as a single multivariate Gaussian "cloud".
+- *Consequence:* It cannot model multi-modal distributions. If your dataset contains distinct clusters (e.g., pathological vs. healthy, or pediatric vs. adult), PCA will smear them into one average continuum.
+
+*3. Global Support (Lack of Locality)*
+Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all* points simultaneously.
+- *Issue:* It is difficult to isolate *local* variations.
+- *Consequence:* A mode describing "femoral head diameter" might also slightly modify the distal condyles just because of spurious correlations in the dataset.
+
+*4. High Dimension, Low Sample Size (HDLSS)*
+Medical datasets often have $N \ll 3P$ (e.g., 50 femurs, 10,000 points).
+- *Issue:* The sample covariance matrix is rank-deficient.
+- *Consequence:* We can only estimate $N-1$ modes. The results can be unstable and prone to overfitting the specific training set (poor generalization to new patients).
