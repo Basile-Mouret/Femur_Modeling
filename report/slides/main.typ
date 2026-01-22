@@ -72,10 +72,10 @@
     columns: (auto, auto, auto, auto),
     align: (center + horizon),  
     gutter: 1em, // Space between images
-    image("../placeholder/placeholder_pca.png", width: 110%),
+    image("../fig/pca_start.gif", width: 110%),
     pause,
     $-->_("Ellipsoid fit")$,
-    image("../placeholder/placeholder_pca.png", width: 110%),
+    image("../fig/pca_ellipse.gif", width: 110%),
   ),
  // Optional: remove if no caption needed
 )
@@ -87,10 +87,10 @@
     columns: (auto, auto, auto, auto),
     align: (center + horizon),  
     gutter: 1em, // Space between images
-    image("../placeholder/placeholder_pca.png", width: 110%),
+    image("../fig/pca_ellipse.gif", width: 110%),
     pause,
     $-->_("Eigendecomposition")$,
-    image("../placeholder/placeholder_pca.png", width: 110%),
+    image("../fig/pca_full.gif", width: 110%),
   ),
 )
 ]
@@ -101,7 +101,7 @@
 - Luckily for us, the femur data originates from all types of individuals which averages out the cluster effect.
 
   #figure(
-    image("../placeholder/placeholder_pca.png", width: auto, height: 50%),
+    image("../fig/pca_cluster.gif", width: auto, height: 50%),
     caption: [PCA is unadapted to datasets with highly clustered structure],
   ) <fimg-label>
 ]
