@@ -61,10 +61,10 @@ COMPONENT_ANATOMY = {
         "significance": "high",
     },
     3: {
-        "name": "Femoral Torsion",
+        "name": "Global Femoral Torsion + Width",
         "short": "Torsion",
         "parens": "mixed",
-        "description": "Rotational alignment (anteversion) combined with condylar width",
+        "description": "Rotational alignment (anteversion) on both proximal and distal ends, combined with condylar width",
         "clinical": "Hip arthroplasty planning, gait mechanics, patellofemoral tracking",
         "finding_pos": "Increased femoral anteversion with wider condyles",
         "finding_neg": "Decreased femoral anteversion (retroversion) with narrower condyles",
@@ -81,32 +81,34 @@ COMPONENT_ANATOMY = {
         "significance": "low",  # Noisy component
     },
     5: {
-        "name": "Condyle Tilt",
-        "short": "Cond. Tilt",
-        "parens": "",
-        "description": "Angulation of the distal condyles (knee articulation surface)",
-        "clinical": "Knee alignment, TKA component positioning, patellofemoral tracking",
-        "finding_magnitude": "Atypical distal condyle angulation",  # Magnitude matters
-        "significance": "medium",
+        "name": "Global Shape and Size",
+        "short": "Global Shape and Size",
+        "parens": "mixed/noisy",
+        "description": "Mixed variation in and overall size and geoemtry",
+        "clinical": "Non significant clinically",
+        "finding_magnitude": "Atypical global geometry and size",  # Magnitude matters
+        "significance": "low",
     },
     6: {
-        "name": "Neck Length",
-        "short": "Neck",
-        "parens": "mixed",
-        "description": "Femoral neck length and offset variation",
-        "clinical": "Hip replacement offset selection, leg length, abductor mechanics",
-        "finding_pos": "Longer femoral neck with increased offset",
-        "finding_neg": "Shorter femoral neck with reduced offset",
+        "name": "Proximal Femoral Version ",
+        "short": "Proximal Femoral Version",
+        "parens": "",
+        "description": "Angulation of the femoral head (hip articulation surface)",
+        "clinical": "Hip alignment, hip arthroplasty planning, gait mechanics",
+        "finding_pos": "Proximal Femoral Anteversion",
+        "finding_neg": "Proximal Femoral Retroversion",
         "significance": "medium",
     },
     7: {
-        "name": "Distal Detail",
-        "short": "Distal",
-        "parens": "subtle",
-        "description": "Subtle distal femur shape variations",
-        "clinical": "Minor condyle morphology differences",
-        "finding_magnitude": "Minor distal morphology variation",
-        "significance": "low",  # Likely noise at 0.7% variance
+        "name": "Femoral Neck Length",
+        "short": "Femoral Neck Length",
+        "parens": "",
+        "description": "Variation in femoral neck length and head offset",
+        "clinical": "Lever arm for the Hip, Risk of Impingement",
+        "finding_pos": "Shorter Femoral Neck Length",
+        "finding_neg": "Longer Femoral Neck Length",
+        "finding_magnitude": "Atypical femoral neck length",  # When direction less important
+        "significance": "medium",  # Likely noise at 0.7% variance
     },
 }
 
