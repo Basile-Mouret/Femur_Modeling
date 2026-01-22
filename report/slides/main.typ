@@ -355,7 +355,7 @@ return result;
 ```
 
 
-
+]
 ]
 #slide(title: "Performance Graph")[
   #image("../fig/perf_multithreading.png", width: 100%)
