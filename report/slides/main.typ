@@ -197,17 +197,15 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 #slide(title: "Neural network")[
  
 
-  == Autoencoder structure
-
 
 #box(width: 100%)[
   #grid(
-    columns: (auto, auto, auto, auto, auto),
+    columns: (auto, auto, 19em, auto, auto),
     align: (center + horizon),
 
     // 1. Original (Smaller)
     stack(dir: ttb, spacing: 0.5em,
-      image("../fig/original_L_Femur_11.png", height: 3.5cm),
+      image("../fig/original_L_Femur_11.png", height:70%),
       [Original Femur]
     ),
 
@@ -218,11 +216,7 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
     ),
 
     // 3. Network (Big)
-    stack(dir: ttb, spacing: 0.5em,
-      // Increased height to 7cm to make it dominant
-      image("../fig/autoencoder.svg", height: 6cm),
-      [Neural Network]
-    ),
+    image("../fig/autoencoder.svg", width: 19em),
 
     // 4. Postprocessing
     stack(dir: ttb, spacing: 0.5em,
@@ -232,7 +226,7 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 
     // 5. Reconstructed (Smaller)
     stack(dir: ttb, spacing: 0.5em,
-      image("../fig/reconstructed_L_Femur_11.png", height: 3.5cm),
+      image("../fig/reconstructed_L_Femur_11.png", height:65%),
       [Reconstructed Femur]
     )
   )
@@ -245,13 +239,14 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 #slide(title: "Training process")[
 
   = First Model
-    - #underline[*Layers*]: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - #underline[*Layers*]: {54873, 1024, 256, 32, *10*, 32, 256, 1024, 54873}
     - #underline[*Activation function*] : Sigmoid
     - #underline[*Loss function*] : MSE
     - #underline[*Preprocessing*] : MinMax Normalization for each coordinate
     - #underline[*Training*] : 1000 epochs
+  #pause
   = Problems
-    - Slow to train
+    - Slow to train (> 100M parameters $approx$ 500MB in memory)
     - Vanishing gradient
     - Loss distances aren't proportional to femur distance
     - Boxed output
@@ -263,8 +258,9 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
     - Change the activation function for *Tanh* and *LeakyReLU*
     - Reduce the layer sizes
     - Preprocessing : remove the *mean femur* and normalizing all coordinates *equally*
+    #pause
   = Latest Models
-    - *Layers*: {54873, 1024, 256, 32, 10, 32, 256, 1024, 54873}
+    - *Layers*: {54873, 1024, 256, 32, *10*, 32, 256, 1024, 54873}
     - *better activation functions*: tanh and LeakyReLU
     - *Linear* last layer
     - New *Preprocessing*
@@ -339,14 +335,6 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 #slide(title: [Multithreading with `std::thread`])[
 1. For *every* parallelizable operation, create a thread
 #pause
-2. Create a *fixed* number of threads at the beginning of the function
-#pause
-#image("../fig/btop2_opt.gif")
-#pause
-3. *Thread pool*
-]
-
-  === OpenMP Multithreading
 #slide(title: "OpenMP Multithreading")[
   - *Automatically* manages thread creation and workload distribution
   #pause
@@ -376,9 +364,19 @@ return result;
 
 == Memory allocation
 #slide(title: "Memory allocation")[
-  === Memory Bandwidth Bottleneck
-   - improve cache locality by switching rows and columns acces (x2 speedup)
-   - Preallocation of variables and Memory optimized functions (MultiplyTranspose) (x4 speedup)
+  == Data Oriented Design
+  #grid(
+    columns: (auto, auto),
+    [
+   - improve *cache locality* by switching rows and columns acces (*$times 2$ speedup*)
+   - *Preallocation* of variables and Memory optimized functions (*$times 4$ speedup*)
+],
+    image("../fig/memory_speed.png"),
+    
+
+  )
+
+In total $==>$  *$times 8$ speedup*, going from 58 seconds to 7 seconds per epoch
 
 
 ]
