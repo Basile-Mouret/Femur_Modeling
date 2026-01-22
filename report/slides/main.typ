@@ -335,6 +335,12 @@ PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
 #slide(title: [Multithreading with `std::thread`])[
 1. For *every* parallelizable operation, create a thread
 #pause
+2. Create a *fixed* number of threads at the beginning of the function
+#pause
+#image("../fig/btop2_opt.gif")
+#pause
+3. *Thread pool*
+]
 #slide(title: "OpenMP Multithreading")[
   - *Automatically* manages thread creation and workload distribution
   #pause
@@ -355,7 +361,7 @@ return result;
 ```
 
 
-]
+
 ]
 #slide(title: "Performance Graph")[
   #image("../fig/perf_multithreading.png", width: 100%)
@@ -370,13 +376,13 @@ return result;
     [
    - improve *cache locality* by switching rows and columns acces (*$times 2$ speedup*)
    - *Preallocation* of variables and Memory optimized functions (*$times 4$ speedup*)
+- In total $==>$  *$times 8$ speedup*, going from 58 seconds to 7 seconds per epoch
 ],
-    image("../fig/memory_speed.png"),
+    image("../fig/memory_speed.png", height:90%),
     
 
   )
 
-In total $==>$  *$times 8$ speedup*, going from 58 seconds to 7 seconds per epoch
 
 
 ]
