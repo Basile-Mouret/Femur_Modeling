@@ -522,7 +522,7 @@ Since the manifold is curved, we cannot do PCA directly on shapes.
   [**Cost**], [Fast], [Computationally intensive]
 )
 ]
-)
+
 
 #slide[
   // Lien canva: https://www.canva.com/design/DAG_JSW4-ug/irIZxhoOdvJ4ilOG2dz6YQ/edit
