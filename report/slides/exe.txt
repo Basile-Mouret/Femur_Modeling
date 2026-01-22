@@ -1,0 +1,3 @@
+
+
+python scripts/visualization/latent_pca_explorer_pca.py models/NeuralNetwork_centered_tanh_5000.bin mean_femur.obj -n 3 --start-at-mean
