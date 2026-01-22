@@ -69,15 +69,41 @@
 #slide(title: "Linear PCA : Principle")[
   #figure(
   grid(
-    columns: (1fr, 1fr, 1fr, 1fr, 1fr),
+    columns: (auto, auto, auto, auto),
+    align: (center + horizon),  
     gutter: 1em, // Space between images
-    image("../fig/pca_start.gif", width: 100%),
-    $-->$,
-    image("../fig/pca_ellipse.gif", width: 100%),
-    image("../fig/pca_full.gif", width: 100%),
+    image("../placeholder/placeholder_pca.png", width: 110%),
+    pause,
+    $-->_("Ellipsoid fit")$,
+    image("../placeholder/placeholder_pca.png", width: 110%),
   ),
  // Optional: remove if no caption needed
 )
+]
+
+#slide(title: "Linear PCA : Principle")[
+ #figure(
+  grid(
+    columns: (auto, auto, auto, auto),
+    align: (center + horizon),  
+    gutter: 1em, // Space between images
+    image("../placeholder/placeholder_pca.png", width: 110%),
+    pause,
+    $-->_("Eigendecomposition")$,
+    image("../placeholder/placeholder_pca.png", width: 110%),
+  ),
+)
+]
+
+#slide(title: "Linear PCA : A subtle potential issue")[
+- PCA assumes the data is distributed as a gaussian point cloud
+- If the data is made up of distinct clusters (e.g *healthy* and *unhealthy* femurs), the method breaks down.
+- Luckily for us, the femur data originates from all types of individuals which averages out the cluster effect.
+
+  #figure(
+    image("../placeholder/placeholder_pca.png", width: auto, height: 50%),
+    caption: [PCA is unadapted to datasets with highly clustered structure],
+  ) <fimg-label>
 ]
 #slide(title: "Linear PCA : Foundation")[
   // Slide 1: Mathematical Foundation
@@ -85,85 +111,58 @@
 
 
 #v(1em)
-*1. Data Representation*
-We consider a set of $24$ femurs. Each femur $i$ is described by $P$ corresponding points (landmarks) in 3D.
-We represent each shape as a vector $x_i in RR^(3P)$ :
-$ x_i = (x_1, y_1, z_1, dots, x_P, y_P, z_P)^top $
+We represent each femur as a vector $S_i in RR^(3P)$.
 
-*2. Centering & Covariance*
-We compute the *Mean Femur* $macron(x)$ and the sample covariance matrix $S$:
-$ macron(x) = 1/N sum_(i=1)^N x_i quad , quad S = 1/(N-1) sum_(i=1)^N (x_i - macron(x)) (x_i - macron(x))^top $
+
+We compute the *Mean Femur* $macron(S)$ and the sample covariance matrix $C$:
+$ macron(S) = 1/N sum_(i=1)^N S_i quad , quad S = 1/(N-1) sum_(i=1)^N (S_i - macron(S)) (S_i - macron(S))^top $
+
+  #figure(
+    image("../fig/femur_3D.png", height: 40%),
+    caption: [The (arithmetic) mean femur], 
+  ) <fimg-label>
 ]
 
 #slide(title: "Linear PCA : Eigendecomposition")[
   // Slide 2: Eigen decomposition and Principal Components
-*3. Eigendecomposition*
-PCA diagonalizes the covariance matrix to find the principal directions:
-$ S v_k = lambda_k v_k $
+PCA orthodiagonalizes the covariance matrix to find the principal directions.
 - The *eigenvectors* $v_k$ are the *Principal Components* (directions of variance).
 - The *eigenvalues* $lambda_k$ represent the variance captured by component $k$.
-#v(1em)
+- Taking the $p$ top components  effectively reduces the dimensionality of the dataset to $p$.  #figure(
+    image("../fig/pca_illustration.png", width: auto, height: 50%),
+    caption: [PCA reduces the data to it's $k$ most meaningful components],
+  ) <fimg-label>
 
 
 ]
 
-#slide(title: "Linear PCA Interpretation: Modes of Variation")[
+#slide(title: "Linear PCA Interpretation : Modes of Variation")[
 
-*Generative Model*
-Any femur instance $x$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
 
-$ x approx macron(x) + sum_(k=1)^K omega_k v_k $
+Any femur instance $S$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components:
 
-- $macron(x)$: The average femur geometry.
-- $v_k$: The $k$-th *Mode of Variation* (a deformation vector field).
-- $omega_k$: The *score* (weight) specific to this individual.
+$ S approx macron(S) + sum_(k=1)^K omega_k v_k $
 
-*Visualizing the Modes*
-To understand what a Principal Component represents physically, we visualize the mean shape deformed along the eigenvector direction:
+- $omega_k$: The standard deviation specific to this individual w.r.t component $k$.
 
-$ x_"mode" = macron(x) plus.minus 3 sqrt(lambda_k) v_k $
+ We can then visualize all possible linear deformations and try to interpret them clinically !
+
 
 ]
 
 #slide(title: "Linear PCA : Results and Limitations")[
-  *1. Assumption of Linearity*
-PCA assumes that the shape space is flat (a linear subspace).
-- *Issue:* Biological deformations can be non-linear (e.g., complex twisting or bending).
+PCA assumes that the shape space is flat (a linear subspace of $RR^(3N)$).
+- No reason to believe all linear transformations are anatomically plausible
+-  True anatomical deformations can be non-linear (e.g. torsion or bending).
 
-*2. Gaussian Distribution Assumption*
-PCA relies entirely on the mean vector and covariance matrix (2nd order statistics).
-- *Issue:* It implicitly describes the data as a single multivariate Gaussian "cloud".
-
-*3. Global Support (Lack of Locality)*
-Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all* points simultaneously.
-- *Issue:* It is difficult to isolate *local* variations.
+#figure(
+  image("../fig/sphere_first.png", width: auto, height: 60%),
+  caption: [Eculidean transformations of points do not preserve underlying structure],
+) <fimg-label>
 ]
 = Linear algebra implementation
 
-#slide(title: "Linear algebra implementation")[
-  == Custom library design
-  - Built on top of *Eigen* for efficient internal storage
-  - Template-based classes: `Vector<T>`, `Matrix2D<T>`, `Matrix2DSquare<T>`
-  - Supports multiple numeric types: `float`, `double`, `int`, `long`, etc.
 
-  == Main classes
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 1em,
-    [
-      *Vector<T>*
-      - Scalar/dot product
-      - Hadamard product
-      - Outer product
-    ],
-    [
-      *Matrix2D<T>*
-      - Matrix multiplication
-      - Transpose
-      - Row/column extraction
-    ]
-  )
-]
 
 = Neural network
 
@@ -196,20 +195,7 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
 ]
 
 #slide(title: "Neural network")[
-  == Neural network architecture
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 1em,
-    [
-      - Input layer
-      - Hidden layers
-      - Output layer
-      - Forward propagation
-    ],
-    [
-      #image("../fig/NN_Diagram.png", width: 100%)
-    ]
-  )
+ 
 
   == Autoencoder structure
 
@@ -285,7 +271,30 @@ Each Principal Component ($v_k$) is a vector of dimension $3P$ that acts on *all
     - Longer training: 5000 epochs
 ]
 
+#slide(title: "Linear algebra implementation")[
+  == Custom library design
+  - Built on top of *Eigen* for efficient internal storage
+  - Template-based classes: `Vector<T>`, `Matrix2D<T>`, `Matrix2DSquare<T>`
+  - Supports multiple numeric types: `float`, `double`, `int`, `long`, etc.
 
+  == Main classes
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      *Vector<T>*
+      - Scalar/dot product
+      - Hadamard product
+      - Outer product
+    ],
+    [
+      *Matrix2D<T>*
+      - Matrix multiplication
+      - Transpose
+      - Row/column extraction
+    ]
+  )
+]
 
 = Optimization techniques
 
