@@ -19,11 +19,12 @@
     }
   }
 }
+
 #canvas({
   // Define layer configurations
   let layers = (
     // (x-pos, neuron-count, fill-color, label-prefix, label-superscript, y-offset)
-    (0, 8, rgb("#f6db71"), "x", none, 3.2), // Input layer
+    (0, 500, rgb("#f6db71"), "x", none, 3.2), // Input layer
     (2, 5, rgb("#eee"), "h", "1", 2), // First hidden layer
     (4, 3, rgb("#eee"), "z", none, 1.2), // Latent layer
     (6, 5, rgb("#eee"), "h", "2", 2), // Third hidden layer
@@ -57,4 +58,3 @@
     }
   }
 })
-
