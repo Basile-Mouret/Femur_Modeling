@@ -62,6 +62,25 @@
   ) <femur_pointcloud>
 ]
 
+= Dimensionality reduction
+#slide(title: "What is there to learn ?")[
+  #grid(
+  columns: (auto,auto),
+  [
+  - _A priori_, femurs are _random_ vectors of $RR^(3N)$
+  - In practice, femurs have structure : not any random $RR^(3N)$ vector represents an anatomically plausible femur !
+    - Compact, distinct shaft and heads...
+    #v(1em)
+  - Femur data thus lies in a low dimensional structure
+    - Goal is learning this structure $-->$ need for dimensionality reduction methods
+  ],
+  
+  figure(
+    image("../fig/wemby.jpeg", width: auto, height: auto),
+    caption: [Victor Wembanyama],
+  ) 
+  )<fimg-label>
+]
 
 
 = Linear PCA
@@ -473,8 +492,8 @@ return result;
 
 #slide(title: "LDDMM : Big Picture")[
 
-- Instead of treating femurs as vectors in a flat space, we would like to capture the underlying structure of the shape space, in order to understand anatomically plausible transformations
-- LDDMM learns a representation of the data on a *curved* *Riemannian manifold*
+- Instead of treating femurs as vectors in a flat space, we would like to capture the finer underlying structure of the shape space, in order to understand anatomically plausible transformations
+- LDDMM learns a representation of the data as a *curved* *Riemannian manifold* $cal(M)$
 - Anatomical deformations are interpreted as following *geodesic* paths on the manifold
 
 #figure(
@@ -485,25 +504,26 @@ return result;
 
 
 
-#slide(title:"LDDMM : Fundamental Theorem")[
+#slide(title:"LDDMM : Big Picture")[
 
-- The space of diffeomorphisms (smooth transformations) over the femur manifold is infinite dimensional.
-- The *geodesic shooting* theorem states that geodesic deformations live in the finite dimensional space  $T = RR^(3N)$.
-  - They are the ones we are interested in, since nature is highly efficient !
-We define the geodesic distance by minimizing a *variational energy* :
+- The space of diffeomorphisms (smooth transformations) over $cal(M)$ is infinite dimensional.
+
+- Based on the *Principle of least action* often respected in nature, we are only interested in the *cheapest* deformations w.r.t some *energy*.
+- We define the geodesic distance by minimizing a *variational energy* (i.e cost) :
   $ E(v) = underbrace(
-  1 / (2 sigma_R^2) integral_0^1 | v_t |_V^2 dif t,
+  1 / (2 sigma_R^2) integral_0^1 norm(  v_t )_V^2 dif t,
   "Regularity"
 ) + underbrace(
   1 / (2 sigma_M^2) sum_(i)^() abs(T_i - phi(S_i))  ,
   "Matching"
 ) $
-- This requires an efficient non-convex optimization algorithm
+- Computationally expensive $-->$ need for efficient non-convex optimization algorithms
 ]
 
 
-#slide(title: [LDDMM : PCA on $T$])[
-- Statistics are computed on these deformations, not on the point coordinates directly, thus always stay on the manifold and are interpretable as plausible femurs !
+#slide(title: [LDDMM : Geodesic statistics])[
+- Statistics are computed w.r.t geodesic distance, not euclidean. 
+  - Guarantee of staying on the manifold and being interpretable as plausible femurs !
 
 - We compute the mean femur (Atlas $macron(S)$) with respect to the geodesic distance :
   $ macron(S) = arg min_S sum_(j=1)^N d_G (S, S_j)^2 $
@@ -515,23 +535,36 @@ We define the geodesic distance by minimizing a *variational energy* :
 
 ]
 
-#slide(title:[LDDMM : PCA on $T$ vs Linear PCA] )[
+#slide(title:[LDDMM : From curved manifold to linear statistics] )[
+- * Goal * : Main modes of variation of geodesic deformations.
+- *Problem *: The space of geodesic deformations $cal(G)$ is curved  so standard linear PCA cannot be applied directly.
+#pause
+- The *geodesic shooting theorem* creates a 1-to-1 map between geodesic deformations of the mean shape and their *initial momenta*
+   - This flattens $cal(G)$ into a finite-dimensional vector space $T_(macron(S)) cal(G) tilde.eq RR^(3N)$
 
 
-
-
-- *Linear Mode:* A static *displacement*: "Move point A to B".
-  - No respect of the topology of femurs.
-- *Tangent Mode:* A dynamic *force* :"Push point A in this direction, and let the physics evolve".
-   - Arrival is guaranteed to be a plausible femur (stays on the manifold)
-- PCA on the geodesic deformation space $T$ yields the most relevant *anatomically plausible* deformations !
+#figure(
+  image("../fig/geodesic_shooting.png", width: auto, height: 45%),
+  caption: [Geodesic shooting linearizes the space of geodesic deformations],
+) <fimg-label>
 ]
 
 
-#slide(title: "LDDMM : Results and Limitations")[
-todo
-]
+#slide(title: "LDDMM : Tangent PCA results and limitations ")[
+- This linearization allows us to rigorously apply PCA on $T_(macron(S)) cal(G)$.
+ - Main modes of variation around the mean femur $macron(S)$
+- Deformations are not linear but geodesic
+- Accounts for finer *local* deformation compared to Linear PCA which focuses on *global* variation.
+- Requires less data than autoencoder, while being more interpretable
 
+  #pause
+* Limitations :*
+  - Very computationally expensive to build the model
+
+* Future work :*
+  
+  - Recent papers build *diffeomorphic autoencoders* to construct atlases $-->$ more efficient.
+]
 
 #slide[
   // Lien canva: https://www.canva.com/design/DAG_JSW4-ug/irIZxhoOdvJ4ilOG2dz6YQ/edit
