@@ -81,3 +81,6 @@ make doc
 # Generate AND open in Firefox
 make doc-open
 ```
+
+# Link of the Drive for models/ and html slides :
+https://drive.google.com/drive/folders/1XfqVVEv_XzGETwcklJSmiH7S0PmQqdPp
