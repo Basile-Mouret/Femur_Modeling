@@ -1,8 +1,9 @@
 //-------------------------------------
 // Document options
 //
+
 #let option = (
-  type : "final",
+  type : none,
   //type : "draft",
   lang : "en",
   //lang : "de",
@@ -11,17 +12,12 @@
 //-------------------------------------
 // Optional generate titlepage image
 //
-#import "@preview/fractusist:0.1.1":*  // only for the generated images
+// Helper function for unnumbered headers
+#let nonumber(body) = {
+  set heading(numbering: none)
+  body
+}
 
-#let titlepage_logo= dragon-curve(
-  12,
-  step-size: 10,
-  stroke-style: stroke(
-    //paint: gradient.linear(..color.map.rocket, angle: 135deg),
-    paint: gradient.radial(..color.map.rocket),
-    thickness: 3pt, join: "round"),
-  height: 10cm,
-)
 
 //-------------------------------------
 // Metadata of the document
@@ -40,25 +36,25 @@
   authors: (
     (
       name        : "Martin Lainé",
-      abbr        : "MaL",
+      abbr        : "M. Lainé",
       email       : "",
       url         : "",
     ),
     (
       name        : "Basile Mouret",
-      abbr        : "BaM",
+      abbr        : "B. Mouret",
       email       : "",
       url         : "",
     ),
     (
       name        : "Timothé Boyer",
-      abbr        : "TiB",
+      abbr        : "T. Boyer",
       email       : "",
       url         : "",
     ),
     (
       name        : "Malik Hacini",
-      abbr        : "MaH",
+      abbr        : "M. Hacini",
       email       : "",
       url         : "",
     ),
@@ -72,9 +68,7 @@
     prof     : "Marek Bucki",
     semester : "Spring 2026",
   ),
-  keywords : ("Typst", "Femur", "Report", "ENSIMAG", "Autoencoder", "LDDMM"),
-  version  : "v0.1.0",
-)
+  keywords : ("Typst", "Femur", "Report", "ENSIMAG", "Autoencoder", "LDDMM"),)
 
 #let date= datetime.today()
 
@@ -82,7 +76,7 @@
 // Settings
 //
 #let tableof = (
-  toc: true,
+  toc: false,
   tof: false,
   tot: false,
   tol: false,

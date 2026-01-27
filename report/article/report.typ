@@ -19,12 +19,22 @@
 //-------------------------------------
 // Content
 //
-//#include "chapters/abstract.typ"
-//#include "chapters/introduction.typ"
-// #include "chapters/motivation.typ"
-// #include "chapters/methods.typ"
-// #include "chapters/results.typ"
-// #include "chapters/discussion.typ"
+
+#nonumber[= Abstract]
+#include "chapters/abstract.typ"
+#nonumber[= Introduction]
+#include "chapters/introduction.typ"
+
+#pagebreak()
+
+= Motivation
+#include "chapters/motivation.typ"
+= Methods
+#include "chapters/methods.typ"
+= Results
+#include "chapters/results.typ"
+= Discussion
+#include "chapters/discussion.typ"
 
 #heading(numbering:none, outlined: false)[] <sec:end>
 
