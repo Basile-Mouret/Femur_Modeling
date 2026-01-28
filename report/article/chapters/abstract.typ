@@ -1,2 +1,4 @@
 // summary of the article in max 200 words.
+
+
 For this project, we developed a comprehensive statistical shape analysis system for femur bones. Our approach relies on two complementary methodological pillars: Principal Component Analysis (PCA), enabling linear dimensionality reduction and identification of the main variation modes, and artificial neural networks, providing the capability to capture non-linear relationships in the data. Each femur in our dataset is represented as a 3D mesh comprising 18,291 vertices, resulting in a vector of dimension 54,873 in the shape space. The main objective of this work is to build a statistical shape model capable of reducing the dimensionality of the data using an autoencoder built with neural networks, generating new anatomically plausible femur shapes, PLACEHOLDER PCA.

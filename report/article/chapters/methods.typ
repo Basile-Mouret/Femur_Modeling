@@ -14,7 +14,7 @@ However, this result is just a linear combination of the inputs. To introduce no
 #v(1em)
 
 #figure(
-  image("../../fig/sigmoid.png", width: 70%),
+  image("/resources/img/sigmoid.png", width: 70%),
   caption: [Sigmoid activation function $Phi(x) = 1 / (1 + e^(-x))$]
 )
 #v(1em)
@@ -40,7 +40,7 @@ Artificial neurons are organized into layers to form a neural network. A typical
 
 #v(1em)
 #figure(
-  image("../../fig/NN_Diagram.png", width: 70%),
+  image("/resources/img/NN_Diagram.png", width: 70%),
   caption: [Structure of a Neural Network]
 )
 
