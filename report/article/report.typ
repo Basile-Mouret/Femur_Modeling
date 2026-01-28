@@ -33,6 +33,8 @@
 #include "chapters/methods.typ"
 = Results
 #include "chapters/results.typ"
+= LDDMM
+#include "chapters/lddmm.typ"
 = Discussion
 #include "chapters/discussion.typ"
 

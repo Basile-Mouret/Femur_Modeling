@@ -1,47 +1,64 @@
 """
-LDDMM-based Tangent PCA Module for Femur Shape Analysis.
+LDDMM-based Shape Analysis Module.
 
-This module provides tools for:
-- Loading femur OBJ files with point correspondence
-- LDDMM registration using emlddmm
-- Atlas building (Fréchet mean computation)
-- Tangent PCA on initial momenta
-- Interactive visualization of shape modes
+This module provides tools for statistical shape analysis using
+Large Deformation Diffeomorphic Metric Mapping (LDDMM):
+
+- **Data loading**: Load OBJ meshes with point correspondence
+- **Registration**: LDDMM geodesic shooting via scikit-shapes
+- **Atlas building**: Compute population mean (Fréchet mean)
+- **Tangent PCA**: Principal component analysis on shape manifold
+
+Theory:
+    See LDDMM_THEORY.md for mathematical background on geodesic
+    shooting, RKHS kernels, and tangent space statistics.
 
 Dependencies:
-- torch (PyTorch for GPU computation)
-- numpy, scipy (numerical operations)
-- trimesh (OBJ loading)
-- pyvista (3D visualization)
-- emlddmm (LDDMM implementation from lib/emlddmm)
+    - skshapes (scikit-shapes for LDDMM)
+    - torch (PyTorch for GPU computation)
+    - numpy (numerical operations)
+    - trimesh (OBJ loading)
 
-Usage:
-    from lddmm import FemurDataLoader, TangentPCA, LDDMMAtlasBuilder
-    
-    # Load data
-    loader = FemurDataLoader("data/training")
-    shapes, filenames = loader.load_all()
-    
-    # Build atlas
-    builder = LDDMMAtlasBuilder()
-    builder.build(shapes)
-    
-    # Compute Tangent PCA
-    pca = TangentPCA(n_components=10)
-    pca.fit(builder.atlas, builder.momenta)
+Example:
+    >>> from lddmm import FemurDataLoader, AtlasBuilder, TangentPCA, LDDMMConfig
+    >>>
+    >>> # Load data
+    >>> loader = FemurDataLoader("data/training")
+    >>> shapes, filenames = loader.load_all()
+    >>>
+    >>> # Build atlas
+    >>> builder = AtlasBuilder(method='arithmetic')
+    >>> result = builder.build(shapes)
+    >>>
+    >>> # Compute Tangent PCA
+    >>> pca = TangentPCA(n_components=10)
+    >>> pca.fit(result.atlas, result.momenta)
+    >>>
+    >>> # Synthesize new shapes
+    >>> new_shape = pca.synthesize_along_mode(mode=0, t_values=[-2, 0, 2])
 """
 
-from .data_loader import FemurDataLoader, verify_correspondence
-from .registration import LDDMMPointRegistration
-from .atlas import LDDMMAtlasBuilder
+from .config import LDDMMConfig
+from .data_loader import FemurDataLoader, verify_correspondence, compute_bounding_box
+from .registration import LDDMMRegistration, RegistrationResult
+from .atlas import AtlasBuilder, AtlasResult
 from .tangent_pca import TangentPCA
 
 __all__ = [
-    'FemurDataLoader',
-    'verify_correspondence', 
-    'LDDMMPointRegistration',
-    'LDDMMAtlasBuilder',
-    'TangentPCA',
+    # Configuration
+    "LDDMMConfig",
+    # Data loading
+    "FemurDataLoader",
+    "verify_correspondence",
+    "compute_bounding_box",
+    # Registration
+    "LDDMMRegistration",
+    "RegistrationResult",
+    # Atlas
+    "AtlasBuilder",
+    "AtlasResult",
+    # PCA
+    "TangentPCA",
 ]
 
-__version__ = '0.1.0'
+__version__ = "0.2.0"

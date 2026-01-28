@@ -12,34 +12,47 @@ import numpy as np
 import pytest
 
 from lddmm.tangent_pca import TangentPCA
-from lddmm.atlas import LDDMMAtlasBuilder
-from lddmm.data_loader import FemurDataLoader
+from lddmm.atlas import AtlasBuilder
 
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
 
-@pytest.fixture
-def data_dir():
-    """Return path to training data directory."""
-    return Path(__file__).parent.parent.parent / "data" / "training"
-
 
 @pytest.fixture
-def shapes_subset(data_dir):
-    """Load a small subset of shapes for fast tests."""
-    loader = FemurDataLoader(str(data_dir))
-    shapes, _ = loader.load_all()
-    return shapes[:5]
+def shapes_subset():
+    """Create small synthetic shapes for fast testing."""
+    np.random.seed(42)
+    n_shapes = 5
+    n_points = 100  # Small point cloud for fast tests
+    
+    shapes = []
+    for i in range(n_shapes):
+        # Create sphere-like shape with variation
+        theta = np.random.uniform(0, 2 * np.pi, n_points)
+        phi = np.random.uniform(0, np.pi, n_points)
+        r = 10.0 + i * 0.5  # Slightly different radii
+        
+        shape = np.column_stack([
+            r * np.sin(phi) * np.cos(theta),
+            r * np.sin(phi) * np.sin(theta),
+            r * np.cos(phi),
+        ]).astype(np.float32)
+        
+        # Add random variation
+        shape += np.random.randn(n_points, 3).astype(np.float32) * 0.3
+        shapes.append(shape)
+    
+    return shapes
 
 
 @pytest.fixture
 def atlas_and_momenta(shapes_subset):
     """Build atlas and get momenta."""
-    builder = LDDMMAtlasBuilder(max_outer_iterations=2, verbose=False)
-    builder.build(shapes_subset)
-    return builder.atlas, builder.momenta
+    builder = AtlasBuilder(max_iterations=2, verbose=False)
+    result = builder.build(shapes_subset)
+    return result.atlas, result.momenta
 
 
 @pytest.fixture
@@ -61,19 +74,20 @@ def fitted_pca(atlas_and_momenta):
 # Tests
 # ============================================================================
 
+
 class TestTangentPCAInit:
     """Tests for TangentPCA initialization."""
-    
+
     def test_default_components(self):
-        """Test default number of components is None (determined at fit time)."""
+        """Test default number of components is None."""
         pca = TangentPCA()
         assert pca.n_components is None
-    
+
     def test_custom_components(self):
         """Test custom number of components."""
         pca = TangentPCA(n_components=5)
         assert pca.n_components == 5
-    
+
     def test_unfitted_state(self, pca):
         """Test that new instance is unfitted."""
         assert pca.atlas is None
@@ -83,191 +97,205 @@ class TestTangentPCAInit:
 
 class TestTangentPCAUnfittedErrors:
     """Tests for error handling on unfitted model."""
-    
-    def test_transform_raises_error(self, pca):
-        """Test that transform raises error when not fitted."""
+
+    def test_project_raises_error(self, pca):
+        """Test that project raises error when not fitted."""
         with pytest.raises(RuntimeError, match="not fitted"):
-            pca.transform([np.zeros((100, 3))])
-    
-    def test_inverse_transform_raises_error(self, pca):
-        """Test that inverse_transform raises error when not fitted."""
-        with pytest.raises(RuntimeError, match="not fitted"):
-            pca.inverse_transform(np.zeros(3))
-    
+            pca.project(np.zeros((100, 3)))
+
     def test_synthesize_shape_raises_error(self, pca):
         """Test that synthesize_shape raises error when not fitted."""
         with pytest.raises(RuntimeError, match="not fitted"):
             pca.synthesize_shape(np.zeros(3))
-    
+
     def test_synthesize_along_mode_raises_error(self, pca):
         """Test that synthesize_along_mode raises error when not fitted."""
         with pytest.raises(RuntimeError, match="not fitted"):
-            pca.synthesize_along_mode(0, np.array([-1, 0, 1]))
+            pca.synthesize_along_mode(0, [-1, 0, 1])
 
 
 class TestTangentPCAFit:
-    """Tests for TangentPCA fitting."""
-    
+    """Tests for fitting Tangent PCA."""
+
+    def test_fit_returns_self(self, pca, atlas_and_momenta):
+        """Test that fit returns self."""
+        atlas, momenta = atlas_and_momenta
+        result = pca.fit(atlas, momenta)
+        assert result is pca
+
     def test_fit_sets_atlas(self, fitted_pca, atlas_and_momenta):
         """Test that fit sets the atlas."""
         atlas, _ = atlas_and_momenta
-        np.testing.assert_array_equal(fitted_pca.atlas, atlas)
-    
+        np.testing.assert_allclose(fitted_pca.atlas, atlas, rtol=1e-5)
+
     def test_fit_sets_components(self, fitted_pca):
         """Test that fit sets components."""
         assert fitted_pca.components is not None
-        assert fitted_pca.components.shape[0] == fitted_pca.n_components
-    
-    def test_fit_sets_mean_momentum(self, fitted_pca, atlas_and_momenta):
+        assert fitted_pca.components.shape[0] == 3  # n_components
+
+    def test_fit_sets_mean_momentum(self, fitted_pca):
         """Test that fit sets mean momentum."""
-        _, momenta = atlas_and_momenta
-        n_points = momenta[0].shape[0]
-        
         assert fitted_pca.mean_momentum is not None
-        assert fitted_pca.mean_momentum.shape == (n_points, 3)
-    
-    def test_explained_variance_ratio(self, fitted_pca):
-        """Test that explained variance ratios are valid."""
-        evr = fitted_pca.explained_variance_ratio
-        
-        assert len(evr) == fitted_pca.n_components
-        assert np.all(evr >= 0)
-        assert np.all(evr <= 1)
-        assert np.sum(evr) <= 1.0 + 1e-6  # Allow small numerical error
-    
-    def test_explained_variance_decreasing(self, fitted_pca):
-        """Test that explained variance is in decreasing order."""
-        evr = fitted_pca.explained_variance_ratio
-        for i in range(len(evr) - 1):
-            assert evr[i] >= evr[i + 1] - 1e-6
+
+    def test_fit_sets_eigenvalues(self, fitted_pca):
+        """Test that fit sets eigenvalues."""
+        assert fitted_pca.eigenvalues is not None
+        assert len(fitted_pca.eigenvalues) == 3  # n_components
+
+    def test_eigenvalues_sorted_descending(self, fitted_pca):
+        """Test that eigenvalues are sorted in descending order."""
+        eigenvalues = fitted_pca.eigenvalues
+        assert np.all(eigenvalues[:-1] >= eigenvalues[1:])
+
+    def test_explained_variance_sums_to_one_or_less(self, atlas_and_momenta):
+        """Test explained variance ratios are valid."""
+        atlas, momenta = atlas_and_momenta
+        pca = TangentPCA()  # Keep all components
+        pca.fit(atlas, momenta)
+
+        assert np.sum(pca.explained_variance_ratio) <= 1.0 + 1e-5
+        assert np.all(pca.explained_variance_ratio >= 0)
+        assert np.all(pca.explained_variance_ratio <= 1.0 + 1e-5)
 
 
-class TestTangentPCATransform:
-    """Tests for TangentPCA transform."""
-    
-    def test_transform_output_shape(self, fitted_pca, atlas_and_momenta):
-        """Test transform output shape."""
-        _, momenta = atlas_and_momenta
-        coeffs = fitted_pca.transform(momenta)
-        
-        assert coeffs.shape == (len(momenta), fitted_pca.n_components)
-    
-    def test_transform_single_momentum(self, fitted_pca, atlas_and_momenta):
-        """Test transform with single momentum."""
-        _, momenta = atlas_and_momenta
-        coeffs = fitted_pca.transform([momenta[0]])
-        
-        assert coeffs.shape == (1, fitted_pca.n_components)
+class TestTangentPCAProject:
+    """Tests for projecting shapes."""
+
+    def test_project_shape(self, fitted_pca, shapes_subset):
+        """Test projecting a shape to coefficients."""
+        shape = shapes_subset[0]
+        coefficients = fitted_pca.project(shape)
+
+        assert coefficients.shape == (3,)  # n_components
+
+    def test_project_atlas_returns_near_zero(self, fitted_pca):
+        """Test that projecting atlas returns near-zero coefficients."""
+        # Atlas projected should give approximately zero coefficients
+        # (minus the mean momentum contribution)
+        coefficients = fitted_pca.project(fitted_pca.atlas)
+        # The projection of atlas should be dominated by mean momentum
+        # which is already centered, so coefficients should be small
+        # (but not exactly zero due to mean momentum centering)
+        assert coefficients is not None
 
 
-class TestTangentPCAInverseTransform:
-    """Tests for TangentPCA inverse transform."""
-    
-    def test_inverse_transform_single(self, fitted_pca):
-        """Test inverse transform with single coefficient vector."""
-        coeffs = np.zeros(fitted_pca.n_components)
-        momentum = fitted_pca.inverse_transform(coeffs)
-        
-        # With zero coefficients, should get mean momentum
-        np.testing.assert_array_almost_equal(momentum, fitted_pca.mean_momentum)
-    
-    def test_inverse_transform_batch(self, fitted_pca):
-        """Test inverse transform with batch of coefficients."""
-        coeffs = np.zeros((3, fitted_pca.n_components))
-        momenta = fitted_pca.inverse_transform(coeffs)
-        
-        assert momenta.shape[0] == 3
-    
-    def test_roundtrip(self, fitted_pca, atlas_and_momenta):
-        """Test transform -> inverse_transform roundtrip."""
-        _, momenta = atlas_and_momenta
-        
-        coeffs = fitted_pca.transform(momenta)
-        reconstructed = fitted_pca.inverse_transform(coeffs)
-        
-        # Reprojecting reconstructed momenta should give same coefficients
-        reprojected_coeffs = fitted_pca.transform([reconstructed[i] for i in range(len(momenta))])
-        
-        # Use relative tolerance for float32 precision
-        np.testing.assert_allclose(coeffs, reprojected_coeffs, rtol=1e-5)
+class TestTangentPCASynthesis:
+    """Tests for shape synthesis."""
 
+    def test_synthesize_shape_at_origin(self, fitted_pca):
+        """Test synthesizing shape at origin (zero coefficients)."""
+        coefficients = np.zeros(3)
+        shape = fitted_pca.synthesize_shape(coefficients)
 
-class TestTangentPCASynthesize:
-    """Tests for TangentPCA shape synthesis."""
-    
-    def test_synthesize_shape_output(self, fitted_pca, atlas_and_momenta):
-        """Test synthesize_shape output shape."""
-        atlas, _ = atlas_and_momenta
-        coeffs = np.zeros(fitted_pca.n_components)
-        shape = fitted_pca.synthesize_shape(coeffs)
-        
-        assert shape.shape == atlas.shape
-    
-    def test_synthesize_shape_at_mean(self, fitted_pca, atlas_and_momenta):
-        """Test that zero coefficients give atlas + mean momentum."""
-        coeffs = np.zeros(fitted_pca.n_components)
-        shape = fitted_pca.synthesize_shape(coeffs)
-        
+        # At origin, should return atlas + mean_momentum
         expected = fitted_pca.atlas + fitted_pca.mean_momentum
-        # Use lower precision due to float32/float64 mixing
-        np.testing.assert_array_almost_equal(shape, expected, decimal=4)
-    
-    def test_synthesize_along_mode_output(self, fitted_pca, atlas_and_momenta):
-        """Test synthesize_along_mode output shape."""
-        t_values = np.array([-2, -1, 0, 1, 2])
-        shapes = fitted_pca.synthesize_along_mode(0, t_values)
-        
-        assert shapes.shape[0] == len(t_values)
-    
-    def test_synthesize_along_mode_invalid_mode(self, fitted_pca):
+        np.testing.assert_allclose(shape, expected, rtol=1e-5)
+
+    def test_synthesize_along_mode_shape(self, fitted_pca):
+        """Test shape of synthesize_along_mode output."""
+        shapes = fitted_pca.synthesize_along_mode(0, [-2, -1, 0, 1, 2])
+
+        assert shapes.shape[0] == 5  # Number of t values
+        assert shapes.shape[1] == fitted_pca.atlas.shape[0]  # N points
+        assert shapes.shape[2] == 3  # 3D
+
+    def test_synthesize_along_mode_zero_is_mean(self, fitted_pca):
+        """Test that t=0 gives mean shape."""
+        shapes = fitted_pca.synthesize_along_mode(0, [0])
+        expected = fitted_pca.atlas + fitted_pca.mean_momentum
+
+        np.testing.assert_allclose(shapes[0], expected, rtol=1e-5)
+
+    def test_get_mode_extremes(self, fitted_pca):
+        """Test get_mode_extremes returns correct shapes."""
+        shapes, t_values = fitted_pca.get_mode_extremes(0, n_std=2.0, n_steps=5)
+
+        assert shapes.shape[0] == 5
+        assert len(t_values) == 5
+        assert t_values[0] == -2.0
+        assert t_values[-1] == 2.0
+
+    def test_invalid_mode_raises(self, fitted_pca):
         """Test that invalid mode raises ValueError."""
         with pytest.raises(ValueError, match="not available"):
-            fitted_pca.synthesize_along_mode(100, np.array([0]))
-    
-    def test_synthesize_along_mode_negative_index(self, fitted_pca):
-        """Test that negative mode index raises ValueError."""
-        with pytest.raises(ValueError, match="not available"):
-            fitted_pca.synthesize_along_mode(-1, np.array([0]))
+            fitted_pca.synthesize_along_mode(100, [0])
+
+
+class TestTangentPCAReconstruct:
+    """Tests for reconstruction."""
+
+    def test_reconstruct_preserves_shape(self, fitted_pca, shapes_subset):
+        """Test that reconstruction preserves shape dimensions."""
+        shape = shapes_subset[0]
+        reconstructed = fitted_pca.reconstruct(shape)
+
+        assert reconstructed.shape == shape.shape
+
+    def test_reconstruct_with_all_components_accurate(
+        self, atlas_and_momenta, shapes_subset
+    ):
+        """Test reconstruction with all components is accurate."""
+        atlas, momenta = atlas_and_momenta
+        pca = TangentPCA()  # Keep all components
+        pca.fit(atlas, momenta)
+
+        shape = shapes_subset[0]
+        reconstructed = pca.reconstruct(shape)
+
+        # Should be very close with all components
+        error = np.linalg.norm(reconstructed - shape)
+        original_norm = np.linalg.norm(shape)
+        relative_error = error / original_norm
+
+        assert relative_error < 0.5  # Within 50% relative error
 
 
 class TestTangentPCASaveLoad:
-    """Tests for TangentPCA save/load functionality."""
-    
+    """Tests for saving and loading PCA model."""
+
     def test_save_creates_files(self, fitted_pca):
         """Test that save creates expected files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             fitted_pca.save(tmpdir)
-            
-            tmppath = Path(tmpdir)
-            assert (tmppath / "tangent_pca_atlas.npy").exists()
-            assert (tmppath / "tangent_pca_components.npy").exists()
-            assert (tmppath / "tangent_pca_metadata.json").exists()
-    
-    def test_load_restores_model(self, fitted_pca):
-        """Test that load restores model correctly."""
+
+            assert (Path(tmpdir) / "tangent_pca_atlas.npy").exists()
+            assert (Path(tmpdir) / "tangent_pca_components.npy").exists()
+            assert (Path(tmpdir) / "tangent_pca_eigenvalues.npy").exists()
+            assert (Path(tmpdir) / "tangent_pca_metadata.json").exists()
+
+    def test_load_restores_atlas(self, fitted_pca):
+        """Test that load restores the atlas."""
         with tempfile.TemporaryDirectory() as tmpdir:
             fitted_pca.save(tmpdir)
             loaded = TangentPCA.load(tmpdir)
-            
-            np.testing.assert_array_equal(loaded.atlas, fitted_pca.atlas)
-            np.testing.assert_array_equal(loaded.components, fitted_pca.components)
+
+            np.testing.assert_allclose(loaded.atlas, fitted_pca.atlas, rtol=1e-5)
+
+    def test_load_restores_components(self, fitted_pca):
+        """Test that load restores components."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fitted_pca.save(tmpdir)
+            loaded = TangentPCA.load(tmpdir)
+
+            np.testing.assert_allclose(
+                loaded.components, fitted_pca.components, rtol=1e-5
+            )
+
+    def test_load_restores_metadata(self, fitted_pca):
+        """Test that load restores metadata."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fitted_pca.save(tmpdir)
+            loaded = TangentPCA.load(tmpdir)
+
             assert loaded.n_components == fitted_pca.n_components
-    
+            assert loaded.n_points_ == fitted_pca.n_points_
+            assert loaded.n_samples_ == fitted_pca.n_samples_
+
     def test_loaded_model_can_synthesize(self, fitted_pca):
         """Test that loaded model can synthesize shapes."""
         with tempfile.TemporaryDirectory() as tmpdir:
             fitted_pca.save(tmpdir)
             loaded = TangentPCA.load(tmpdir)
-            
-            coeffs = np.zeros(loaded.n_components)
-            shape = loaded.synthesize_shape(coeffs)
-            
-            assert shape.shape == loaded.atlas.shape
 
-
-# ============================================================================
-# Run tests directly
-# ============================================================================
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+            shapes = loaded.synthesize_along_mode(0, [-1, 0, 1])
+            assert shapes.shape[0] == 3

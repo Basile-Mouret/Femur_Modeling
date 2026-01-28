@@ -1,206 +1,316 @@
 """
 Atlas Building for LDDMM Shape Analysis.
 
-Computes the Fréchet mean (atlas) shape and stores initial momenta
-for tangent PCA.
+Computes the population mean (atlas) shape and initial momenta for
+tangent space analysis.
 
-Author: Femur Modeling Project
-Date: 2026
+This module provides two methods for computing the atlas:
+1. Arithmetic mean (default): Exact Fréchet mean for corresponding points
+2. Geodesic mean: Iterative averaging using LDDMM (for soft correspondence)
+
+Theory:
+    See LDDMM_THEORY.md for mathematical background on:
+    - Fréchet mean on shape manifolds
+    - Why arithmetic mean equals geodesic mean for corresponding points
+
+Example:
+    >>> from lddmm import AtlasBuilder, LDDMMConfig
+    >>> builder = AtlasBuilder()
+    >>> result = builder.build(shapes)
+    >>> print(result.atlas.shape)  # (N, 3)
 """
 
-import numpy as np
-from typing import List, Dict, Optional
+from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Literal, Optional
 import json
 
-try:
-    from .registration import LDDMMPointRegistration
-except ImportError:
-    from registration import LDDMMPointRegistration
+import numpy as np
+
+from .config import LDDMMConfig
+from .registration import LDDMMRegistration
 
 
-class LDDMMAtlasBuilder:
+@dataclass
+class AtlasResult:
+    """Result of atlas building.
+
+    Attributes:
+        atlas: The mean shape (N, 3).
+        momenta: Initial momenta from atlas to each shape (K, N, 3).
+        convergence_history: Energy at each iteration (for geodesic method).
     """
-    Build population atlas using LDDMM registration.
-    
-    The atlas is the Fréchet mean shape that minimizes the sum of
-    squared geodesic distances to all shapes in the population.
-    
-    For computational efficiency with corresponding points, we use
-    an iterative algorithm that approximates the geodesic mean.
-    
+
+    atlas: np.ndarray
+    momenta: np.ndarray
+    convergence_history: List[float]
+
+
+class AtlasBuilder:
+    """Build population atlas (Fréchet mean) from a collection of shapes.
+
+    The atlas is the shape that minimizes the sum of squared geodesic
+    distances to all shapes in the population.
+
+    Two methods are available:
+
+    1. **Arithmetic mean** (default, `method='arithmetic'`):
+       Simply averages the corresponding point positions. This is
+       mathematically equivalent to the Fréchet mean when:
+       - All shapes have established point correspondence
+       - Points live in Euclidean space (ℝ³)
+
+       Why? For corresponding points, the geodesic distance equals the
+       Euclidean distance: d(S₁, S₂) = ‖S₁ - S₂‖_F. The minimizer of
+       Σᵢ ‖μ - Sᵢ‖² is the arithmetic mean μ = (1/K) Σᵢ Sᵢ.
+
+    2. **Geodesic mean** (`method='geodesic'`):
+       Iteratively refines the atlas using geodesic averaging in tangent
+       space. This is useful when:
+       - Correspondence is uncertain or soft
+       - Additional regularization is desired
+       - Comparing to true LDDMM geodesic distances
+
+    Attributes:
+        config: LDDMM configuration for geodesic computations.
+        method: 'arithmetic' or 'geodesic'.
+        atlas: The computed atlas (after calling build()).
+        momenta: Momenta from atlas to each shape.
+
     Example:
-        >>> builder = LDDMMAtlasBuilder(max_outer_iterations=5)
-        >>> builder.build(shapes)
-        >>> builder.save("model/lddmm")
+        >>> builder = AtlasBuilder(method='arithmetic')
+        >>> result = builder.build(shapes)
+        >>> builder.save("model/atlas")
     """
-    
+
     def __init__(
         self,
-        registration_params: Optional[Dict] = None,
-        atlas_step_size: float = 0.5,
-        max_outer_iterations: int = 10,
+        config: Optional[LDDMMConfig] = None,
+        method: Literal["arithmetic", "geodesic"] = "arithmetic",
+        max_iterations: int = 10,
         convergence_tol: float = 1e-4,
-        verbose: bool = True
-    ):
-        """
-        Initialize atlas builder.
-        
+        step_size: float = 0.5,
+        verbose: bool = True,
+    ) -> None:
+        """Initialize atlas builder.
+
         Args:
-            registration_params: Parameters for LDDMMPointRegistration
-            atlas_step_size: Step size for atlas update (0-1)
-            max_outer_iterations: Maximum iterations for atlas refinement
-            convergence_tol: Convergence tolerance
-            verbose: Print progress
+            config: LDDMM configuration for registration (geodesic method).
+            method: Atlas computation method:
+                - 'arithmetic': Direct averaging (fast, exact for correspondence)
+                - 'geodesic': Iterative geodesic averaging (slower, more general)
+            max_iterations: Maximum iterations for geodesic method.
+            convergence_tol: Relative energy change threshold for convergence.
+            step_size: Step size for geodesic atlas update (0 < step_size ≤ 1).
+            verbose: Print progress information.
         """
-        self.reg_params = registration_params or {
-            'sigmaR': 10.0,
-            'a': 5.0,
-            'sigmaP': 1.0,
-            'n_iter': 100,
-            'ev': 1e-3,
-            'verbose': False
-        }
-        self.atlas_step_size = atlas_step_size
-        self.max_outer_iterations = max_outer_iterations
+        self.config = config or LDDMMConfig()
+        self.method = method
+        self.max_iterations = max_iterations
         self.convergence_tol = convergence_tol
+        self.step_size = step_size
         self.verbose = verbose
-        
-        # Results
-        self.atlas = None
-        self.momenta = []
-        self.energy_history = []
-    
-    def build(
-        self,
-        shapes: List[np.ndarray],
-        initial_atlas: Optional[np.ndarray] = None
-    ) -> Dict:
-        """
-        Build atlas from collection of shapes.
-        
+
+        # Results (populated by build())
+        self.atlas: Optional[np.ndarray] = None
+        self.momenta: Optional[np.ndarray] = None
+        self.convergence_history: List[float] = []
+
+    def build(self, shapes: List[np.ndarray]) -> AtlasResult:
+        """Build atlas from a collection of shapes.
+
         Args:
-            shapes: List of (N, 3) arrays with point correspondence
-            initial_atlas: Optional initial atlas (default: arithmetic mean)
-            
+            shapes: List of K shapes, each (N, 3) with point correspondence.
+
         Returns:
-            Dictionary with atlas, momenta, energy_history
+            AtlasResult containing atlas, momenta, and convergence history.
+
+        Raises:
+            ValueError: If shapes have inconsistent dimensions.
         """
-        num_shapes = len(shapes)
-        
-        # Initialize atlas
-        if initial_atlas is not None:
-            self.atlas = initial_atlas.copy()
-        else:
-            # Arithmetic mean as initial guess
-            self.atlas = np.stack(shapes).mean(axis=0)
-            if self.verbose:
-                print("[AtlasBuilder] Initialized atlas as arithmetic mean")
-        
-        # Note: For corresponding points, the Fréchet mean equals the arithmetic mean.
-        # The iterative algorithm below verifies convergence and computes momenta.
-        
-        prev_total_energy = float('inf')
-        
-        for outer_iter in range(self.max_outer_iterations):
-            if self.verbose:
-                print(f"\n{'='*60}")
-                print(f"Atlas Iteration {outer_iter + 1}/{self.max_outer_iterations}")
-                print(f"{'='*60}")
-            
-            # Compute displacements from atlas to each shape
-            displacements = []
-            total_energy = 0.0
-            
-            for j, shape in enumerate(shapes):
-                # Simple displacement (momentum proxy)
-                displacement = shape - self.atlas
-                displacements.append(displacement)
-                
-                # Energy = squared displacement norm
-                energy = np.sum(displacement ** 2)
-                total_energy += energy
-                
-                if self.verbose:
-                    disp_norm = np.linalg.norm(displacement, axis=1).mean()
-                    print(f"  Shape {j+1}/{num_shapes}: mean_disp={disp_norm:.4f}")
-            
-            self.energy_history.append(total_energy)
-            
-            if self.verbose:
-                print(f"\n  Total energy: {total_energy:.2f}")
-            
-            # Check convergence
-            if abs(prev_total_energy - total_energy) < self.convergence_tol * prev_total_energy:
-                if self.verbose:
-                    print("  ✓ Atlas converged!")
-                break
-            prev_total_energy = total_energy
-            
-            # Update atlas: move towards mean of target shapes
-            mean_displacement = np.stack(displacements).mean(axis=0)
-            self.atlas = self.atlas + self.atlas_step_size * mean_displacement
-            
-            if self.verbose:
-                update_norm = np.linalg.norm(mean_displacement, axis=1).mean()
-                print(f"  Atlas update: mean_displacement = {update_norm:.4f}")
-        
-        # Final momenta computation
+        if len(shapes) < 2:
+            raise ValueError("Need at least 2 shapes to build atlas")
+
+        # Validate shapes
+        n_points = shapes[0].shape[0]
+        for i, shape in enumerate(shapes):
+            if shape.shape != (n_points, 3):
+                raise ValueError(
+                    f"Shape {i} has dimensions {shape.shape}, "
+                    f"expected ({n_points}, 3)"
+                )
+
         if self.verbose:
-            print(f"\n{'='*60}")
-            print("Computing final momenta...")
-            print(f"{'='*60}")
-        
-        self.momenta = []
-        for j, shape in enumerate(shapes):
-            # Momentum = displacement from atlas to shape
-            momentum = shape - self.atlas
-            self.momenta.append(momentum)
-            
+            print(f"[AtlasBuilder] Building atlas from {len(shapes)} shapes")
+            print(f"  Method: {self.method}")
+            print(f"  Points per shape: {n_points}")
+
+        if self.method == "arithmetic":
+            return self._build_arithmetic(shapes)
+        else:
+            return self._build_geodesic(shapes)
+
+    def _build_arithmetic(self, shapes: List[np.ndarray]) -> AtlasResult:
+        """Build atlas using arithmetic mean.
+
+        This is the exact Fréchet mean for shapes with point correspondence
+        in Euclidean space. See class docstring for mathematical justification.
+        """
+        # Stack and compute mean
+        shapes_array = np.stack(shapes, axis=0)  # (K, N, 3)
+        self.atlas = shapes_array.mean(axis=0)  # (N, 3)
+
+        # Compute momenta (displacements from atlas to each shape)
+        # For corresponding points in Euclidean space, momentum = displacement
+        self.momenta = shapes_array - self.atlas[np.newaxis, :, :]  # (K, N, 3)
+
+        # No iterations for arithmetic mean
+        self.convergence_history = [self._compute_total_energy(shapes)]
+
+        if self.verbose:
+            print(f"  Atlas computed (arithmetic mean)")
+            print(f"  Total energy: {self.convergence_history[0]:.4f}")
+
+        return AtlasResult(
+            atlas=self.atlas,
+            momenta=self.momenta,
+            convergence_history=self.convergence_history,
+        )
+
+    def _build_geodesic(self, shapes: List[np.ndarray]) -> AtlasResult:
+        """Build atlas using iterative geodesic averaging.
+
+        Algorithm:
+        1. Initialize atlas as arithmetic mean
+        2. Repeat until convergence:
+           a. Compute log maps (momenta) from atlas to each shape
+           b. Average momenta in tangent space
+           c. Update atlas by shooting along mean momentum
+        """
+        registration = LDDMMRegistration(self.config)
+
+        # Initialize with arithmetic mean
+        shapes_array = np.stack(shapes, axis=0)
+        self.atlas = shapes_array.mean(axis=0)
+
+        prev_energy = float("inf")
+        self.convergence_history = []
+
+        for iteration in range(self.max_iterations):
             if self.verbose:
-                mom_norm = np.linalg.norm(momentum, axis=1).mean()
-                print(f"  Shape {j+1}: ||momentum|| = {mom_norm:.4f}")
-        
-        return {
-            'atlas': self.atlas,
-            'momenta': self.momenta,
-            'energy_history': self.energy_history
-        }
-    
-    def save(self, output_dir: str):
-        """Save atlas and momenta to files."""
+                print(f"\n  Iteration {iteration + 1}/{self.max_iterations}")
+
+            # Compute momenta (log maps) from atlas to each shape
+            momenta_list = []
+            for i, shape in enumerate(shapes):
+                momentum = registration.compute_momentum(self.atlas, shape)
+                momenta_list.append(momentum)
+
+            self.momenta = np.stack(momenta_list, axis=0)  # (K, N, 3)
+
+            # Compute energy
+            energy = self._compute_total_energy(shapes)
+            self.convergence_history.append(energy)
+
+            if self.verbose:
+                print(f"  Energy: {energy:.4f}")
+
+            # Check convergence
+            rel_change = abs(prev_energy - energy) / (abs(prev_energy) + 1e-10)
+            if rel_change < self.convergence_tol:
+                if self.verbose:
+                    print(f"  Converged (relative change: {rel_change:.2e})")
+                break
+
+            prev_energy = energy
+
+            # Update atlas: shoot along mean momentum
+            mean_momentum = self.momenta.mean(axis=0)
+            scaled_momentum = self.step_size * mean_momentum
+
+            # Geodesic update via exponential map
+            self.atlas = registration.shoot(self.atlas, scaled_momentum)
+
+            if self.verbose:
+                update_norm = np.linalg.norm(scaled_momentum)
+                print(f"  Atlas update norm: {update_norm:.4f}")
+
+        # Final momenta computation at converged atlas
+        momenta_list = []
+        for shape in shapes:
+            momentum = registration.compute_momentum(self.atlas, shape)
+            momenta_list.append(momentum)
+        self.momenta = np.stack(momenta_list, axis=0)
+
+        if self.verbose:
+            print(f"\n  Atlas building complete")
+            print(f"  Final energy: {self.convergence_history[-1]:.4f}")
+
+        return AtlasResult(
+            atlas=self.atlas,
+            momenta=self.momenta,
+            convergence_history=self.convergence_history,
+        )
+
+    def _compute_total_energy(self, shapes: List[np.ndarray]) -> float:
+        """Compute total squared distance from atlas to all shapes."""
+        if self.atlas is None:
+            return float("inf")
+
+        total = 0.0
+        for shape in shapes:
+            diff = shape - self.atlas
+            total += np.sum(diff**2)
+        return total
+
+    def save(self, output_dir: str) -> None:
+        """Save atlas and momenta to files.
+
+        Args:
+            output_dir: Directory to save files.
+        """
+        if self.atlas is None or self.momenta is None:
+            raise RuntimeError("No atlas to save. Call build() first.")
+
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        
-        # Save atlas
+
         np.save(output_path / "atlas.npy", self.atlas)
-        
-        # Save momenta
-        momenta_array = np.stack(self.momenta)  # (K, N, 3)
-        np.save(output_path / "momenta.npy", momenta_array)
-        
-        # Save energy history (convert to float for JSON serialization)
-        energy_list = [float(e) for e in self.energy_history]
-        with open(output_path / "energy_history.json", 'w') as f:
-            json.dump(energy_list, f)
-        
+        np.save(output_path / "momenta.npy", self.momenta)
+
+        metadata = {
+            "method": self.method,
+            "n_shapes": int(self.momenta.shape[0]),
+            "n_points": int(self.atlas.shape[0]),
+            "convergence_history": [float(e) for e in self.convergence_history],
+        }
+        with open(output_path / "atlas_metadata.json", "w") as f:
+            json.dump(metadata, f, indent=2)
+
         if self.verbose:
-            print(f"\n[AtlasBuilder] Saved to {output_path}")
-            print(f"  atlas.npy: {self.atlas.shape}")
-            print(f"  momenta.npy: {momenta_array.shape}")
-    
+            print(f"[AtlasBuilder] Saved to {output_path}")
+
     @classmethod
-    def load(cls, output_dir: str) -> 'LDDMMAtlasBuilder':
-        """Load atlas and momenta from files."""
+    def load(cls, output_dir: str) -> "AtlasBuilder":
+        """Load atlas and momenta from files.
+
+        Args:
+            output_dir: Directory containing saved files.
+
+        Returns:
+            AtlasBuilder with loaded atlas and momenta.
+        """
         output_path = Path(output_dir)
-        
+
         builder = cls(verbose=False)
         builder.atlas = np.load(output_path / "atlas.npy")
-        builder.momenta = list(np.load(output_path / "momenta.npy"))
-        
-        energy_file = output_path / "energy_history.json"
-        if energy_file.exists():
-            with open(energy_file, 'r') as f:
-                builder.energy_history = json.load(f)
-        
+        builder.momenta = np.load(output_path / "momenta.npy")
+
+        metadata_file = output_path / "atlas_metadata.json"
+        if metadata_file.exists():
+            with open(metadata_file, "r") as f:
+                metadata = json.load(f)
+            builder.method = metadata.get("method", "arithmetic")
+            builder.convergence_history = metadata.get("convergence_history", [])
+
         return builder
