@@ -66,6 +66,7 @@
 
 = Methods
 
+#include("chapters/lin_pca.typ")
 #include("chapters/methods.typ")
 
 = Results

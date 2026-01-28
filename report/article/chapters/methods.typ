@@ -29,7 +29,7 @@ $ (Phi compose f)(x) = Phi(f(x)) $
 
 #v(1em)
 #figure(
-  [PLACEHOLDER for Neuron Diagram],
+  image("../../fig/Neuron_diagram.png", width: 50%),
   caption: [Structure of an Artificial Neuron]
 )
 
