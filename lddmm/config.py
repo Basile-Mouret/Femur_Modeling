@@ -40,6 +40,10 @@ class LDDMMConfig:
 
         n_iter: Maximum optimizer iterations for registration.
 
+        verbose: Verbosity level for optimization.
+            - 0: Silent
+            - 1+: Print loss at each iteration
+
         device: Compute device for PyTorch operations.
             - "auto": Select CUDA if available, else CPU
             - "cuda" or "cuda:0": Force GPU
@@ -55,6 +59,7 @@ class LDDMMConfig:
     scale: float = 10.0
     regularization_weight: float = 0.01
     n_iter: int = 100
+    verbose: int = 1
     device: str = "auto"
 
     def __post_init__(self) -> None:

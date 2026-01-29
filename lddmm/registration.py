@@ -118,7 +118,7 @@ class LDDMMRegistration:
             optimizer=sks.LBFGS(),
             n_iter=self.config.n_iter,
             regularization_weight=self.config.regularization_weight,
-            verbose=False,
+            verbose=self.config.verbose,
         )
 
     def register(
@@ -162,39 +162,28 @@ class LDDMMRegistration:
         registration = self._build_registration(model)
 
         # Perform registration
-        try:
-            morphed = registration.fit_transform(source=source_poly, target=target_poly)
+        morphed = registration.fit_transform(source=source_poly, target=target_poly)
 
-            # Extract momentum from the model parameter
-            # In scikit-shapes, the parameter is the momentum field
-            momentum = self._extract_momentum(registration, source_poly)
+        # Extract momentum from the model parameter
+        # In scikit-shapes, the parameter is the momentum field
+        momentum = self._extract_momentum(registration, source_poly)
 
-            # Extract path if available
-            path = self._extract_path(registration)
+        # Extract path if available
+        path = self._extract_path(registration)
 
-            # Compute deformation energy
-            energy = self._compute_energy(registration)
+        # Compute deformation energy
+        energy = self._compute_energy(registration)
 
-            # Get transformed points
-            transformed = morphed.points.detach().cpu().numpy()
+        # Get transformed points
+        transformed = morphed.points.detach().cpu().numpy()
 
-            return RegistrationResult(
-                momentum=momentum,
-                transformed=transformed,
-                path=path,
-                energy=energy,
-                success=True,
-            )
-
-        except Exception as e:
-            # On failure, return displacement as fallback with warning
-            import warnings
-
-            warnings.warn(
-                f"LDDMM registration failed: {e}. "
-                "Returning displacement-based approximation."
-            )
-            return self._fallback_displacement(source, target)
+        return RegistrationResult(
+            momentum=momentum,
+            transformed=transformed,
+            path=path,
+            energy=energy,
+            success=True,
+        )
 
     def _extract_momentum(
         self, registration: sks.Registration, source: sks.PolyData
@@ -203,60 +192,29 @@ class LDDMMRegistration:
 
         The momentum is stored as the model parameter after fitting.
         """
-        try:
-            # The parameter_ attribute contains the fitted momentum
-            if hasattr(registration, "parameter_") and registration.parameter_ is not None:
-                return registration.parameter_.detach().cpu().numpy()
-        except (AttributeError, RuntimeError):
-            pass
+        # The parameter_ attribute contains the fitted momentum
+        if hasattr(registration, "parameter_") and registration.parameter_ is not None:
+            return registration.parameter_.detach().cpu().numpy()
 
-        # Fallback: compute displacement (linearized approximation)
-        # This should rarely happen with a successful registration
-        if hasattr(registration, "morphed_shape_"):
-            morphed = registration.morphed_shape_.points.detach().cpu().numpy()
-            source_pts = source.points.detach().cpu().numpy()
-            return morphed - source_pts
-
-        # Ultimate fallback
-        return np.zeros_like(source.points.detach().cpu().numpy())
+        raise RuntimeError(
+            "Could not extract momentum from registration. "
+            "The registration may have failed or the scikit-shapes API changed."
+        )
 
     def _extract_path(self, registration: sks.Registration) -> Optional[List[np.ndarray]]:
         """Extract geodesic path from registration if available."""
-        try:
-            if hasattr(registration, "path_") and registration.path_ is not None:
-                return [
-                    shape.points.detach().cpu().numpy()
-                    for shape in registration.path_
-                ]
-        except (AttributeError, RuntimeError):
-            pass
+        if hasattr(registration, "path_") and registration.path_ is not None:
+            return [
+                shape.points.detach().cpu().numpy()
+                for shape in registration.path_
+            ]
         return None
 
     def _compute_energy(self, registration: sks.Registration) -> float:
         """Compute deformation energy (regularization term)."""
-        try:
-            if hasattr(registration, "regularization_") and registration.regularization_ is not None:
-                return float(registration.regularization_.detach().cpu())
-        except (AttributeError, RuntimeError):
-            pass
+        if hasattr(registration, "regularization_") and registration.regularization_ is not None:
+            return float(registration.regularization_.detach().cpu())
         return 0.0
-
-    def _fallback_displacement(
-        self, source: np.ndarray, target: np.ndarray
-    ) -> RegistrationResult:
-        """Fallback to displacement when LDDMM fails.
-
-        Note: This is only valid as a linearized approximation for small
-        deformations. For large deformations, results will be inaccurate.
-        """
-        momentum = target - source
-        return RegistrationResult(
-            momentum=momentum,
-            transformed=target.copy(),
-            path=None,
-            energy=0.0,
-            success=False,
-        )
 
     def compute_momentum(
         self, source: np.ndarray, target: np.ndarray
@@ -309,12 +267,8 @@ class LDDMMRegistration:
         model = self._build_model()
 
         # Use model's morph method with the momentum as parameter
-        try:
-            morphed = model.morph(
-                shape=source_poly,
-                parameter=momentum_tensor,
-            )
-            return morphed.points.detach().cpu().numpy()
-        except Exception:
-            # Fallback: linear approximation
-            return source + momentum
+        morphed = model.morph(
+            shape=source_poly,
+            parameter=momentum_tensor,
+        )
+        return morphed.points.detach().cpu().numpy()

@@ -214,7 +214,7 @@ def main() -> int:
     # 3. Build atlas
     # -------------------------------------------------------------------------
     if verbose:
-        print("\n[3/4] Building atlas (geodesic averaging)...")
+        print("\n[3/4] Building atlas (average shape w.r.t geodesic distance)...")
 
     builder = AtlasBuilder(
         config=config,

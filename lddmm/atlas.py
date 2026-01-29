@@ -127,7 +127,7 @@ class AtlasBuilder:
         if self.verbose:
             print(f"[AtlasBuilder] Building atlas from {len(shapes)} shapes")
             print(f"  Points per shape: {n_points}")
-            print(f"  Max iterations: {self.max_iterations}")
+            print(f"  Max atlas iterations: {self.max_iterations}")
 
         registration = LDDMMRegistration(self.config)
 
@@ -140,11 +140,13 @@ class AtlasBuilder:
 
         for iteration in range(self.max_iterations):
             if self.verbose:
-                print(f"\n  Iteration {iteration + 1}/{self.max_iterations}")
+                print(f"\n  === Atlas iteration {iteration + 1}/{self.max_iterations} ===")
 
             # Compute momenta (log maps) from atlas to each shape
             momenta_list = []
             for i, shape in enumerate(shapes):
+                if self.verbose:
+                    print(f"    [Registration {i + 1}/{len(shapes)}]")
                 momentum = registration.compute_momentum(self.atlas, shape)
                 momenta_list.append(momentum)
 
