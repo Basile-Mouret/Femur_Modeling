@@ -126,9 +126,41 @@ After the training, we could use the encoder part of the network to obtain a low
 
 == Multi-threading
 
-Since the NN is quiet slow to train, we implemented a multi-threading system to speed up the process. \
-Firstly we try to create a thread for each operation that can be parallelized. But the overhead created by the creation of threads is too important compared to the time saved (we began with vector addition):
+Since training the neural network is quite slow, we used multi-threading to speed up the process.
+We focused on parallelizing the matrix-vector multiplication (MatVec) operations, as these are computationally intensive and benefit the most from parallel execution.
 
-With this approach, the time taken to train our network is too long because of the large number of threads created, we can't train in a reasonable time.
+=== With `std::threads`
+Our first approach was to use `std::threads` from the C++ standard library.
 
-So, we decided to split the operations in a fixed number of threads (depended of the computer threads, basically 4 or 8). Each thread will compute a part of the result vector.
+==== Naive method
+At first, we naively tried to create a thread for each operation that could be parallelized. However, the overhead from creating so many threads was far greater than any time saved. For example, for the largest matrix in our network ($54873 times 512 = 28,094,976$ parameters), we would have created 28 094 976 threads, which is obviously not feasible. With this approach, our neural network was actually slower than the single-threaded version.
+
+==== Improved approach <better-approach>
+We then decided to split the computation among a fixed number of threads (depending on the number of CPU cores, typically 8 or 16). Each thread computes a portion of the result vector: the first thread computes the first $"result.size"() / "num_threads"$ elements, the second thread the next $"result.size()" / "num_threads"$ elements, and so on.
+
+This approach worked much better, and we observed a significant speedup in the training time of our neural network.
+However, there was still some overhead due to thread creation and destruction at each MatVec operation.
+
+==== Thread pool <thread-pool>
+As noted in @better-approach, we were still creating and destroying too many threads. The best solution would be to implement a thread pool, where a fixed number of threads are created at the start of the program and reused for multiple MatVec operations.
+Unfortunately, due to time constraints, we did not implement this method, which could have further improved the performance of our neural network training.
+
+=== OpenMP
+A second approach was to use OpenMP, a popular API for parallel programming (see @openmp). It provides a simple and efficient way to parallelize code, as it is close to sequential code and automatically manages thread creation and workload distribution.
+
+=== Performance Comparison
+
+#figure(
+  image("/resources/img/perf_multithreading.png", width: 100%),
+  caption: [Performance comparison between single-threaded and multi-threaded implementations.
+   *Note:* The number at the end of epoch_times corresponds to the threshold parameter, which is the number of parameters in the weight matrix above which we use multithreading.]
+) <perf-multithreading>
+
+As shown in @perf-multithreading, using multi-threading significantly reduces the time required to train the neural network: we gain about 3 seconds per epoch, which is quite significant since we train our neural network for hundreds of epochs. \
+Even though we achieved better results with this multi-threaded approach, as mentioned in @thread-pool, we could have obtained even greater improvements by implementing a thread pool with `std::threads`.
+
+Overall, the multi-threaded implementation shows a clear advantage over the single-threaded version, especially as the size of the dataset increases. This demonstrates the effectiveness of parallelizing computationally intensive operations in our neural network training process.
+
+*Remark:* We observed that the time taken by our neural network to train with OpenMP multi-threading or with our `std::threads` implementation is quite similar. The OpenMP method likely uses an algorithm similar to the one we implemented with `std::threads`.
+
+*Remark 2:* As expected, with the threshold parameter set to 100 000 000, all computations are single-threaded (since the largest matrix in the neural network contains 28 094 976 parameters), so the training time matches that of the single-threaded implementation.
