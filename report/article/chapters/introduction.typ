@@ -1,2 +1,3 @@
 // general presentation of the context.
 
+Here is the report on our work on “Statistical and Neural Approaches to 3D Femur Modeling.” In the field of medical imaging, understanding the variations in the shapes of different parts of the human body is a crucial issue. During our work, we focused on human femurs and asked ourselves the following question: “How can we model and compress the complex 3D shape of a femur and explore the possible variations ?”
