@@ -11,7 +11,7 @@ and justifies the algorithmic choices made.
 4. [The Kernel and RKHS](#the-kernel-and-rkhs)
 5. [Atlas Building](#atlas-building)
 6. [Tangent Space PCA](#tangent-space-pca)
-7. [Why Not Just Use Displacements?](#why-not-just-use-displacements)
+7. [LDDMM vs Linear PCA: Key Differences](#lddmm-vs-linear-pca-key-differences)
 8. [Implementation Choices](#implementation-choices)
 9. [References](#references)
 
@@ -20,7 +20,8 @@ and justifies the algorithmic choices made.
 ## What is LDDMM?
 
 **Large Deformation Diffeomorphic Metric Mapping (LDDMM)** is a framework for
-computing smooth, invertible transformations between shapes.
+computing smooth, invertible transformations between shapes. It treats shapes
+as points on a **Riemannian manifold**, not as vectors in Euclidean space.
 
 ### The Key Idea
 
@@ -35,6 +36,21 @@ This ensures:
 1. **Diffeomorphism**: φ is smooth and invertible (no folding/tearing)
 2. **Metric structure**: The "length" of the deformation path defines a distance
 
+### The Fundamental Difference from Euclidean Methods
+
+**LDDMM treats shapes as manifold-valued data**:
+
+| Aspect | Euclidean (Linear PCA) | LDDMM |
+|--------|------------------------|-------|
+| **Shape space** | ℝ³ᴺ (flat vector space) | Diff(Ω) (curved manifold) |
+| **Distance** | ‖S₁ - S₂‖ (Euclidean) | ∫₀¹ ‖vₜ‖²_V dt (geodesic) |
+| **Mean** | Arithmetic: (1/K)Σᵢ Sᵢ | Fréchet: argmin Σᵢ d²(μ, Sᵢ) |
+| **Interpolation** | Linear: (1-t)S₁ + tS₂ | Geodesic: Exp_S₁(t·Log_S₁(S₂)) |
+
+The distance in LDDMM is **NOT** the Euclidean distance, even when shapes have
+point correspondence. The geodesic distance measures the "cost" of the smoothest
+diffeomorphism connecting two shapes, weighted by the kernel.
+
 ### Why Does This Matter?
 
 For statistical shape analysis, we need:
@@ -42,7 +58,8 @@ For statistical shape analysis, we need:
 - A **mean** shape (what's the average femur?)
 - A **linear space** for statistics (PCA requires vector operations)
 
-LDDMM provides all three through its Riemannian geometry.
+LDDMM provides all three through its Riemannian geometry—but the mean and
+distance are fundamentally different from their Euclidean counterparts.
 
 ---
 
@@ -55,14 +72,26 @@ can't simply add two femurs and get a valid femur. Instead, it's a **manifold**:
 a curved space where linear operations don't directly apply.
 
 ```
-        Shape Manifold
+        Shape Manifold (curved!)
            ╱╲
-          ╱  ╲
+          ╱  ╲        Geodesic (shortest path on manifold)
      S₁ ●────● S₂     ← Shapes are points
-          ╲  ╱
-           ●
+          ╲  ╱        Straight line in Euclidean space
+           ●            would cut through manifold!
           Atlas
 ```
+
+### Why Not Just Use Euclidean Space?
+
+Even with point correspondence, treating shapes as vectors in ℝ³ᴺ ignores the
+**geometry of deformations**:
+
+1. **Linear interpolation artifacts**: The midpoint (S₁ + S₂)/2 may have
+   self-intersections or unphysical local stretching
+2. **Wrong distance**: Euclidean distance treats all point movements equally;
+   LDDMM penalizes non-smooth deformations more heavily
+3. **Non-geodesic paths**: The straight line S₁ → S₂ is not the optimal
+   deformation path on the shape manifold
 
 ### The Tangent Space
 
@@ -73,7 +102,7 @@ approximation where we CAN do vector operations.
     Tangent Space at Atlas
     ━━━━━━━━━━━━━━━━━━━━━━
     │   →    →    →       │
-    │  v₁   v₂   v₃  ...  │  ← Initial momenta (vectors)
+    │  p₁   p₂   p₃  ...  │  ← Initial momenta (vectors)
     ━━━━━━━━━━━━━━━━━━━━━━
            ↑
          Atlas (base point)
@@ -81,6 +110,9 @@ approximation where we CAN do vector operations.
 
 The **initial momentum** p₀ at the atlas encodes "which direction and how far"
 to shoot to reach a target shape.
+
+**Critical point**: The momentum p₀ is NOT the displacement (target - source).
+It's the initial velocity of the geodesic, transformed by the kernel.
 
 ---
 
@@ -95,7 +127,7 @@ $$
 \frac{\partial p}{\partial t} + \nabla_v p + (\nabla v)^T p + p \, \text{div}(v) = 0
 $$
 
-where p is the momentum (dual to velocity via the kernel).
+where p is the momentum (dual to velocity via the kernel: v = K * p).
 
 ### In Practice
 
@@ -120,7 +152,18 @@ $$
 $$
 
 The log map finds the initial momentum that shoots to a given shape. This is
-computed via **registration** (optimization).
+computed via **registration** (optimization)—it's NOT simply (S - atlas).
+
+### The Geodesic Distance
+
+The distance between two shapes is the length of the geodesic connecting them:
+
+$$
+d(S_1, S_2)^2 = \min_{v_t} \int_0^1 \|v_t\|_V^2 \, dt
+$$
+
+where v_t is the time-varying velocity field and ‖·‖_V is the RKHS norm defined
+by the kernel. This is **fundamentally different** from Euclidean distance.
 
 ---
 
@@ -171,50 +214,64 @@ $$
 \mu = \arg\min_S \sum_{i=1}^K d^2(S, S_i)
 $$
 
+where d is the **geodesic distance**, NOT the Euclidean distance.
+
+### Why the Fréchet Mean ≠ Arithmetic Mean
+
+Even with point correspondence, the Fréchet mean in LDDMM is NOT the arithmetic
+mean. Here's why:
+
+1. **Different distance metric**: The geodesic distance d(S₁, S₂) involves
+   minimizing the integral ∫‖vₜ‖²_V dt over smooth velocity fields. This is
+   NOT equal to ‖S₁ - S₂‖_F.
+
+2. **Regularization matters**: The kernel K penalizes non-smooth deformations.
+   Two shapes that differ by a smooth global rotation have smaller geodesic
+   distance than two shapes differing by local jagged displacements of the
+   same Euclidean magnitude.
+
+3. **Curved geometry**: The minimizer of Σᵢ d²(μ, Sᵢ) on a curved manifold
+   is generally NOT the same as (1/K) Σᵢ Sᵢ.
+
+### Illustrative Example
+
+Consider three 2D point clouds forming triangles:
+- S₁: equilateral triangle at origin
+- S₂: same triangle rotated 60°
+- S₃: same triangle with one vertex displaced
+
+Euclidean distance:
+- d_E(S₁, S₂) could be large (all points moved)
+- d_E(S₁, S₃) could be small (one point moved)
+
+LDDMM geodesic distance:
+- d_G(S₁, S₂) is small (smooth rotation)
+- d_G(S₁, S₃) could be larger (local, less smooth deformation)
+
+The Fréchet mean would weight these differently than arithmetic mean.
+
 ### Algorithm: Iterative Geodesic Averaging
 
 ```
-1. Initialize: μ = arithmetic mean of shapes
+1. Initialize: μ = arithmetic mean of shapes (approximation)
 2. Repeat until convergence:
    a. Compute log maps: pᵢ = Log_μ(Sᵢ) for all shapes
+      (via LDDMM registration, NOT displacement)
    b. Average in tangent space: p̄ = (1/K) Σᵢ pᵢ
    c. Update: μ ← Exp_μ(α · p̄)  where α ∈ (0, 1] is step size
 ```
 
-### Special Case: Corresponding Points in Euclidean Space
+### Our Implementation
 
-**Important:** When shapes have **established point correspondence** and live
-in **Euclidean space** (as our femur landmarks do), the Fréchet mean **equals
-the arithmetic mean**.
+We use true LDDMM geodesic averaging:
 
-#### Why This Is True
+1. Initialize atlas as arithmetic mean of shapes (starting point only)
+2. Compute log maps pᵢ = Log_μ(Sᵢ) via LDDMM registration
+3. Average in tangent space: p̄ = (1/K) Σᵢ pᵢ
+4. Update atlas: μ ← Exp_μ(α · p̄) via geodesic shooting
+5. Repeat until convergence
 
-Consider K shapes S₁, ..., Sₖ where each Sᵢ ∈ ℝ^(N×3) represents N corresponding
-landmark points.
-
-1. **Distance is Euclidean**: With point correspondence, the geodesic distance
-   between shapes reduces to:
-   $$d(S_1, S_2) = \|S_1 - S_2\|_F$$
-   (Frobenius norm = sum of squared point-to-point distances)
-
-2. **Fréchet objective**: We minimize:
-   $$E(\mu) = \sum_{i=1}^K \|\mu - S_i\|_F^2$$
-
-3. **Solution**: Taking the gradient and setting to zero:
-   $$\nabla_\mu E = 2\sum_{i=1}^K (\mu - S_i) = 0$$
-   $$\Rightarrow \mu = \frac{1}{K}\sum_{i=1}^K S_i$$
-
-This is exactly the **arithmetic mean**.
-
-#### When Would Geodesic Averaging Differ?
-
-- **No correspondence**: When matching is unknown, the distance involves
-  optimization over correspondences, making it non-Euclidean
-- **Manifold-valued data**: If points lie on a sphere or other manifold
-- **Regularized matching**: If we penalize deformation complexity
-
-**For our femur landmarks with known correspondence in ℝ³, arithmetic mean
-is mathematically equivalent to the Fréchet mean.**
+This produces the true Fréchet mean on the shape manifold.
 
 ---
 
@@ -224,7 +281,7 @@ is mathematically equivalent to the Fréchet mean.**
 
 Since the tangent space at the atlas IS a vector space, we can do standard PCA:
 
-1. Compute all initial momenta: pᵢ = Log_atlas(Sᵢ)
+1. Compute all initial momenta: pᵢ = Log_atlas(Sᵢ) via LDDMM registration
 2. Flatten to vectors: pᵢ ∈ ℝ^(N×3) → ℝ^(3N)
 3. Subtract mean: p̃ᵢ = pᵢ - p̄
 4. SVD: P̃ = UΣVᵀ
@@ -242,7 +299,15 @@ $$
 S = \text{Exp}_\text{atlas}(p)
 $$
 
-where vⱼ are principal components and λⱼ are eigenvalues.
+where vⱼ are principal components, λⱼ are eigenvalues, and Exp is geodesic shooting.
+
+### Shape Projection
+
+To project a new shape S onto the PCA basis:
+
+1. Compute log map: p = Log_atlas(S) via LDDMM registration
+2. Center: p̃ = p - p̄
+3. Project: c = p̃ · V (inner product with principal components)
 
 ### Interpretation
 
@@ -252,36 +317,37 @@ where vⱼ are principal components and λⱼ are eigenvalues.
 
 ---
 
-## Why Not Just Use Displacements?
+## Why LDDMM Over Linear PCA?
 
-The previous implementation approximated:
+### Key Differences
 
-```python
-momentum = target - source  # WRONG for true LDDMM
-```
+| Aspect | Linear PCA | LDDMM |
+|--------|------------|-------|
+| **Shape representation** | Vector in ℝ³ᴺ | Point on Diff(Ω) manifold |
+| **Distance** | ‖S₁ - S₂‖_F | Geodesic (regularized path length) |
+| **Mean** | (1/K) Σᵢ Sᵢ | Fréchet mean (iterative) |
+| **"Momentum"** | Displacement: S - μ | Log map via registration |
+| **Interpolation** | (1-t)S₁ + tS₂ | Geodesic shooting |
+| **Extrapolation** | May self-intersect | Diffeomorphic (valid shapes) |
 
-### When This Works
+### Why Momenta ≠ Displacements
 
-This is valid in the **linearized small-deformation regime**:
-- Deformations are infinitesimally small
-- The kernel is identity (no regularization)
-- We're at the limit: LDDMM → linear elasticity
+Linear PCA uses displacements: `momentum = target - source`
 
-### When This Fails
+This ignores the geometry of deformations. True LDDMM momenta are obtained
+by solving a registration problem that finds the smoothest diffeomorphism.
 
-For realistic anatomical variation:
-- **Non-linearity**: Large rotations, scaling require geodesics
-- **Regularization ignored**: No smoothness constraint on deformation
-- **Geodesic distance wrong**: Euclidean ≠ geodesic for large deformations
+**The momentum p₀ satisfies**: v₀ = K * p₀ (velocity = kernel applied to momentum)
 
-### Practical Impact
+The kernel K enforces smoothness—nearby points must move coherently.
 
-| Aspect | Displacement | True LDDMM |
-|--------|--------------|------------|
-| Reconstruction error | Higher for large deformations | Lower |
-| Interpolation | May produce invalid shapes | Stays on manifold |
-| Geodesic distance | Approximation only | Exact |
-| Statistical validity | Questionable | Principled |
+### Advantages of True LDDMM
+
+1. **Topology preservation**: All interpolated/extrapolated shapes are valid
+2. **Physically plausible deformations**: Smooth, coherent transformations
+3. **Proper statistics**: Analysis respects the curved geometry of shape space
+4. **Large deformation handling**: No artifacts from linear approximation
+5. **Consistent distance metric**: Geodesic distance is geometrically meaningful
 
 ---
 

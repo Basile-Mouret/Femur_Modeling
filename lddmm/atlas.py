@@ -1,12 +1,15 @@
 """
 Atlas Building for LDDMM Shape Analysis.
 
-Computes the population mean (atlas) shape and initial momenta for
-tangent space analysis.
+Computes the population mean (Fréchet mean) shape and initial momenta for
+tangent space analysis using true LDDMM geodesic averaging.
 
-This module provides two methods for computing the atlas:
-1. Arithmetic mean (default): Exact Fréchet mean for corresponding points
-2. Geodesic mean: Iterative averaging using LDDMM (for soft correspondence)
+The atlas is computed via iterative geodesic averaging:
+1. Initialize with arithmetic mean
+2. Compute log maps (momenta) from atlas to each shape via LDDMM registration
+3. Average momenta in tangent space
+4. Update atlas via exponential map (geodesic shooting)
+5. Repeat until convergence
 
 Example:
     >>> from lddmm import AtlasBuilder, LDDMMConfig
@@ -17,7 +20,7 @@ Example:
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import List, Optional
 import json
 
 import numpy as np
@@ -31,9 +34,10 @@ class AtlasResult:
     """Result of atlas building.
 
     Attributes:
-        atlas: The mean shape (N, 3).
-        momenta: Initial momenta from atlas to each shape (K, N, 3).
-        convergence_history: Energy at each iteration (for geodesic method).
+        atlas: The Fréchet mean shape (N, 3).
+        momenta: True LDDMM momenta from atlas to each shape (K, N, 3),
+            computed via geodesic registration.
+        convergence_history: Energy at each iteration.
     """
 
     atlas: np.ndarray
@@ -42,38 +46,28 @@ class AtlasResult:
 
 
 class AtlasBuilder:
-    """Build population atlas (Fréchet mean) from a collection of shapes.
+    """Build population atlas (Fréchet mean) using true LDDMM.
 
-    The atlas is the shape that minimizes the sum of squared geodesic
+    Computes the atlas via iterative geodesic averaging in the space of
+    diffeomorphisms. The Fréchet mean minimizes the sum of squared geodesic
     distances to all shapes in the population.
 
-    Two methods are available:
-
-    1. **Arithmetic mean** (default, `method='arithmetic'`):
-       Simply averages the corresponding point positions. This is
-       mathematically equivalent to the Fréchet mean when:
-       - All shapes have established point correspondence
-       - Points live in Euclidean space (ℝ³)
-
-       Why? For corresponding points, the geodesic distance equals the
-       Euclidean distance: d(S₁, S₂) = ‖S₁ - S₂‖_F. The minimizer of
-       Σᵢ ‖μ - Sᵢ‖² is the arithmetic mean μ = (1/K) Σᵢ Sᵢ.
-
-    2. **Geodesic mean** (`method='geodesic'`):
-       Iteratively refines the atlas using geodesic averaging in tangent
-       space. This is useful when:
-       - Correspondence is uncertain or soft
-       - Additional regularization is desired
-       - Comparing to true LDDMM geodesic distances
+    Algorithm:
+        1. Initialize atlas as arithmetic mean of shapes
+        2. For each iteration:
+           a. Compute log maps: pᵢ = Log_μ(Sᵢ) via LDDMM registration
+           b. Average in tangent space: p̄ = (1/K) Σᵢ pᵢ
+           c. Update atlas: μ ← Exp_μ(α · p̄) via geodesic shooting
+        3. Converge when energy change is below threshold
 
     Attributes:
         config: LDDMM configuration for geodesic computations.
-        method: 'arithmetic' or 'geodesic'.
-        atlas: The computed atlas (after calling build()).
-        momenta: Momenta from atlas to each shape.
+        atlas: The computed Fréchet mean (after calling build()).
+        momenta: True LDDMM momenta from atlas to each shape.
+        convergence_history: Energy values during iteration.
 
     Example:
-        >>> builder = AtlasBuilder(method='arithmetic')
+        >>> builder = AtlasBuilder()
         >>> result = builder.build(shapes)
         >>> builder.save("model/atlas")
     """
@@ -81,7 +75,6 @@ class AtlasBuilder:
     def __init__(
         self,
         config: Optional[LDDMMConfig] = None,
-        method: Literal["arithmetic", "geodesic"] = "arithmetic",
         max_iterations: int = 10,
         convergence_tol: float = 1e-4,
         step_size: float = 0.5,
@@ -90,17 +83,13 @@ class AtlasBuilder:
         """Initialize atlas builder.
 
         Args:
-            config: LDDMM configuration for registration (geodesic method).
-            method: Atlas computation method:
-                - 'arithmetic': Direct averaging (fast, exact for correspondence)
-                - 'geodesic': Iterative geodesic averaging (slower, more general)
-            max_iterations: Maximum iterations for geodesic method.
+            config: LDDMM configuration for registration.
+            max_iterations: Maximum geodesic averaging iterations.
             convergence_tol: Relative energy change threshold for convergence.
-            step_size: Step size for geodesic atlas update (0 < step_size ≤ 1).
+            step_size: Step size for atlas update (0 < step_size ≤ 1).
             verbose: Print progress information.
         """
         self.config = config or LDDMMConfig()
-        self.method = method
         self.max_iterations = max_iterations
         self.convergence_tol = convergence_tol
         self.step_size = step_size
@@ -112,7 +101,7 @@ class AtlasBuilder:
         self.convergence_history: List[float] = []
 
     def build(self, shapes: List[np.ndarray]) -> AtlasResult:
-        """Build atlas from a collection of shapes.
+        """Build atlas from a collection of shapes using geodesic averaging.
 
         Args:
             shapes: List of K shapes, each (N, 3) with point correspondence.
@@ -137,51 +126,9 @@ class AtlasBuilder:
 
         if self.verbose:
             print(f"[AtlasBuilder] Building atlas from {len(shapes)} shapes")
-            print(f"  Method: {self.method}")
             print(f"  Points per shape: {n_points}")
+            print(f"  Max iterations: {self.max_iterations}")
 
-        if self.method == "arithmetic":
-            return self._build_arithmetic(shapes)
-        else:
-            return self._build_geodesic(shapes)
-
-    def _build_arithmetic(self, shapes: List[np.ndarray]) -> AtlasResult:
-        """Build atlas using arithmetic mean.
-
-        This is the exact Fréchet mean for shapes with point correspondence
-        in Euclidean space. See class docstring for mathematical justification.
-        """
-        # Stack and compute mean
-        shapes_array = np.stack(shapes, axis=0)  # (K, N, 3)
-        self.atlas = shapes_array.mean(axis=0)  # (N, 3)
-
-        # Compute momenta (displacements from atlas to each shape)
-        # For corresponding points in Euclidean space, momentum = displacement
-        self.momenta = shapes_array - self.atlas[np.newaxis, :, :]  # (K, N, 3)
-
-        # No iterations for arithmetic mean
-        self.convergence_history = [self._compute_total_energy(shapes)]
-
-        if self.verbose:
-            print(f"  Atlas computed (arithmetic mean)")
-            print(f"  Total energy: {self.convergence_history[0]:.4f}")
-
-        return AtlasResult(
-            atlas=self.atlas,
-            momenta=self.momenta,
-            convergence_history=self.convergence_history,
-        )
-
-    def _build_geodesic(self, shapes: List[np.ndarray]) -> AtlasResult:
-        """Build atlas using iterative geodesic averaging.
-
-        Algorithm:
-        1. Initialize atlas as arithmetic mean
-        2. Repeat until convergence:
-           a. Compute log maps (momenta) from atlas to each shape
-           b. Average momenta in tangent space
-           c. Update atlas by shooting along mean momentum
-        """
         registration = LDDMMRegistration(self.config)
 
         # Initialize with arithmetic mean
@@ -274,7 +221,6 @@ class AtlasBuilder:
         np.save(output_path / "momenta.npy", self.momenta)
 
         metadata = {
-            "method": self.method,
             "n_shapes": int(self.momenta.shape[0]),
             "n_points": int(self.atlas.shape[0]),
             "convergence_history": [float(e) for e in self.convergence_history],
@@ -305,7 +251,6 @@ class AtlasBuilder:
         if metadata_file.exists():
             with open(metadata_file, "r") as f:
                 metadata = json.load(f)
-            builder.method = metadata.get("method", "arithmetic")
             builder.convergence_history = metadata.get("convergence_history", [])
 
         return builder

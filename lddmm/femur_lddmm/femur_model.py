@@ -87,13 +87,6 @@ Examples:
         help="LDDMM configuration preset (default: for_femurs)",
     )
     parser.add_argument(
-        "--atlas-method",
-        type=str,
-        choices=["arithmetic", "geodesic"],
-        default="arithmetic",
-        help="Atlas computation method (default: arithmetic)",
-    )
-    parser.add_argument(
         "--scale",
         type=float,
         default=None,
@@ -221,11 +214,10 @@ def main() -> int:
     # 3. Build atlas
     # -------------------------------------------------------------------------
     if verbose:
-        print(f"\n[3/4] Building atlas (method={args.atlas_method})...")
+        print("\n[3/4] Building atlas (geodesic averaging)...")
 
     builder = AtlasBuilder(
         config=config,
-        method=args.atlas_method,
         verbose=verbose,
     )
     atlas_result = builder.build(shapes)
@@ -272,7 +264,7 @@ def main() -> int:
             "n_steps": config.n_steps,
             "regularization_weight": config.regularization_weight,
         },
-        "atlas_method": args.atlas_method,
+        "atlas_method": "geodesic",
         "n_pca_components": pca.n_components,
         "explained_variance_cumsum": [
             float(v) for v in pca.explained_variance_ratio.cumsum()

@@ -9,6 +9,11 @@ Large Deformation Diffeomorphic Metric Mapping (LDDMM):
 - **Atlas building**: Compute population mean (Fréchet mean)
 - **Tangent PCA**: Principal component analysis on shape manifold
 
+All operations use true LDDMM geodesic methods:
+- Atlas building uses iterative geodesic averaging
+- Projection uses LDDMM registration to compute log maps
+- Synthesis uses geodesic shooting for exponential maps
+
 Dependencies:
     - skshapes (scikit-shapes for LDDMM)
     - torch (PyTorch for GPU computation)
@@ -22,15 +27,15 @@ Example:
     >>> loader = FemurDataLoader("data/training")
     >>> shapes, filenames = loader.load_all()
     >>>
-    >>> # Build atlas
-    >>> builder = AtlasBuilder(method='arithmetic')
+    >>> # Build atlas using geodesic averaging
+    >>> builder = AtlasBuilder()
     >>> result = builder.build(shapes)
     >>>
     >>> # Compute Tangent PCA
     >>> pca = TangentPCA(n_components=10)
     >>> pca.fit(result.atlas, result.momenta)
     >>>
-    >>> # Synthesize new shapes
+    >>> # Synthesize new shapes along principal geodesics
     >>> new_shape = pca.synthesize_along_mode(mode=0, t_values=[-2, 0, 2])
 """
 

@@ -9,6 +9,10 @@ The tangent space at the atlas is a linear space where standard PCA
 applies. Each principal component represents a direction of maximum
 variance in shape space, corresponding to a mode of anatomical variation.
 
+This module uses true LDDMM throughout:
+- Projection uses LDDMM registration to compute the log map
+- Synthesis uses geodesic shooting for the exponential map
+
 Example:
     >>> from lddmm import TangentPCA, AtlasBuilder
     >>> builder = AtlasBuilder()
@@ -24,6 +28,9 @@ import json
 
 import numpy as np
 
+from .config import LDDMMConfig
+from .registration import LDDMMRegistration
+
 
 class TangentPCA:
     """Principal Component Analysis in the tangent space at the atlas.
@@ -32,13 +39,13 @@ class TangentPCA:
     atlas to each training shape. The principal components represent
     directions of maximum variance in the shape manifold.
 
-    Shape synthesis is performed using a linearized exponential map:
-        shape = atlas + momentum
-
-    For true geodesic synthesis, use LDDMMRegistration.shoot().
+    This implementation uses true LDDMM:
+    - `project()`: Computes log map via LDDMM registration
+    - `synthesize_shape()`: Uses geodesic shooting for exponential map
 
     Attributes:
         n_components: Number of principal components to retain.
+        config: LDDMM configuration for registration/shooting.
         atlas: The mean shape (N, 3).
         mean_momentum: Mean of all training momenta (N, 3).
         components: Principal components (n_components, N, 3).
@@ -52,13 +59,20 @@ class TangentPCA:
         >>> reconstructed = pca.synthesize_shape(coeffs)
     """
 
-    def __init__(self, n_components: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        n_components: Optional[int] = None,
+        config: Optional[LDDMMConfig] = None,
+    ) -> None:
         """Initialize Tangent PCA.
 
         Args:
             n_components: Number of components to keep. If None, keeps all.
+            config: LDDMM configuration for registration/shooting.
         """
         self.n_components = n_components
+        self.config = config or LDDMMConfig()
+        self._registration: Optional[LDDMMRegistration] = None
 
         # Fitted parameters (populated by fit())
         self.atlas: Optional[np.ndarray] = None
@@ -86,6 +100,12 @@ class TangentPCA:
     def n_components_(self) -> int:
         """Number of retained components."""
         return self.n_components if self.n_components else 0
+
+    def _get_registration(self) -> LDDMMRegistration:
+        """Get or create the LDDMM registration object."""
+        if self._registration is None:
+            self._registration = LDDMMRegistration(self.config)
+        return self._registration
 
     def fit(
         self, atlas: np.ndarray, momenta: np.ndarray
@@ -172,10 +192,10 @@ class TangentPCA:
         return self
 
     def project(self, shape: np.ndarray) -> np.ndarray:
-        """Project a shape onto the principal components.
+        """Project a shape onto the principal components using true LDDMM.
 
-        Computes the log map (momentum) from atlas to shape, then projects
-        onto the principal component basis.
+        Computes the log map from atlas to shape via LDDMM registration,
+        then projects the resulting momentum onto the principal component basis.
 
         Args:
             shape: Shape to project (N, 3).
@@ -188,8 +208,9 @@ class TangentPCA:
         """
         self._check_fitted()
 
-        # Linearized log map: momentum = shape - atlas
-        momentum = shape - self.atlas
+        # True LDDMM log map via registration
+        registration = self._get_registration()
+        momentum = registration.compute_momentum(self.atlas, shape)
 
         # Center
         momentum_centered = momentum - self.mean_momentum
@@ -203,10 +224,10 @@ class TangentPCA:
     def synthesize_shape(
         self, coefficients: Union[np.ndarray, List[float]]
     ) -> np.ndarray:
-        """Synthesize a shape from PCA coefficients.
+        """Synthesize a shape from PCA coefficients using geodesic shooting.
 
         Reconstructs the momentum from coefficients, then applies the
-        linearized exponential map to produce a shape.
+        exponential map via geodesic shooting to produce a shape.
 
         Args:
             coefficients: PCA coefficients (n_components,) or list.
@@ -234,8 +255,9 @@ class TangentPCA:
         # Add mean momentum
         momentum = momentum + self.mean_momentum
 
-        # Linearized exponential map
-        return self.atlas + momentum
+        # True LDDMM exponential map via geodesic shooting
+        registration = self._get_registration()
+        return registration.shoot(self.atlas, momentum)
 
     def synthesize_along_mode(
         self, mode: int, t_values: Union[np.ndarray, List[float]]
@@ -356,18 +378,19 @@ class TangentPCA:
         print(f"[TangentPCA] Saved to {output_path}")
 
     @classmethod
-    def load(cls, output_dir: str) -> "TangentPCA":
+    def load(cls, output_dir: str, config: Optional[LDDMMConfig] = None) -> "TangentPCA":
         """Load fitted PCA model from files.
 
         Args:
             output_dir: Directory containing saved files.
+            config: LDDMM configuration for registration/shooting.
 
         Returns:
             TangentPCA with loaded parameters.
         """
         output_path = Path(output_dir)
 
-        pca = cls()
+        pca = cls(config=config)
         pca.atlas = np.load(output_path / "tangent_pca_atlas.npy")
         pca.mean_momentum = np.load(output_path / "tangent_pca_mean_momentum.npy")
         pca.components = np.load(output_path / "tangent_pca_components.npy")

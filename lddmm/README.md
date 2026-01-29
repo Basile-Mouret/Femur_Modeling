@@ -27,13 +27,14 @@ from lddmm import FemurDataLoader, AtlasBuilder, TangentPCA, LDDMMConfig
 loader = FemurDataLoader("data/training")
 shapes, filenames = loader.load_all()
 
-# 2. Build atlas (mean shape)
-builder = AtlasBuilder(method='arithmetic')  # or 'geodesic'
+# 2. Build atlas (mean shape) via geodesic averaging
+config = LDDMMConfig.for_femurs()
+builder = AtlasBuilder(config=config)
 result = builder.build(shapes)
 builder.save("model/atlas")
 
 # 3. Fit Tangent PCA
-pca = TangentPCA(n_components=10)
+pca = TangentPCA(n_components=10, config=config)
 pca.fit(result.atlas, result.momenta)
 pca.save("model/tangent_pca")
 
@@ -131,15 +132,10 @@ new_shape = registration.shoot(source, momentum)
 ```python
 from lddmm import AtlasBuilder, LDDMMConfig
 
-# Arithmetic mean (exact for corresponding points)
-builder = AtlasBuilder(method='arithmetic')
-result = builder.build(shapes)
-
-# Geodesic mean (iterative, more general)
+# Build Fréchet mean via iterative geodesic averaging
 config = LDDMMConfig.for_femurs()
 builder = AtlasBuilder(
     config=config,
-    method='geodesic',
     max_iterations=10,
 )
 result = builder.build(shapes)
@@ -258,17 +254,15 @@ model/tangent_pca/
 └── tangent_pca_metadata.json
 ```
 
-## Why Arithmetic Mean = Fréchet Mean
+## True LDDMM Throughout
 
-For shapes with **established point correspondence** in **Euclidean space**:
+This implementation uses **true LDDMM geodesic operations** everywhere:
 
-1. The geodesic distance equals Euclidean distance: $d(S_1, S_2) = \|S_1 - S_2\|_F$
-2. The Fréchet mean minimizes: $\sum_i \|\mu - S_i\|^2$
-3. The minimizer is the arithmetic mean: $\mu = \frac{1}{K}\sum_i S_i$
+- **Atlas**: Computed via iterative geodesic averaging (Fréchet mean)
+- **Log map**: LDDMM registration to compute initial momenta
+- **Exponential map**: Geodesic shooting to synthesize shapes
 
-This is why we default to `method='arithmetic'` - it's faster and mathematically equivalent for our use case.
-
-See [LDDMM_THEORY.md](LDDMM_THEORY.md) for the full proof.
+See [LDDMM_THEORY.md](LDDMM_THEORY.md) for the mathematical foundations.
 
 ## References
 
