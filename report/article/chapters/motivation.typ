@@ -1,2 +1,7 @@
 // presentation of ONE (1) specific topic within the introduced context that presents a challenge of interest.
 
+Modeling the 3D shape of the human femur is a central challenge in medical image analysis. The femur exhibits both global similarities and subtle anatomical variations across individuals, which are crucial for applications such as surgical planning, implant design, and pathology detection. However, each femur in our dataset is represented by a dense 3D mesh with over 18,000 vertices, resulting in extremely high-dimensional data (54,873 dimensions per shape).
+
+The main challenge is to find a compact, informative representation of this complex shape space that preserves anatomical variability while enabling efficient analysis and generation of new, plausible femur shapes. Traditional linear methods like PCA can capture the main modes of variation, but may miss non-linear relationships that are important for biological realism. Neural networks, on the other hand, offer the potential to learn these non-linearities, but require careful design and validation to ensure anatomical plausibility.
+
+In this project, we focus on the problem of dimensionality reduction for femur shapes: how can we compress such high-dimensional anatomical data into a small set of parameters, without losing essential information? Addressing this question is key to advancing statistical shape modeling and enabling new applications in personalized medicine.

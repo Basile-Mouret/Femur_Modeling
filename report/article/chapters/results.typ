@@ -40,7 +40,7 @@ However, by moving the sliders, we also noticed that some generated femurs were 
 That's why we decided to perform a PCA on the latent space, to see if we could identify directions that lead to realistic femurs (see @encoder-results).
 == Encoder results <encoder-results>
 
-The goal of the encoder is to reduce the dimensionality of the femur shapes from 54873 to 10. 
+The goal of the encoder is to reduce the dimensionality of the femur shapes from 54,873 to 10. 
 
 We decide to plot the data in the latent space using only these three components. To see if there is some structure in the data.
 
