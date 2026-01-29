@@ -9,9 +9,11 @@ Out first approach to understand the shape variability of femur bones is through
 It's clear that in general, femur bones have a similar structure, but they can vary in size, curvature, and other shape characteristics. PCA is a statistical technique that helps us to identify and quantify these variations. It's a change of basis that aims to find the directions (principal components) in which the data varies the most. By projecting the data onto these principal components, we can reduce the dimensionality of the dataset while retaining most of the variance.
 
 #figure(
-  image("/resources/img/bone_visu.png", width: 40%),
+  image("/resources/img/bone_visu.png", width: 20%),
   caption: [3D visualisation of a femur. We reconize a general shape]
 )
+
+#v(1em)
 
 === Change of Basis
 
