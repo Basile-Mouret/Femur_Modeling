@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import numpy as np
 import pytest
 
-from lddmm.data_loader import (
+from lddmm.femur_lddmm.data_loader import (
     FemurDataLoader,
     verify_correspondence,
     compute_bounding_box

@@ -31,7 +31,7 @@ from matplotlib.colors import LinearSegmentedColormap
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from lddmm.tangent_pca import TangentPCA
-from lddmm.data_loader import FemurDataLoader
+from lddmm.femur_lddmm.data_loader import FemurDataLoader
 
 
 # =============================================================================

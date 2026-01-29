@@ -1,310 +1,274 @@
 """
-LDDMM Registration Wrapper using emlddmm Library.
+LDDMM Registration using scikit-shapes.
 
-Provides point cloud registration with established correspondence,
-wrapping the emlddmm library for 3D LDDMM.
+Provides true LDDMM (Large Deformation Diffeomorphic Metric Mapping) registration
+for point clouds with established point correspondence.
 
-For shapes with KNOWN POINT CORRESPONDENCE (like our femur data),
-we also provide a simpler displacement-based approach that is
-computationally efficient and sufficient for Tangent PCA.
+This module implements geodesic shooting in the space of diffeomorphisms,
+computing smooth invertible transformations between shapes.
 
-Author: Femur Modeling Project
-Date: 2026
+Example:
+    >>> from lddmm import LDDMMRegistration, LDDMMConfig
+    >>> config = LDDMMConfig.for_femurs()
+    >>> registration = LDDMMRegistration(config)
+    >>> result = registration.register(source, target)
+    >>> print(result.momentum.shape)  # (N, 3)
 """
+
+from dataclasses import dataclass
+from typing import List, Optional
 
 import numpy as np
 import torch
-from typing import Dict, Optional, Tuple, List
-from pathlib import Path
-import sys
-
-# Add emlddmm to path
-_emlddmm_path = Path(__file__).parent.parent / "lib" / "emlddmm"
-if str(_emlddmm_path) not in sys.path:
-    sys.path.insert(0, str(_emlddmm_path))
 
 try:
-    import emlddmm
-    EMLDDMM_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: emlddmm not available: {e}")
-    EMLDDMM_AVAILABLE = False
+    import skshapes as sks
+    from skshapes.morphing import extrinsic_deformation
+
+    # Fix type annotation bug in scikit-shapes 0.3
+    # torchdiffeq passes t as tensor but ODEModule.__call__ expects float
+    def _patched_odemodule_call(self, t, y):
+        """Call the ODE function, converting tensor t to float if needed."""
+        t_float = float(t) if isinstance(t, torch.Tensor) else t
+        return self.func(t_float, y)
+
+    extrinsic_deformation.ODEModule.__call__ = _patched_odemodule_call
+
+    SKSHAPES_AVAILABLE = True
+except ImportError:
+    SKSHAPES_AVAILABLE = False
+    sks = None
+
+from .config import LDDMMConfig
 
 
-class LDDMMPointRegistration:
+@dataclass
+class RegistrationResult:
+    """Result of LDDMM registration.
+
+    Attributes:
+        momentum: Initial momentum (N, 3) that generates the geodesic from
+            source to target. This is the key quantity for tangent PCA.
+        transformed: The deformed source shape (N, 3), should match target.
+        path: List of intermediate shapes along the geodesic (if available).
+        energy: Deformation energy (regularization term value).
+        success: Whether registration converged successfully.
     """
-    LDDMM-style registration for point clouds.
-    
-    For shapes with known point correspondence (like our femur data),
-    we provide two modes:
-    
-    1. 'displacement': Direct displacement vectors (fast, recommended for Tangent PCA)
-    2. 'emlddmm': Full LDDMM registration via emlddmm library (more accurate, slower)
-    
-    The displacement mode is preferred when:
-    - Shapes have established point correspondence
-    - Goal is Tangent PCA (where displacement ≈ initial momentum)
-    - Computational efficiency is important
-    
+
+    momentum: np.ndarray
+    transformed: np.ndarray
+    path: Optional[List[np.ndarray]] = None
+    energy: float = 0.0
+    success: bool = True
+
+
+class LDDMMRegistration:
+    """LDDMM registration for point clouds with correspondence.
+
+    Computes diffeomorphic transformations between shapes using geodesic
+    shooting in the space of diffeomorphisms. The transformation is
+    parametrized by an initial momentum field at the source points.
+
+    For shapes with known point correspondence, we use L2Loss which
+    measures the squared distance between corresponding points.
+
+    Attributes:
+        config: LDDMM configuration parameters.
+
     Example:
-        >>> reg = LDDMMPointRegistration(mode='displacement')
-        >>> result = reg.register(source, target)
-        >>> momentum = result['momentum']  # Use for Tangent PCA
+        >>> config = LDDMMConfig(n_steps=5, scale=15.0)
+        >>> reg = LDDMMRegistration(config)
+        >>> result = reg.register(source_points, target_points)
+        >>> momentum = result.momentum  # Use for tangent PCA
     """
-    
-    def __init__(
-        self,
-        mode: str = 'displacement',  # 'displacement' or 'emlddmm'
-        # Regularization parameters (for emlddmm mode)
-        sigmaR: float = 10.0,
-        a: float = 5.0,
-        p: float = 2.0,
-        # Point matching
-        sigmaP: float = 1.0,
-        # Integration
-        nt: int = 5,
-        # Optimization
-        eA: float = 0.0,
-        ev: float = 1e-3,
-        n_iter: int = 200,
-        # Computational
-        device: str = 'auto',
-        dtype: torch.dtype = torch.float32,
-        # Output
-        n_draw: int = 0,
-        verbose: bool = True
-    ):
-        """
-        Initialize registration.
-        
+
+    def __init__(self, config: Optional[LDDMMConfig] = None) -> None:
+        """Initialize LDDMM registration.
+
         Args:
-            mode: 'displacement' (fast) or 'emlddmm' (full LDDMM)
-            sigmaR: Regularization weight (emlddmm only)
-            a: Kernel scale in mm (emlddmm only)
-            ... (other params for emlddmm)
+            config: LDDMM configuration. If None, uses default settings.
+
+        Raises:
+            ImportError: If scikit-shapes is not installed.
         """
-        self.mode = mode
-        self.sigmaR = sigmaR
-        self.a = a
-        self.p = p
-        self.sigmaP = sigmaP
-        self.nt = nt
-        self.eA = eA
-        self.ev = ev
-        self.n_iter = n_iter
-        self.n_draw = n_draw
-        self.verbose = verbose
-        
-        if device == 'auto':
-            self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-        else:
-            self.device = device
-        self.dtype = dtype
-        
-        if verbose:
-            print(f"[LDDMMPointRegistration] Mode: {mode}")
-            if mode == 'emlddmm':
-                print(f"  Parameters: sigmaR={sigmaR}, a={a}, sigmaP={sigmaP}")
-    
-    def register(
-        self,
-        source: np.ndarray,
-        target: np.ndarray,
-        return_details: bool = False
-    ) -> Dict:
-        """
-        Register source points to target points.
-        
-        For corresponding points, computes the transformation that
-        maps source to target.
-        
-        Args:
-            source: (N, 3) source point cloud
-            target: (N, 3) target point cloud
-            return_details: Return additional details
-            
-        Returns:
-            result: Dictionary containing:
-                - 'momentum': Initial momentum (N, 3) - use for Tangent PCA
-                - 'transformed': Transformed source points
-                - 'error_mean': Mean registration error
-                - 'success': Whether registration succeeded
-        """
-        assert source.shape == target.shape, \
-            f"Shape mismatch: source {source.shape} vs target {target.shape}"
-        
-        if self.mode == 'displacement':
-            return self._register_displacement(source, target)
-        elif self.mode == 'emlddmm':
-            return self._register_emlddmm(source, target, return_details)
-        else:
-            raise ValueError(f"Unknown mode: {self.mode}")
-    
-    def _register_displacement(
-        self,
-        source: np.ndarray,
-        target: np.ndarray
-    ) -> Dict:
-        """
-        Simple displacement-based registration.
-        
-        For corresponding points, the displacement IS the momentum
-        (in the linearized/small deformation regime).
-        """
-        # Momentum = displacement from source to target
-        momentum = target - source
-        
-        # Transformed = source + momentum = target
-        transformed = target.copy()
-        
-        # Error is zero by definition for corresponding points
-        error = np.zeros(source.shape[0])
-        
-        result = {
-            'momentum': momentum,
-            'transformed': transformed,
-            'displacement': momentum,
-            'error_mean': 0.0,
-            'error_max': 0.0,
-            'error_std': 0.0,
-            'success': True,
-            'mode': 'displacement'
-        }
-        
-        if self.verbose:
-            mom_norm = np.linalg.norm(momentum, axis=1)
-            print(f"  Displacement: mean={mom_norm.mean():.4f}, max={mom_norm.max():.4f}")
-        
-        return result
-    
-    def _register_emlddmm(
-        self,
-        source: np.ndarray,
-        target: np.ndarray,
-        return_details: bool = False
-    ) -> Dict:
-        """
-        Full LDDMM registration using emlddmm library.
-        """
-        if not EMLDDMM_AVAILABLE:
-            print("[Warning] emlddmm not available, falling back to displacement mode")
-            return self._register_displacement(source, target)
-        
-        n_points = source.shape[0]
-        
-        # Create images that span the point clouds
-        xI, I = self._create_images_for_points(source, target)
-        xJ, J = xI, I  # Use same coordinate system
-        
-        # Convert points to tensors
-        pointsI = torch.tensor(source, dtype=self.dtype, device=self.device)
-        pointsJ = torch.tensor(target, dtype=self.dtype, device=self.device)
-        
-        if self.verbose:
-            print(f"[emlddmm] Registering {n_points} points...")
-        
-        try:
-            output = emlddmm.emlddmm(
-                xI=xI, I=I,
-                xJ=xJ, J=J,
-                pointsI=pointsI,
-                pointsJ=pointsJ,
-                sigmaP=self.sigmaP,
-                sigmaR=self.sigmaR,
-                a=self.a,
-                p=self.p,
-                nt=self.nt,
-                eA=self.eA,
-                ev=self.ev,
-                niter=self.n_iter,
-                device=self.device,
-                dtype=self.dtype,
-                ndraw=self.n_draw,
+        if not SKSHAPES_AVAILABLE:
+            raise ImportError(
+                "scikit-shapes is required for LDDMM registration. "
+                "Install with: pip install skshapes"
             )
-            
-            # Extract final result
-            final = output[-1] if isinstance(output, list) else output
-            
-            # Use displacement as momentum proxy
-            momentum = target - source
-            
-            result = {
-                'momentum': momentum,
-                'transformed': target.copy(),
-                'displacement': momentum,
-                'error_mean': 0.0,
-                'error_max': 0.0,
-                'success': True,
-                'mode': 'emlddmm'
-            }
-            
-            if return_details:
-                result['emlddmm_output'] = output
-                
-        except Exception as e:
-            if self.verbose:
-                print(f"[emlddmm] Failed: {e}")
-                print("[emlddmm] Falling back to displacement mode")
-            return self._register_displacement(source, target)
-        
-        return result
-    
-    def _create_images_for_points(
-        self,
-        source: np.ndarray,
-        target: np.ndarray,
-        resolution: int = 32,
-        margin: float = 20.0
-    ) -> Tuple[List[torch.Tensor], torch.Tensor]:
+
+        self.config = config or LDDMMConfig()
+        self._model: Optional[sks.ExtrinsicDeformation] = None
+        self._registration: Optional[sks.Registration] = None
+
+    def _build_model(self) -> sks.ExtrinsicDeformation:
+        """Build the scikit-shapes deformation model."""
+        return sks.ExtrinsicDeformation(
+            n_steps=self.config.n_steps,
+            kernel=self.config.kernel,
+            scale=self.config.scale,
+            control_points=False,  # Use shape points directly as control points
+        )
+
+    def _build_registration(self, model: sks.ExtrinsicDeformation) -> sks.Registration:
+        """Build the scikit-shapes registration object."""
+        return sks.Registration(
+            model=model,
+            loss=sks.L2Loss(),  # L2 loss for corresponding points
+            optimizer=sks.LBFGS(),
+            n_iter=self.config.n_iter,
+            regularization_weight=self.config.regularization_weight,
+            verbose=self.config.verbose,
+        )
+
+    def register(
+        self, source: np.ndarray, target: np.ndarray
+    ) -> RegistrationResult:
+        """Register source shape to target shape.
+
+        Computes the LDDMM geodesic from source to target, returning the
+        initial momentum that generates this transformation.
+
+        Args:
+            source: Source point cloud (N, 3).
+            target: Target point cloud (N, 3). Must have same N as source
+                (point correspondence required).
+
+        Returns:
+            RegistrationResult containing momentum, transformed shape, and
+            deformation energy.
+
+        Raises:
+            ValueError: If source and target have different shapes.
         """
-        Create coordinate system and dummy image for emlddmm.
-        """
-        # Combine points to get full bounding box
-        all_points = np.vstack([source, target])
-        pmin = all_points.min(axis=0) - margin
-        pmax = all_points.max(axis=0) + margin
-        
-        # Create coordinate arrays (emlddmm uses z, y, x order)
-        xI = [
-            torch.linspace(float(pmin[2]), float(pmax[2]), resolution, 
-                          dtype=self.dtype, device=self.device),
-            torch.linspace(float(pmin[1]), float(pmax[1]), resolution,
-                          dtype=self.dtype, device=self.device),
-            torch.linspace(float(pmin[0]), float(pmax[0]), resolution,
-                          dtype=self.dtype, device=self.device),
-        ]
-        
-        # Create simple gradient image (better conditioned than constant)
-        I = torch.zeros((1, resolution, resolution, resolution),
-                       dtype=self.dtype, device=self.device)
-        for i in range(resolution):
-            I[0, i, :, :] = i / resolution
-        
-        return xI, I
-    
-    def compute_momentum(
-        self,
-        source: np.ndarray,
-        target: np.ndarray
+        if source.shape != target.shape:
+            raise ValueError(
+                f"Shape mismatch: source {source.shape} vs target {target.shape}. "
+                "Point correspondence requires equal point counts."
+            )
+
+        # Convert to PolyData
+        source_poly = sks.PolyData(points=torch.tensor(source, dtype=torch.float32))
+        target_poly = sks.PolyData(points=torch.tensor(target, dtype=torch.float32))
+
+        # Move to device
+        if self.config.device != "cpu":
+            source_poly = source_poly.to(self.config.device)
+            target_poly = target_poly.to(self.config.device)
+
+        # Build fresh model and registration for each call
+        # (ensures clean state)
+        model = self._build_model()
+        registration = self._build_registration(model)
+
+        # Perform registration
+        morphed = registration.fit_transform(source=source_poly, target=target_poly)
+
+        # Extract momentum from the model parameter
+        # In scikit-shapes, the parameter is the momentum field
+        momentum = self._extract_momentum(registration, source_poly)
+
+        # Extract path if available
+        path = self._extract_path(registration)
+
+        # Compute deformation energy
+        energy = self._compute_energy(registration)
+
+        # Get transformed points
+        transformed = morphed.points.detach().cpu().numpy()
+
+        return RegistrationResult(
+            momentum=momentum,
+            transformed=transformed,
+            path=path,
+            energy=energy,
+            success=True,
+        )
+
+    def _extract_momentum(
+        self, registration: sks.Registration, source: sks.PolyData
     ) -> np.ndarray:
-        """
-        Compute momentum from source to target.
-        
-        For corresponding points, momentum ≈ displacement.
-        This is the key input for Tangent PCA.
-        """
-        return target - source
+        """Extract initial momentum from the fitted registration.
 
+        The momentum is stored as the model parameter after fitting.
+        """
+        # The parameter_ attribute contains the fitted momentum
+        if hasattr(registration, "parameter_") and registration.parameter_ is not None:
+            return registration.parameter_.detach().cpu().numpy()
 
-def get_device_info() -> Dict:
-    """Get information about available compute devices."""
-    info = {
-        'cuda_available': torch.cuda.is_available(),
-        'device_count': torch.cuda.device_count() if torch.cuda.is_available() else 0,
-    }
-    
-    if info['cuda_available']:
-        info['device_name'] = torch.cuda.get_device_name(0)
-        info['memory_total'] = torch.cuda.get_device_properties(0).total_memory / 1e9
-    
-    return info
+        raise RuntimeError(
+            "Could not extract momentum from registration. "
+            "The registration may have failed or the scikit-shapes API changed."
+        )
+
+    def _extract_path(self, registration: sks.Registration) -> Optional[List[np.ndarray]]:
+        """Extract geodesic path from registration if available."""
+        if hasattr(registration, "path_") and registration.path_ is not None:
+            return [
+                shape.points.detach().cpu().numpy()
+                for shape in registration.path_
+            ]
+        return None
+
+    def _compute_energy(self, registration: sks.Registration) -> float:
+        """Compute deformation energy (regularization term)."""
+        if hasattr(registration, "regularization_") and registration.regularization_ is not None:
+            return float(registration.regularization_.detach().cpu())
+        return 0.0
+
+    def compute_momentum(
+        self, source: np.ndarray, target: np.ndarray
+    ) -> np.ndarray:
+        """Compute initial momentum from source to target.
+
+        Convenience method that performs registration and returns only
+        the momentum field. This is the log map: Log_source(target).
+
+        Args:
+            source: Source point cloud (N, 3).
+            target: Target point cloud (N, 3).
+
+        Returns:
+            Initial momentum (N, 3).
+        """
+        result = self.register(source, target)
+        return result.momentum
+
+    def shoot(
+        self, source: np.ndarray, momentum: np.ndarray
+    ) -> np.ndarray:
+        """Shoot from source along momentum (exponential map).
+
+        Computes: Exp_source(momentum) = geodesic endpoint.
+
+        This is the inverse of compute_momentum (log map).
+
+        Args:
+            source: Source point cloud (N, 3).
+            momentum: Initial momentum field (N, 3).
+
+        Returns:
+            Deformed shape (N, 3).
+        """
+        if source.shape != momentum.shape:
+            raise ValueError(
+                f"Shape mismatch: source {source.shape} vs momentum {momentum.shape}"
+            )
+
+        # Convert to PolyData
+        source_poly = sks.PolyData(points=torch.tensor(source, dtype=torch.float32))
+        momentum_tensor = torch.tensor(momentum, dtype=torch.float32)
+
+        if self.config.device != "cpu":
+            source_poly = source_poly.to(self.config.device)
+            momentum_tensor = momentum_tensor.to(self.config.device)
+
+        # Build model and apply morphing
+        model = self._build_model()
+
+        # Use model's morph method with the momentum as parameter
+        morphed = model.morph(
+            shape=source_poly,
+            parameter=momentum_tensor,
+        )
+        return morphed.points.detach().cpu().numpy()

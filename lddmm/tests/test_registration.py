@@ -10,157 +10,250 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import numpy as np
 import pytest
 
-from lddmm.registration import (
-    LDDMMPointRegistration,
-    get_device_info
-)
-from lddmm.data_loader import FemurDataLoader
+from lddmm.config import LDDMMConfig
+from lddmm.registration import LDDMMRegistration, RegistrationResult
+from lddmm.femur_lddmm.data_loader import FemurDataLoader
 
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
 
-@pytest.fixture
-def data_dir():
-    """Return path to training data directory."""
-    return Path(__file__).parent.parent.parent / "data" / "training"
-
 
 @pytest.fixture
-def shapes(data_dir):
-    """Load all shapes."""
-    loader = FemurDataLoader(str(data_dir))
-    shapes, _ = loader.load_all()
-    return shapes
+def synthetic_shapes():
+    """Create small synthetic shapes for fast testing."""
+    np.random.seed(42)
+    n_points = 100  # Small point cloud for fast tests
+    
+    # Create base shape (sphere-ish)
+    theta = np.random.uniform(0, 2 * np.pi, n_points)
+    phi = np.random.uniform(0, np.pi, n_points)
+    r = 10.0  # radius in mm
+    
+    source = np.column_stack([
+        r * np.sin(phi) * np.cos(theta),
+        r * np.sin(phi) * np.sin(theta),
+        r * np.cos(phi),
+    ]).astype(np.float32)
+    
+    # Create target with small deformation
+    target = source + np.random.randn(n_points, 3).astype(np.float32) * 0.5
+    
+    return source, target
 
 
 @pytest.fixture
-def source_target(shapes):
+def source_target(synthetic_shapes):
     """Return a pair of shapes for registration."""
-    return shapes[0], shapes[1]
+    return synthetic_shapes
+
+
+@pytest.fixture
+def config():
+    """Create a fast test configuration."""
+    return LDDMMConfig(
+        n_steps=2,  # Fewer steps for faster tests
+        scale=5.0,  # Smaller scale for small synthetic data
+        n_iter=5,   # Fewer iterations for faster tests
+    )
 
 
 # ============================================================================
-# Tests
+# Tests for LDDMMConfig
 # ============================================================================
 
-class TestGetDeviceInfo:
-    """Tests for get_device_info function."""
-    
-    def test_returns_dict(self):
-        """Test that get_device_info returns a dictionary."""
-        info = get_device_info()
-        assert isinstance(info, dict)
-    
-    def test_has_required_keys(self):
-        """Test that device info has required keys."""
-        info = get_device_info()
-        assert 'cuda_available' in info
-        assert 'device_count' in info
+
+class TestLDDMMConfig:
+    """Tests for LDDMMConfig dataclass."""
+
+    def test_default_values(self):
+        """Test default configuration values."""
+        config = LDDMMConfig()
+        assert config.n_steps == 5
+        assert config.kernel == "gaussian"
+        assert config.scale == 10.0
+        assert config.regularization_weight == 0.01
+        assert config.n_iter == 100
+
+    def test_auto_device_selection(self):
+        """Test that 'auto' device gets resolved."""
+        config = LDDMMConfig(device="auto")
+        assert config.device in ["cuda", "cpu"]
+
+    def test_for_femurs_preset(self):
+        """Test femur preset configuration."""
+        config = LDDMMConfig.for_femurs()
+        assert config.scale == 15.0
+        assert config.n_steps == 5
+
+    def test_high_precision_preset(self):
+        """Test high precision preset."""
+        config = LDDMMConfig.high_precision()
+        assert config.n_steps == 10
+        assert config.n_iter == 200
+
+    def test_fast_preset(self):
+        """Test fast preset configuration."""
+        config = LDDMMConfig.fast()
+        assert config.n_steps == 3
+        assert config.n_iter == 50
+
+    def test_invalid_n_steps_raises(self):
+        """Test that invalid n_steps raises ValueError."""
+        with pytest.raises(ValueError):
+            LDDMMConfig(n_steps=0)
+
+    def test_invalid_scale_raises(self):
+        """Test that negative scale raises ValueError."""
+        with pytest.raises(ValueError):
+            LDDMMConfig(scale=-1.0)
 
 
-class TestLDDMMPointRegistrationDisplacement:
-    """Tests for LDDMMPointRegistration in displacement mode."""
-    
-    def test_init_default_mode(self):
-        """Test default initialization uses displacement mode."""
-        reg = LDDMMPointRegistration()
-        assert reg.mode == 'displacement'
-    
-    def test_register_returns_dict(self, source_target):
-        """Test that register returns a dictionary."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        assert isinstance(result, dict)
-    
-    def test_register_result_keys(self, source_target):
-        """Test that registration result has expected keys."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        assert 'momentum' in result
-        assert 'transformed' in result
-        assert 'displacement' in result
-        assert 'success' in result
-        assert 'mode' in result
-    
-    def test_momentum_shape(self, source_target):
+# ============================================================================
+# Tests for LDDMMRegistration
+# ============================================================================
+
+
+class TestLDDMMRegistrationInit:
+    """Tests for LDDMMRegistration initialization."""
+
+    def test_default_config(self):
+        """Test initialization with default config."""
+        try:
+            reg = LDDMMRegistration()
+            assert reg.config is not None
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+    def test_custom_config(self, config):
+        """Test initialization with custom config."""
+        try:
+            reg = LDDMMRegistration(config)
+            assert reg.config.n_steps == config.n_steps
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+
+class TestLDDMMRegistrationRegister:
+    """Tests for LDDMM registration."""
+
+    def test_register_returns_result(self, source_target, config):
+        """Test that register returns a RegistrationResult."""
+        try:
+            source, target = source_target
+            reg = LDDMMRegistration(config)
+            result = reg.register(source, target)
+
+            assert isinstance(result, RegistrationResult)
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+    def test_momentum_shape(self, source_target, config):
         """Test that momentum has correct shape."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        assert result['momentum'].shape == source.shape
-    
-    def test_displacement_equals_momentum(self, source_target):
-        """Test that displacement equals momentum in displacement mode."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        np.testing.assert_array_equal(result['displacement'], result['momentum'])
-    
-    def test_transformed_equals_target(self, source_target):
-        """Test that transformed equals target in displacement mode."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        np.testing.assert_array_almost_equal(result['transformed'], target)
-    
-    def test_success_flag(self, source_target):
-        """Test that registration succeeds."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(mode='displacement', verbose=False)
-        result = reg.register(source, target)
-        
-        assert result['success'] is True
+        try:
+            source, target = source_target
+            reg = LDDMMRegistration(config)
+            result = reg.register(source, target)
+
+            assert result.momentum.shape == source.shape
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+    def test_transformed_shape(self, source_target, config):
+        """Test that transformed shape has correct dimensions."""
+        try:
+            source, target = source_target
+            reg = LDDMMRegistration(config)
+            result = reg.register(source, target)
+
+            assert result.transformed.shape == target.shape
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+    def test_shape_mismatch_raises(self, config):
+        """Test that mismatched shapes raise ValueError."""
+        try:
+            source = np.random.randn(100, 3).astype(np.float32)
+            target = np.random.randn(50, 3).astype(np.float32)
+            reg = LDDMMRegistration(config)
+
+            with pytest.raises(ValueError, match="Shape mismatch"):
+                reg.register(source, target)
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
 
 
-class TestLDDMMPointRegistrationEmlddmm:
-    """Tests for LDDMMPointRegistration in emlddmm mode."""
-    
-    def test_init_emlddmm_mode(self):
-        """Test initialization in emlddmm mode."""
-        reg = LDDMMPointRegistration(mode='emlddmm')
-        assert reg.mode == 'emlddmm'
-    
-    def test_register_returns_result(self, source_target):
-        """Test that emlddmm mode returns a result (may fallback)."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(
-            mode='emlddmm',
-            n_iter=10,  # Few iterations for speed
-            verbose=False
-        )
-        result = reg.register(source, target)
-        
-        # Should succeed (either with emlddmm or fallback)
-        assert result['success'] is True
-        assert result['momentum'].shape == source.shape
-
-
-class TestComputeMomentum:
+class TestLDDMMRegistrationComputeMomentum:
     """Tests for compute_momentum method."""
-    
-    def test_momentum_is_displacement(self, source_target):
-        """Test that momentum equals displacement."""
-        source, target = source_target
-        reg = LDDMMPointRegistration(verbose=False)
-        
-        momentum = reg.compute_momentum(source, target)
-        expected = target - source
-        
-        np.testing.assert_array_equal(momentum, expected)
+
+    def test_compute_momentum_shape(self, source_target, config):
+        """Test that compute_momentum returns correct shape."""
+        try:
+            source, target = source_target
+            reg = LDDMMRegistration(config)
+            momentum = reg.compute_momentum(source, target)
+
+            assert momentum.shape == source.shape
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+
+class TestLDDMMRegistrationShoot:
+    """Tests for shoot (exponential map) method."""
+
+    def test_shoot_shape(self, source_target, config):
+        """Test that shooting produces correct shape."""
+        try:
+            source, target = source_target
+            reg = LDDMMRegistration(config)
+
+            # Create a momentum
+            momentum = np.random.randn(*source.shape).astype(np.float32) * 0.1
+
+            result = reg.shoot(source, momentum)
+
+            assert result.shape == source.shape
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
+
+    def test_shoot_momentum_mismatch_raises(self, source_target, config):
+        """Test that mismatched momentum raises ValueError."""
+        try:
+            source, _ = source_target
+            reg = LDDMMRegistration(config)
+
+            momentum = np.random.randn(50, 3).astype(np.float32)
+
+            with pytest.raises(ValueError, match="Shape mismatch"):
+                reg.shoot(source, momentum)
+        except ImportError:
+            pytest.skip("scikit-shapes not installed")
 
 
 # ============================================================================
-# Run tests directly
+# Tests for RegistrationResult
 # ============================================================================
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+
+class TestRegistrationResult:
+    """Tests for RegistrationResult dataclass."""
+
+    def test_creation(self):
+        """Test creating a RegistrationResult."""
+        momentum = np.random.randn(100, 3)
+        transformed = np.random.randn(100, 3)
+
+        result = RegistrationResult(
+            momentum=momentum,
+            transformed=transformed,
+            path=None,
+            energy=0.5,
+            success=True,
+        )
+
+        assert result.momentum.shape == (100, 3)
+        assert result.transformed.shape == (100, 3)
+        assert result.energy == 0.5
+        assert result.success is True
+        assert result.path is None

@@ -7,3 +7,9 @@ matplotlib>=3.5.0
 # Qt backend for matplotlib (required on some Linux systems)
 PyQt5>=5.15.0
 scikit-learn
+
+# LDDMM Shape Analysis Pipeline
+torch>=2.0.0
+skshapes>=0.3.0
+trimesh>=4.0.0
+pytest>=7.0.0

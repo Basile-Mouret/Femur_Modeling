@@ -1,232 +1,273 @@
-# LDDMM-based Tangent PCA for Femur Shape Analysis
+# LDDMM Shape Analysis Module
 
-This module provides tools for building statistical shape models using LDDMM (Large Deformation Diffeomorphic Metric Mapping) and Tangent PCA.
+Statistical shape analysis using Large Deformation Diffeomorphic Metric Mapping (LDDMM).
 
 ## Overview
 
-The pipeline consists of:
-1. **Data Loading** - Load femur meshes from OBJ files
-2. **Atlas Building** - Compute the Fréchet mean (population average shape)
-3. **Tangent PCA** - Perform PCA in the tangent space at the atlas
-4. **Visualization** - Interactive exploration of shape variations
+This module provides a clean, well-documented implementation of:
+
+1. **LDDMM Registration** - Geodesic shooting between shapes
+2. **Atlas Building** - Fréchet mean computation
+3. **Tangent PCA** - Principal component analysis on shape manifold
+
+The implementation uses [scikit-shapes](https://scikit-shapes.github.io/scikit-shapes/) for true LDDMM geodesic shooting.
+
+## Installation
+
+```bash
+pip install skshapes torch numpy trimesh
+```
 
 ## Quick Start
 
-### 1. Run the Full Pipeline
-
-```bash
-cd scripts/pca
-source ../../.venv/bin/activate.fish  # or: source ../../.venv/bin/activate
-
-python tangent_pca_demo.py
-```
-
-This will:
-- Load all 22 femur shapes from `data/training/`
-- Build the atlas (Fréchet mean)
-- Fit Tangent PCA with 10 components
-- Save the model to `scripts/pca/model/tangent_pca/`
-
-### 2. Interactive Exploration
-
-Launch the interactive explorer with slider controls:
-
-```bash
-python tangent_pca_explorer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj
-```
-
-**Controls:**
-- **Sliders**: Adjust each principal component weight (±3σ)
-- **R**: Reset all weights to zero (mean shape)
-- **Q**: Quit
-- **Mouse**: Rotate/zoom the 3D view
-
-### 3. Visualization Commands
-
-#### Show Atlas (Mean Shape)
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --atlas
-```
-
-#### Show Mode Variation (e.g., PC1)
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --mode 0
-```
-
-#### Show Multiple Modes in Grid
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --modes 5
-```
-
-#### Animate a Mode
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --animate 0
-```
-
-#### Variance Explained Plot
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --variance
-```
-
-#### Export Shapes to OBJ Files
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --export output/shapes/
-```
-
-#### Generate Full Report
-```bash
-python tangent_pca_visualizer.py \
-    --model model/tangent_pca \
-    --template ../../data/training/L_Femur_11_DECIM.obj.FINAL.obj \
-    --report output/report/
-```
-
-## Module Structure
-
-```
-Femur_Modeling/
-├── lddmm/                          # Core LDDMM module
-│   ├── __init__.py                 # Package exports
-│   ├── data_loader.py              # FemurDataLoader
-│   ├── registration.py             # LDDMMPointRegistration
-│   ├── atlas.py                    # LDDMMAtlasBuilder
-│   ├── tangent_pca.py              # TangentPCA
-│   ├── README.md                   # This file
-│   └── tests/                      # LDDMM unit tests
-│       ├── test_data_loader.py
-│       ├── test_registration.py
-│       ├── test_atlas.py
-│       └── test_tangent_pca.py
-├── scripts/
-│   └── pca/                        # PCA visualization tools
-│       ├── tangent_pca_visualizer.py   # TangentPCAVisualizer class
-│       ├── tangent_pca_explorer.py     # Interactive explorer
-│       ├── tangent_pca_demo.py         # Full pipeline demo
-│       ├── test_tangent_pca_visualization.py
-│       └── model/
-│           └── tangent_pca/        # Saved model files
-└── data/
-    └── training/                   # Femur OBJ files
-```
-
-## Python API
-
-### Loading a Saved Model
-
 ```python
-from scripts.pca.tangent_pca_visualizer import load_tangent_pca_model, load_template_mesh, TangentPCAVisualizer
+from lddmm import FemurDataLoader, AtlasBuilder, TangentPCA, LDDMMConfig
 
-# Load model and template
-model = load_tangent_pca_model('scripts/pca/model/tangent_pca')
-template = load_template_mesh('data/training/L_Femur_11_DECIM.obj.FINAL.obj')
-
-# Create visualizer
-viz = TangentPCAVisualizer(model, template)
-
-# Use it
-viz.show_atlas()
-viz.show_mode_variation(mode=0)
-viz.plot_variance_explained()
-```
-
-### Building a New Model
-
-```python
-from lddmm import FemurDataLoader, LDDMMAtlasBuilder, TangentPCA
-
-# Load data
-loader = FemurDataLoader('data/training')
+# 1. Load data
+loader = FemurDataLoader("data/training")
 shapes, filenames = loader.load_all()
 
-# Build atlas
-builder = LDDMMAtlasBuilder(max_outer_iterations=5)
+# 2. Build atlas (mean shape) via geodesic averaging
+config = LDDMMConfig.for_femurs()
+builder = AtlasBuilder(config=config)
 result = builder.build(shapes)
-atlas = result['atlas']
-momenta = result['momenta']
+builder.save("model/atlas")
 
-# Fit Tangent PCA
-pca = TangentPCA(n_components=10)
-pca.fit(atlas, momenta)
+# 3. Fit Tangent PCA
+pca = TangentPCA(n_components=10, config=config)
+pca.fit(result.atlas, result.momenta)
+pca.save("model/tangent_pca")
 
-# Save
-pca.save('scripts/pca/model/my_tangent_pca')
+# 4. Synthesize new shapes
+new_shapes = pca.synthesize_along_mode(mode=0, t_values=[-2, -1, 0, 1, 2])
 ```
 
-### Synthesizing New Shapes
+## Theory
+
+See [LDDMM_THEORY.md](LDDMM_THEORY.md) for comprehensive mathematical background.
+
+### Key Concepts
+
+**LDDMM (Large Deformation Diffeomorphic Metric Mapping)** computes smooth, invertible transformations between shapes by integrating a time-varying velocity field:
+
+$$\frac{\partial \phi_t}{\partial t}(x) = v(\phi_t(x), t)$$
+
+**Initial Momentum**: The velocity field is parametrized by an initial momentum $p_0$ at the source shape. This momentum is:
+- The input to geodesic shooting (exponential map)
+- The coordinate for tangent space PCA
+- Lives in the cotangent space at the atlas
+
+**Fréchet Mean**: The atlas $\mu$ minimizes total squared geodesic distance:
+
+$$\mu = \arg\min_S \sum_{i=1}^K d^2(S, S_i)$$
+
+For shapes with **point correspondence in Euclidean space**, this equals the arithmetic mean.
+
+## API Reference
+
+### Configuration
+
+```python
+from lddmm import LDDMMConfig
+
+# Default configuration
+config = LDDMMConfig()
+
+# Presets
+config = LDDMMConfig.for_femurs()     # Tuned for femur landmarks
+config = LDDMMConfig.high_precision() # More accurate, slower
+config = LDDMMConfig.fast()           # Quick exploratory analysis
+
+# Custom
+config = LDDMMConfig(
+    n_steps=5,                  # Geodesic integration steps (≥5 for true LDDMM)
+    kernel="gaussian",          # Kernel type: "gaussian" or "cauchy"
+    scale=15.0,                 # Kernel bandwidth σ in mm
+    regularization_weight=0.01, # Deformation smoothness penalty
+    n_iter=100,                 # Optimizer iterations
+    device="auto",              # "auto", "cuda", or "cpu"
+)
+```
+
+### Data Loading
+
+```python
+from lddmm import FemurDataLoader, verify_correspondence, compute_bounding_box
+
+# Load shapes
+loader = FemurDataLoader("data/training", file_pattern="*.obj")
+shapes, filenames = loader.load_all()
+
+# Verify point correspondence
+verify_correspondence(shapes)  # Returns True if all shapes have same vertex count
+
+# Compute bounding box (useful for setting kernel scale)
+bbox = compute_bounding_box(shapes)
+print(f"Size: {bbox['size']}")  # e.g., [100, 80, 60] mm
+```
+
+### Registration
+
+```python
+from lddmm import LDDMMRegistration, LDDMMConfig
+
+config = LDDMMConfig.for_femurs()
+registration = LDDMMRegistration(config)
+
+# Register source to target
+result = registration.register(source, target)
+print(result.momentum.shape)     # (N, 3) - initial momentum
+print(result.transformed.shape)  # (N, 3) - deformed source
+print(result.energy)             # Deformation energy
+
+# Compute log map (registration shortcut)
+momentum = registration.compute_momentum(source, target)
+
+# Compute exponential map (geodesic shooting)
+new_shape = registration.shoot(source, momentum)
+```
+
+### Atlas Building
+
+```python
+from lddmm import AtlasBuilder, LDDMMConfig
+
+# Build Fréchet mean via iterative geodesic averaging
+config = LDDMMConfig.for_femurs()
+builder = AtlasBuilder(
+    config=config,
+    max_iterations=10,
+)
+result = builder.build(shapes)
+
+# Access results
+atlas = result.atlas       # (N, 3) mean shape
+momenta = result.momenta   # (K, N, 3) momenta to each shape
+
+# Save/load
+builder.save("model/atlas")
+loaded = AtlasBuilder.load("model/atlas")
+```
+
+### Tangent PCA
 
 ```python
 from lddmm import TangentPCA
-import numpy as np
 
-# Load model
-pca = TangentPCA.load('scripts/pca/model/tangent_pca')
+# Fit PCA
+pca = TangentPCA(n_components=10)
+pca.fit(atlas, momenta)
 
-# Generate shape at specific PC weights
-weights = np.array([2.0, -1.0, 0.5, 0, 0, 0, 0, 0, 0, 0])  # 10 components
-shape = pca.synthesize_shape(weights)
+# Project shape to coefficients
+coefficients = pca.project(shape)  # (n_components,)
 
-# Generate shapes along a mode
-shapes, t_values = pca.get_mode_extremes(mode=0, n_std=3, n_steps=5)
+# Synthesize shape from coefficients
+new_shape = pca.synthesize_shape(coefficients)
+
+# Synthesize along principal mode
+shapes = pca.synthesize_along_mode(mode=0, t_values=[-2, -1, 0, 1, 2])
+
+# Get mode extremes
+shapes, t_values = pca.get_mode_extremes(mode=0, n_std=2.0)
+
+# Reconstruct with fewer components
+reconstructed = pca.reconstruct(shape, n_components=5)
+
+# Explained variance
+print(pca.explained_variance_ratio)  # [0.35, 0.20, 0.15, ...]
+print(sum(pca.explained_variance_ratio[:5]))  # Cumulative for top 5
+
+# Save/load
+pca.save("model/tangent_pca")
+loaded = TangentPCA.load("model/tangent_pca")
 ```
 
-## Results
+## Parameters
 
-With 22 femur shapes (18,291 vertices each):
+### Kernel Scale (σ)
 
-| Component | Variance | Cumulative |
-|-----------|----------|------------|
-| PC1       | 68.9%    | 68.9%      |
-| PC2       | 16.4%    | 85.3%      |
-| PC3       | 7.2%     | 92.5%      |
-| PC4       | 2.1%     | 94.5%      |
-| PC5       | 1.7%     | 96.2%      |
+The kernel scale controls the spatial correlation of deformations:
 
-## Running Tests
+- **Small σ**: Local deformations, points move independently
+- **Large σ**: Global deformations, nearby points move together
 
-```bash
-source .venv/bin/activate.fish
+**Rule of thumb**: σ ≈ 10-20% of bounding box diagonal.
 
-# Run LDDMM tests
-python -m pytest lddmm/tests/ -v
+For femurs (~100mm bounding box): σ ≈ 10-20mm.
 
-# Run visualization tests
-python -m pytest scripts/pca/test_tangent_pca_visualization.py -v
+### Number of Steps (n_steps)
 
-# Run all tests (fast, excluding slow registration)
-python -m pytest lddmm/tests/ scripts/pca/test_tangent_pca_visualization.py --ignore=lddmm/tests/test_registration.py -v
+Controls the accuracy of geodesic integration:
+
+- **n_steps=1**: Linear deformation (NOT true LDDMM)
+- **n_steps≥5**: True LDDMM with geodesic shooting
+
+Higher values give more accurate geodesics but slower computation.
+
+### Regularization Weight
+
+Controls the trade-off between matching accuracy and deformation smoothness:
+
+- **High weight (0.1)**: Smoother deformations, may not match exactly
+- **Low weight (0.001)**: Closer matching, may have irregular deformations
+
+## File Structure
+
+```
+lddmm/
+├── __init__.py          # Module exports
+├── config.py            # LDDMMConfig dataclass
+├── data_loader.py       # FemurDataLoader and utilities
+├── registration.py      # LDDMMRegistration
+├── atlas.py             # AtlasBuilder
+├── tangent_pca.py       # TangentPCA
+├── README.md            # This file
+├── LDDMM_THEORY.md      # Mathematical background
+├── IMPLEMENTATION_PLAN.md  # Migration plan
+└── tests/
+    ├── test_registration.py
+    ├── test_atlas.py
+    ├── test_tangent_pca.py
+    └── test_data_loader.py
 ```
 
-## Dependencies
+## Saved Model Files
 
-- numpy
-- scipy
-- torch (with CUDA support recommended)
-- pyvista
-- trimesh
-- matplotlib
-- pytest (for testing)
+### Atlas
+
+```
+model/atlas/
+├── atlas.npy           # (N, 3) mean shape
+├── momenta.npy         # (K, N, 3) initial momenta
+└── atlas_metadata.json # Method, shape counts
+```
+
+### Tangent PCA
+
+```
+model/tangent_pca/
+├── tangent_pca_atlas.npy              # (N, 3)
+├── tangent_pca_mean_momentum.npy      # (N, 3)
+├── tangent_pca_components.npy         # (n_components, N, 3)
+├── tangent_pca_eigenvalues.npy        # (n_components,)
+├── tangent_pca_explained_variance.npy # (n_components,)
+└── tangent_pca_metadata.json
+```
+
+## True LDDMM Throughout
+
+This implementation uses **true LDDMM geodesic operations** everywhere:
+
+- **Atlas**: Computed via iterative geodesic averaging (Fréchet mean)
+- **Log map**: LDDMM registration to compute initial momenta
+- **Exponential map**: Geodesic shooting to synthesize shapes
+
+See [LDDMM_THEORY.md](LDDMM_THEORY.md) for the mathematical foundations.
 
 ## References
 
-- Miller, Trouvé, Younes (2006) - Geodesic shooting for computational anatomy
-- Fletcher et al. (2004) - Principal geodesic analysis on symmetric spaces
+1. Beg, M.F., et al. (2005). "Computing Large Deformation Metric Mappings via Geodesic Flows of Diffeomorphisms." *IJCV* 61(2), 139-157.
+
+2. Younes, L. (2010). *Shapes and Diffeomorphisms*. Springer.
+
+3. scikit-shapes: https://scikit-shapes.github.io/scikit-shapes/
