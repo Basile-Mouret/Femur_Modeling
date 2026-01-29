@@ -75,23 +75,23 @@ Finally, the output of the neuron is given by the activation function applied to
 $ (Phi compose f)(x) = Phi(f(x)) $
 
 #v(1em)
-#figure(
-  image("/resources/img/Neuron_diagram.png", width: 70%),
+#grid(
+  columns: (1fr, 1fr),
+  gutter: 1em,
+  [
+  #figure(
+  image("/resources/img/Neuron_diagram.png", width: 71%),
   caption: [Structure of an Artificial Neuron]
+  )],
+  [#figure(
+  image("/resources/img/NN_Diagram.png", width: 100%),
+  caption: [Structure of a Neural Network])]
 )
-
-
-=== Layers and Network Architecture
-
-Artificial neurons are organized into layers to form a neural network. A typical feedforward neural network consists of an input layer, one or more hidden layers, and an output layer. Each layer contains multiple neurons, and the output of one layer serves as the input to the next layer.
 
 #v(1em)
-#figure(
-  image("/resources/img/NN_Diagram.png", width: 70%),
-  caption: [Structure of a Neural Network]
-)
+=== Layers and Network Architecture
 
-However, the weights and biases of the neurons are initially set to random values and need to be optimized through a training process.
+Artificial neurons are organized into layers to form a neural network. A typical feedforward neural network consists of an input layer, one or more hidden layers, and an output layer. Each layer contains multiple neurons, and the output of one layer serves as the input to the next layer. However, the weights and biases of the neurons are initially set to random values and need to be optimized through a training process.
 
 === Backpropagation and Training
 
