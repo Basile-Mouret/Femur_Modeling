@@ -84,7 +84,7 @@ With this approach, the time taken to train our network is too long because of t
 
 So, we decided to split the operations in a fixed number of threads (depended of the computer threads, basically 4 or 8). Each thread will compute a part of the result vector.
 
-#include "memory.typ"
+#include "memory_allocations.typ"
 
 == PCA
 
