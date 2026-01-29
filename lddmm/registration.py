@@ -7,12 +7,6 @@ for point clouds with established point correspondence.
 This module implements geodesic shooting in the space of diffeomorphisms,
 computing smooth invertible transformations between shapes.
 
-Theory:
-    See LDDMM_THEORY.md for mathematical background on:
-    - Geodesic shooting and EPDiff
-    - RKHS kernels and regularization
-    - Exponential and log maps on shape manifolds
-
 Example:
     >>> from lddmm import LDDMMRegistration, LDDMMConfig
     >>> config = LDDMMConfig.for_femurs()

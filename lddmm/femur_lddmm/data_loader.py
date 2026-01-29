@@ -3,14 +3,11 @@ Data Loader for Femur OBJ Files.
 
 Handles loading of femur meshes from OBJ files with established
 point correspondence (all shapes have same vertex count and ordering).
-
-Author: Femur Modeling Project
-Date: 2026
 """
 
 import numpy as np
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 import trimesh
 
 

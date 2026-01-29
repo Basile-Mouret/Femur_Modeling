@@ -8,11 +8,6 @@ This module provides two methods for computing the atlas:
 1. Arithmetic mean (default): Exact Fréchet mean for corresponding points
 2. Geodesic mean: Iterative averaging using LDDMM (for soft correspondence)
 
-Theory:
-    See LDDMM_THEORY.md for mathematical background on:
-    - Fréchet mean on shape manifolds
-    - Why arithmetic mean equals geodesic mean for corresponding points
-
 Example:
     >>> from lddmm import AtlasBuilder, LDDMMConfig
     >>> builder = AtlasBuilder()

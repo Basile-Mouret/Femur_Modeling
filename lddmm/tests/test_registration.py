@@ -12,7 +12,7 @@ import pytest
 
 from lddmm.config import LDDMMConfig
 from lddmm.registration import LDDMMRegistration, RegistrationResult
-from lddmm.data_loader import FemurDataLoader
+from lddmm.femur_lddmm.data_loader import FemurDataLoader
 
 
 # ============================================================================

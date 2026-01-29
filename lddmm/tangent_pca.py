@@ -5,15 +5,9 @@ Performs Principal Component Analysis on initial momenta in the tangent
 space at the atlas, enabling statistical analysis and shape synthesis
 along principal geodesics.
 
-Theory:
-    The tangent space at the atlas is a linear space where standard PCA
-    applies. Each principal component represents a direction of maximum
-    variance in shape space, corresponding to a mode of anatomical variation.
-
-    See LDDMM_THEORY.md for mathematical background on:
-    - Tangent space and linearization
-    - SVD-based PCA on momenta
-    - Shape synthesis via exponential map
+The tangent space at the atlas is a linear space where standard PCA
+applies. Each principal component represents a direction of maximum
+variance in shape space, corresponding to a mode of anatomical variation.
 
 Example:
     >>> from lddmm import TangentPCA, AtlasBuilder

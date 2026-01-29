@@ -9,10 +9,6 @@ Large Deformation Diffeomorphic Metric Mapping (LDDMM):
 - **Atlas building**: Compute population mean (Fréchet mean)
 - **Tangent PCA**: Principal component analysis on shape manifold
 
-Theory:
-    See LDDMM_THEORY.md for mathematical background on geodesic
-    shooting, RKHS kernels, and tangent space statistics.
-
 Dependencies:
     - skshapes (scikit-shapes for LDDMM)
     - torch (PyTorch for GPU computation)
@@ -39,7 +35,7 @@ Example:
 """
 
 from .config import LDDMMConfig
-from .data_loader import FemurDataLoader, verify_correspondence, compute_bounding_box
+from .femur_lddmm.data_loader import FemurDataLoader, verify_correspondence, compute_bounding_box
 from .registration import LDDMMRegistration, RegistrationResult
 from .atlas import AtlasBuilder, AtlasResult
 from .tangent_pca import TangentPCA
