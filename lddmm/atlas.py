@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 import json
+import time
 
 import numpy as np
 
@@ -139,6 +140,8 @@ class AtlasBuilder:
         self.convergence_history = []
 
         for iteration in range(self.max_iterations):
+            iteration_start = time.time()
+            
             if self.verbose:
                 print(f"\n  === Atlas iteration {iteration + 1}/{self.max_iterations} ===")
 
@@ -163,7 +166,9 @@ class AtlasBuilder:
             rel_change = abs(prev_energy - energy) / (abs(prev_energy) + 1e-10)
             if rel_change < self.convergence_tol:
                 if self.verbose:
+                    iteration_time = time.time() - iteration_start
                     print(f"  Converged (relative change: {rel_change:.2e})")
+                    print(f"  Iteration time: {iteration_time:.2f}s")
                 break
 
             prev_energy = energy
@@ -177,7 +182,9 @@ class AtlasBuilder:
 
             if self.verbose:
                 update_norm = np.linalg.norm(scaled_momentum)
+                iteration_time = time.time() - iteration_start
                 print(f"  Atlas update norm: {update_norm:.4f}")
+                print(f"  Iteration time: {iteration_time:.2f}s")
 
         # Final momenta computation at converged atlas
         momenta_list = []

@@ -206,8 +206,9 @@ def main() -> int:
         print(f"\n[2/4] LDDMM Configuration ({args.config}):")
         print(f"  Kernel: {config.kernel}")
         print(f"  Scale: {config.scale} mm")
-        print(f"  N steps: {config.n_steps}")
-        print(f"  Regularization: {config.regularization_weight}")
+        print(f"  ODE integration steps: {config.n_steps}")
+        print(f"  LBFGS iterations per registration: {config.n_iter}")
+        print(f"  Regularization weight: {config.regularization_weight}")
         print(f"  Device: {config.device}")
 
     # -------------------------------------------------------------------------
