@@ -1,8 +1,8 @@
 #import "@preview/hei-synd-report:0.1.1": *
-#import "/metadata.typ": *
-#import "/tail/bibliography.typ": *
-#import "/tail/glossary.typ": *
-#import "/extra.typ": *
+#import "metadata.typ": *
+#import "tail/bibliography.typ": *
+#import "tail/glossary.typ": *
+#import "extra.typ": *
 #show:make-glossary
 #register-glossary(entry-list)
 
