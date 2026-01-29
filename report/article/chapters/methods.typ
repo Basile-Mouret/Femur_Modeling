@@ -133,7 +133,7 @@ We focused on parallelizing the matrix-vector multiplication (MatVec) operations
 Our first approach was to use `std::threads` from the C++ standard library.
 
 ==== Naive method
-At first, we naively tried to create a thread for each operation that could be parallelized. However, the overhead from creating so many threads was far greater than any time saved. For example, for the largest matrix in our network ($54873 times 512 = 28,094,976$ parameters), we would have created 28 094 976 threads, which is obviously not feasible. With this approach, our neural network was actually slower than the single-threaded version.
+At first, we naively tried to create a thread for each operation that could be parallelized. However, the overhead from creating so many threads was far greater than any time saved. For example, for the largest matrix in our network ($54873 times 512 = 28,094,976$ parameters), we would have created 28,094,976 threads, which is obviously not feasible. With this approach, our neural network was actually slower than the single-threaded version.
 
 ==== Improved approach <better-approach>
 We then decided to split the computation among a fixed number of threads (depending on the number of CPU cores, typically 8 or 16). Each thread computes a portion of the result vector: the first thread computes the first $"result.size"() / "num_threads"$ elements, the second thread the next $"result.size()" / "num_threads"$ elements, and so on.
@@ -163,4 +163,4 @@ Overall, the multi-threaded implementation shows a clear advantage over the sing
 
 *Remark:* We observed that the time taken by our neural network to train with OpenMP multi-threading or with our `std::threads` implementation is quite similar. The OpenMP method likely uses an algorithm similar to the one we implemented with `std::threads`.
 
-*Remark 2:* As expected, with the threshold parameter set to 100 000 000, all computations are single-threaded (since the largest matrix in the neural network contains 28 094 976 parameters), so the training time matches that of the single-threaded implementation.
+*Remark 2:* As expected, with the threshold parameter set to 100,000,000, all computations are single-threaded (since the largest matrix in the neural network contains 28,094,976 parameters), so the training time matches that of the single-threaded implementation.
