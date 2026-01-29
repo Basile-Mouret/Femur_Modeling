@@ -4,7 +4,14 @@
 
 The goal of the encoder is to reduce the dimensionality of the femur shapes from 54873 to 10. 
 
-Even with this strong reduction, it's still complicated to visualize the results. We decide do a PCA on the latent space to see if we can focuse on fewer dimensions.
+We decide to plot the data in the latent space using only these three components. To see if there is some structure in the data.
+
+#figure(
+  image("/resources/img/latent_space_plane_comparison.pdf", width: 70%),
+  caption: [Latent space representation using the first three principal components. We draw one plane approximating the data distribution.]
+)
+
+With this plot, we can see that the data is not uniformly distributed in the latent space. We decide do a PCA on the latent space to see if we can focuse on fewer dimensions.
 
 #v(1em)
 #figure(
@@ -13,22 +20,5 @@ Even with this strong reduction, it's still complicated to visualize the results
 )
 #v(1em)
 
-We can see that the first three principal components explain almost 85% of the variance in the latent space.
-
-We decide to plot the data in the latent space using only these three components. To see if there is some structure in the data.
-
-#v(1em)
-/* #figure(
-  image("/resources/img/latent_space_plane_comparison.pdf", width: 70%),
-  caption: [Latent space representation using the first three principal components. We draw one plane approximating the data distribution.]
-) */
-#v(1em)
-
-We can see that the data is quite well approximated by a plane in this 3D space. That allow us to add details on the visualization of the latent space.
-
-Combinating these two observation that means that we can play with two parameters to explore the latent space.
-
-== Decoder results
-
-[TODO]
+With this plot, we can see that the first six principal components explain almost 90% of the variance in the latent space. This means that we can reduce the dimensionality of the latent space from 10 to 6 without losing much information.
 
