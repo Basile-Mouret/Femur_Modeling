@@ -8,7 +8,7 @@ This script:
 3. Computes Tangent PCA for shape variation analysis
 4. Saves the complete model to disk
 
-Warning : This process can be computationally intensive. It is designed to run on GPU-enabled systems for efficiency, using PyKeops via scikit-shapes.
+Warning : This process can be computationally intensive. It is designed to run on GPU-enabled systems for efficiency, using PyKeops/PyTorch routines via scikit-shapes.
 This library needs full CUDA toolkit installed and a compatible GPU.
 
 Usage (from project root):
@@ -30,6 +30,7 @@ Output:
     └── tangent_pca_metadata.json
 """
 
+import json
 import argparse
 import sys
 from pathlib import Path
@@ -251,7 +252,7 @@ def main() -> int:
     pca.save(str(output_dir))
 
     # Save additional metadata
-    import json
+    
 
     model_info = {
         "data_dirs": [str(d) for d in data_dirs],
