@@ -1,11 +1,13 @@
 """
 LDDMM Registration using scikit-shapes.
 
-Provides true LDDMM (Large Deformation Diffeomorphic Metric Mapping) registration
+Provides LDDMM (Large Deformation Diffeomorphic Metric Mapping) registration
 for point clouds with established point correspondence.
 
-This module implements geodesic shooting in the space of diffeomorphisms,
-computing smooth invertible transformations between shapes.
+This module implements Log map computation in Riemannian manifold of shapes, via iterative
+optimization and geodesic shooting (Exp map). The key output is the initial momentum
+field that generates the diffeomorphic transformation between source and target shapes.
+
 
 Example:
     >>> from lddmm import LDDMMRegistration, LDDMMConfig
@@ -48,7 +50,7 @@ class RegistrationResult:
 
     Attributes:
         momentum: Initial momentum (N, 3) that generates the geodesic from
-            source to target. This is the key quantity for tangent PCA.
+            source to target.
         transformed: The deformed source shape (N, 3), should match target.
         path: List of intermediate shapes along the geodesic (if available).
         energy: Deformation energy (regularization term value).
@@ -65,8 +67,7 @@ class RegistrationResult:
 class LDDMMRegistration:
     """LDDMM registration for point clouds with correspondence.
 
-    Computes diffeomorphic transformations between shapes using geodesic
-    shooting in the space of diffeomorphisms. The transformation is
+    The transformation is
     parametrized by an initial momentum field at the source points.
 
     For shapes with known point correspondence, we use L2Loss which
