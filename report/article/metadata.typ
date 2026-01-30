@@ -31,7 +31,7 @@
     tp_topleft  : image("resources/img/uga.svg", height: 1.2cm),
     tp_topright : image("resources/img/ensimag.svg", height: 1.5cm),
     tp_main     : image("resources/img/femur_3D.png",),
-    header      : image("resources/img/femur_3D.png", width: 2.5cm),
+    //header      : image("resources/img/femur_3D.png", width: 2.5cm),
   ),
   authors: (
     (
