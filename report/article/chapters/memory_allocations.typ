@@ -15,7 +15,7 @@ On the contrary, in `Fortran` arrays are stored in columns-major order.
 
 For compatibility reasons with linear algebra libraries in `Fortran` like `BLAS` and `LAPACK`, `Eigen` uses the column-major order by default.
 This means elements from a same columns are near one another in memory.
-This means when we access elements of a matrix, we should iterate over elements from the same columns as they will already be loaded in the cache, resulting in faster load times.
+So when we access elements of a matrix, we should iterate over elements from the same columns as they will already be loaded in the cache, resulting in faster load times.
 
 
 #figure(
@@ -41,8 +41,8 @@ This means when we access elements of a matrix, we should iterate over elements 
   caption: [Exchanging iteration order results in 2x faster \ model training by reducing cache misses]
 )
 
-We then reduced the ammount of memory that was created and destroyed during the neural network methods by preallocating matrices and vectors.
-These are placeholders in memory created before a function call and that are reused, thus removing the overhead of allocating and destroying memory. the allocation and destruction overhead.
+We then reduced the amount of memory that was created and destroyed during the neural network methods by preallocating matrices and vectors.
+These are placeholders in memory created before a function call and that are reused, thus removing the overhead of allocating and destroying memory. The allocation and destruction overhead.
 
 Finally we combined some linear algebra operations to remove temporary matrices. For example when computing $y = A^t dot x$ during the backpropagation, we were creating a temporary transpose matrix :  
 
@@ -50,7 +50,9 @@ Finally we combined some linear algebra operations to remove temporary matrices.
 Matrix2D<T> W_transpose = m_weights[layer + 1].transpose();
 Vector<T> weightedDelta = W_transpose * deltas[lastLayer - layer - 1];
 ```
-In order to eliminate this, we created a new method on the `Matrix2D` class that combines both operations efficiently :  
+In order to eliminate this, we created a new method on the `Matrix2D` class that combines both operations efficiently :
+
+#block(breakable: false)[
 ```cpp
 Vector<T> multiplyTranspose(const Vector<T>& vec) const {
     Vector<T> result(m_cols);
@@ -64,7 +66,7 @@ Vector<T> multiplyTranspose(const Vector<T>& vec) const {
     }
     return result;
 }
-```
+```]
 
 // describe and show usage of transposeMultiply and Rank1Update
 
