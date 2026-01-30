@@ -23,20 +23,20 @@ So when we access elements of a matrix, we should iterate over elements from the
     columns: (auto, auto, auto),
     align: horizon,
     ```cpp 
-    for (size_t j=0; j < m_cols; ++j){
-      for (size_t i=0; i < m_rows; ++i){
+    for (size_t j=0; j < m_rows; ++j){
+      for (size_t i=0; i < m_cols; ++i){
         // operation
       }
     }
     ```,
     $quad --> quad$,
     ```cpp 
-    for (size_t j=0; j < m_rows; ++j){
-      for (size_t i=0; i < m_cols; ++i){
+    for (size_t j=0; j < m_cols; ++j){
+      for (size_t i=0; i < m_rows; ++i){
         // operation
       }
     }
-    ```
+    ```,
   ),
   caption: [Exchanging iteration order results in 2x faster \ model training by reducing cache misses]
 )
