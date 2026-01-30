@@ -47,24 +47,56 @@ def load_model(model_dir: str) -> PCAModel:
     """Load a PCA model from directory (auto-detects type)."""
     model_path = Path(model_dir)
 
+    # New NPZ format (preferred)
+    tangent_npz = model_path / "tangent_pca.npz"
+    atlas_npz = model_path / "atlas.npz"
+    # Legacy format
     tangent_atlas = model_path / "tangent_pca_atlas.npy"
     tangent_components = model_path / "tangent_pca_components.npy"
     linear_mean = model_path / "mean.npy"
     linear_components = model_path / "components.npy"
 
-    if tangent_atlas.exists() and tangent_components.exists():
-        return _load_tangent_model(model_path)
+    if tangent_npz.exists() and atlas_npz.exists():
+        return _load_tangent_model_npz(model_path)
+    elif tangent_atlas.exists() and tangent_components.exists():
+        return _load_tangent_model_legacy(model_path)
     elif linear_mean.exists() and linear_components.exists():
         return _load_linear_model(model_path)
     else:
         raise FileNotFoundError(
             f"No valid PCA model found in {model_dir}. "
-            "Expected tangent_pca_*.npy or mean.npy + components.npy"
+            "Expected tangent_pca.npz + atlas.npz, tangent_pca_*.npy, or mean.npy + components.npy"
         )
 
 
-def _load_tangent_model(model_path: Path) -> PCAModel:
-    """Load Tangent PCA model."""
+def _load_tangent_model_npz(model_path: Path) -> PCAModel:
+    """Load Tangent PCA model from NPZ files (new format)."""
+    atlas_data = np.load(model_path / "atlas.npz")
+    pca_data = np.load(model_path / "tangent_pca.npz")
+
+    atlas = atlas_data["atlas"]
+    mean_momentum = pca_data["mean_momentum"]
+    components = pca_data["components"]
+    eigenvalues = pca_data["eigenvalues"]
+    explained_var = pca_data["explained_variance_ratio"]
+
+    mean = atlas + mean_momentum
+
+    print(f"[PCAExplorer] Loaded Tangent PCA (NPZ): {components.shape[0]} components, {atlas.shape[0]} points")
+
+    return PCAModel(
+        mean=mean,
+        components=components,
+        variances=eigenvalues,
+        explained_variance_ratio=explained_var,
+        n_components=components.shape[0],
+        n_points=atlas.shape[0],
+        model_type="tangent",
+    )
+
+
+def _load_tangent_model_legacy(model_path: Path) -> PCAModel:
+    """Load Tangent PCA model from legacy .npy files."""
     atlas = np.load(model_path / "tangent_pca_atlas.npy")
     mean_momentum = np.load(model_path / "tangent_pca_mean_momentum.npy")
     components = np.load(model_path / "tangent_pca_components.npy")
@@ -73,7 +105,7 @@ def _load_tangent_model(model_path: Path) -> PCAModel:
 
     mean = atlas + mean_momentum
 
-    print(f"[PCAExplorer] Loaded Tangent PCA: {components.shape[0]} components, {atlas.shape[0]} points")
+    print(f"[PCAExplorer] Loaded Tangent PCA (legacy): {components.shape[0]} components, {atlas.shape[0]} points")
 
     return PCAModel(
         mean=mean,

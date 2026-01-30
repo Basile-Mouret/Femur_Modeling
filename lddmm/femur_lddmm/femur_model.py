@@ -19,15 +19,9 @@ Usage (from project root):
 
 Output:
     models/lddmm_pca/
-    ├── atlas.npy                        # Mean shape (N, 3)
-    ├── momenta.npy                      # Momenta to each training shape (K, N, 3)
-    ├── atlas_metadata.json              # Atlas metadata
-    ├── tangent_pca_atlas.npy            # Duplicate for TangentPCA
-    ├── tangent_pca_components.npy       # Principal components (n_components, N, 3)
-    ├── tangent_pca_eigenvalues.npy      # Variance per component
-    ├── tangent_pca_explained_variance.npy
-    ├── tangent_pca_mean_momentum.npy
-    └── tangent_pca_metadata.json
+    ├── atlas.npz             # Atlas shape, faces, momenta, convergence history
+    ├── tangent_pca.npz       # PCA components, eigenvalues, variance, mean momentum
+    └── model_info.json       # Human-readable training configuration and metadata
 """
 
 import json

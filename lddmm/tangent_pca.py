@@ -348,65 +348,97 @@ class TangentPCA:
         return self.synthesize_shape(coefficients_truncated)
 
     def save(self, output_dir: str) -> None:
-        """Save fitted PCA model to files.
+        """Save fitted PCA model to a single NPZ file.
+
+        Creates `tangent_pca.npz` containing:
+        - mean_momentum: Mean of training momenta (N, 3)
+        - components: Principal components (n_components, N, 3)
+        - eigenvalues: Variance per component
+        - explained_variance_ratio: Fraction of variance per component
+        - n_components, n_samples, n_points: Metadata
+
+        Note: The atlas is NOT duplicated here; it's stored in atlas.npz.
+        When loading, the atlas is read from atlas.npz.
 
         Args:
-            output_dir: Directory to save files.
+            output_dir: Directory to save the file.
         """
         self._check_fitted()
 
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        np.save(output_path / "tangent_pca_atlas.npy", self.atlas)
-        np.save(output_path / "tangent_pca_mean_momentum.npy", self.mean_momentum)
-        np.save(output_path / "tangent_pca_components.npy", self.components)
-        np.save(output_path / "tangent_pca_eigenvalues.npy", self.eigenvalues)
-        np.save(
-            output_path / "tangent_pca_explained_variance.npy",
-            self.explained_variance_ratio,
+        np.savez_compressed(
+            output_path / "tangent_pca.npz",
+            mean_momentum=self.mean_momentum,
+            components=self.components,
+            eigenvalues=self.eigenvalues,
+            explained_variance_ratio=self.explained_variance_ratio,
+            n_components=np.array(self.n_components),
+            n_samples=np.array(self._n_samples),
+            n_points=np.array(self._n_points),
         )
 
-        metadata = {
-            "n_components": int(self.n_components),
-            "n_samples": int(self._n_samples),
-            "n_points": int(self._n_points),
-        }
-        with open(output_path / "tangent_pca_metadata.json", "w") as f:
-            json.dump(metadata, f, indent=2)
-
-        print(f"[TangentPCA] Saved to {output_path}")
+        print(f"[TangentPCA] Saved to {output_path / 'tangent_pca.npz'}")
 
     @classmethod
     def load(cls, output_dir: str, config: Optional[LDDMMConfig] = None) -> "TangentPCA":
-        """Load fitted PCA model from files.
+        """Load fitted PCA model from NPZ file.
+
+        Loads tangent_pca.npz and reads atlas from atlas.npz in the same directory.
 
         Args:
-            output_dir: Directory containing saved files.
+            output_dir: Directory containing the npz files.
             config: LDDMM configuration for registration/shooting.
 
         Returns:
             TangentPCA with loaded parameters.
         """
         output_path = Path(output_dir)
-
         pca = cls(config=config)
-        pca.atlas = np.load(output_path / "tangent_pca_atlas.npy")
-        pca.mean_momentum = np.load(output_path / "tangent_pca_mean_momentum.npy")
-        pca.components = np.load(output_path / "tangent_pca_components.npy")
-        pca.eigenvalues = np.load(output_path / "tangent_pca_eigenvalues.npy")
-        pca.explained_variance_ratio = np.load(
-            output_path / "tangent_pca_explained_variance.npy"
-        )
 
-        with open(output_path / "tangent_pca_metadata.json", "r") as f:
-            metadata = json.load(f)
+        # Try new NPZ format first
+        npz_file = output_path / "tangent_pca.npz"
+        if npz_file.exists():
+            data = np.load(npz_file)
+            pca.mean_momentum = data["mean_momentum"]
+            pca.components = data["components"]
+            pca.eigenvalues = data["eigenvalues"]
+            pca.explained_variance_ratio = data["explained_variance_ratio"]
+            pca.n_components = int(data["n_components"])
+            pca._n_samples = int(data["n_samples"])
+            pca._n_points = int(data["n_points"])
 
-        pca.n_components = metadata["n_components"]
-        pca._n_samples = metadata["n_samples"]
-        pca._n_points = metadata["n_points"]
+            # Load atlas from atlas.npz
+            atlas_file = output_path / "atlas.npz"
+            if atlas_file.exists():
+                atlas_data = np.load(atlas_file)
+                pca.atlas = atlas_data["atlas"]
+            else:
+                raise FileNotFoundError(
+                    f"atlas.npz not found in {output_path}. "
+                    "TangentPCA requires the atlas file."
+                )
+            return pca
 
-        return pca
+        # Legacy format fallback
+        legacy_file = output_path / "tangent_pca_atlas.npy"
+        if legacy_file.exists():
+            pca.atlas = np.load(output_path / "tangent_pca_atlas.npy")
+            pca.mean_momentum = np.load(output_path / "tangent_pca_mean_momentum.npy")
+            pca.components = np.load(output_path / "tangent_pca_components.npy")
+            pca.eigenvalues = np.load(output_path / "tangent_pca_eigenvalues.npy")
+            pca.explained_variance_ratio = np.load(
+                output_path / "tangent_pca_explained_variance.npy"
+            )
+            with open(output_path / "tangent_pca_metadata.json", "r") as f:
+                metadata = json.load(f)
+            pca.n_components = metadata["n_components"]
+            pca._n_samples = metadata["n_samples"]
+            pca._n_points = metadata["n_points"]
+            return pca
+
+        raise FileNotFoundError(f"No tangent PCA file found in {output_path}")
 
     def _check_fitted(self) -> None:
         """Check if model is fitted."""

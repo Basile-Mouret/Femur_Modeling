@@ -186,13 +186,17 @@ class AtlasBuilder:
                 iteration_time = time.time() - iteration_start
                 print(f"  Atlas update norm: {update_norm:.4f}")
                 print(f"  Iteration time: {iteration_time:.2f}s")
-
-        # Final momenta computation at converged atlas
-        momenta_list = []
-        for shape in shapes:
-            momentum = registration.compute_momentum(self.atlas, shape)
-            momenta_list.append(momentum)
-        self.momenta = np.stack(momenta_list, axis=0)
+        else:
+            # Loop completed without convergence (hit max_iterations)
+            # Need to recompute momenta at final atlas position since
+            # atlas was updated after the last momenta computation
+            if self.verbose:
+                print(f"\n  Max iterations reached, computing final momenta...")
+            momenta_list = []
+            for shape in shapes:
+                momentum = registration.compute_momentum(self.atlas, shape)
+                momenta_list.append(momentum)
+            self.momenta = np.stack(momenta_list, axis=0)
 
         if self.verbose:
             print(f"\n  Atlas building complete")
@@ -216,10 +220,17 @@ class AtlasBuilder:
         return total
 
     def save(self, output_dir: str) -> None:
-        """Save atlas and momenta to files.
+        """Save atlas and momenta to a single NPZ file.
+
+        Creates `atlas.npz` containing:
+        - atlas: The Fréchet mean shape (N, 3)
+        - momenta: Initial momenta from atlas to each training shape (K, N, 3)
+        - convergence_history: Energy at each iteration
+        - n_shapes: Number of training shapes
+        - n_points: Number of points per shape
 
         Args:
-            output_dir: Directory to save files.
+            output_dir: Directory to save the file.
         """
         if self.atlas is None or self.momenta is None:
             raise RuntimeError("No atlas to save. Call build() first.")
@@ -227,40 +238,51 @@ class AtlasBuilder:
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        np.save(output_path / "atlas.npy", self.atlas)
-        np.save(output_path / "momenta.npy", self.momenta)
-
-        metadata = {
-            "n_shapes": int(self.momenta.shape[0]),
-            "n_points": int(self.atlas.shape[0]),
-            "convergence_history": [float(e) for e in self.convergence_history],
-        }
-        with open(output_path / "atlas_metadata.json", "w") as f:
-            json.dump(metadata, f, indent=2)
+        np.savez_compressed(
+            output_path / "atlas.npz",
+            atlas=self.atlas,
+            momenta=self.momenta,
+            convergence_history=np.array(self.convergence_history),
+            n_shapes=np.array(self.momenta.shape[0]),
+            n_points=np.array(self.atlas.shape[0]),
+        )
 
         if self.verbose:
-            print(f"[AtlasBuilder] Saved to {output_path}")
+            print(f"[AtlasBuilder] Saved to {output_path / 'atlas.npz'}")
 
     @classmethod
     def load(cls, output_dir: str) -> "AtlasBuilder":
-        """Load atlas and momenta from files.
+        """Load atlas and momenta from NPZ file.
 
         Args:
-            output_dir: Directory containing saved files.
+            output_dir: Directory containing atlas.npz.
 
         Returns:
             AtlasBuilder with loaded atlas and momenta.
         """
         output_path = Path(output_dir)
 
-        builder = cls(verbose=False)
-        builder.atlas = np.load(output_path / "atlas.npy")
-        builder.momenta = np.load(output_path / "momenta.npy")
+        # Support both new NPZ format and legacy format
+        npz_file = output_path / "atlas.npz"
+        if npz_file.exists():
+            data = np.load(npz_file)
+            builder = cls(verbose=False)
+            builder.atlas = data["atlas"]
+            builder.momenta = data["momenta"]
+            builder.convergence_history = data["convergence_history"].tolist()
+            return builder
 
-        metadata_file = output_path / "atlas_metadata.json"
-        if metadata_file.exists():
-            with open(metadata_file, "r") as f:
-                metadata = json.load(f)
-            builder.convergence_history = metadata.get("convergence_history", [])
+        # Legacy format fallback
+        legacy_atlas = output_path / "atlas.npy"
+        if legacy_atlas.exists():
+            builder = cls(verbose=False)
+            builder.atlas = np.load(output_path / "atlas.npy")
+            builder.momenta = np.load(output_path / "momenta.npy")
+            metadata_file = output_path / "atlas_metadata.json"
+            if metadata_file.exists():
+                with open(metadata_file, "r") as f:
+                    metadata = json.load(f)
+                builder.convergence_history = metadata.get("convergence_history", [])
+            return builder
 
-        return builder
+        raise FileNotFoundError(f"No atlas file found in {output_path}")
