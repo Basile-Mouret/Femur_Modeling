@@ -15,15 +15,15 @@ import torch
 class LDDMMConfig:
     """Configuration for LDDMM registration.
 
-    This dataclass encapsulates all parameters needed for LDDMM geodesic
+    This dataclass encapsulates all parameters needed for LDDMM registration and geodesic
     shooting. The parameters control the trade-off between deformation
     smoothness (regularization) and data fidelity (matching accuracy).
 
     Attributes:
-        n_steps: Number of time discretization steps for geodesic integration.
+        n_steps: Number of time discretization steps for geodesic shooting (done via Hamiltonian
+        integration). Controls the accuracy of the geodesic approximation:
             - n_steps=1: Linear deformation (NOT true LDDMM)
             - n_steps≥5: True LDDMM with geodesic shooting
-            Higher values give more accurate geodesics but slower computation.
 
         kernel: RKHS kernel type defining the deformation regularity.
             - "gaussian": Standard choice, smooth deformations
@@ -79,12 +79,8 @@ class LDDMMConfig:
     @classmethod
     def for_femurs(cls) -> "LDDMMConfig":
         """Preset configuration for femur landmarks.
-
         Tuned for femur point clouds with ~100mm bounding box diagonal.
         Uses moderate regularization to capture anatomical variation.
-
-        Returns:
-            LDDMMConfig configured for femur analysis.
         """
         return cls(
             n_steps=5,
@@ -97,12 +93,7 @@ class LDDMMConfig:
     @classmethod
     def high_precision(cls) -> "LDDMMConfig":
         """Preset for higher accuracy at the cost of speed.
-
         Uses more integration steps and optimizer iterations.
-        Useful for final analysis or when accuracy is critical.
-
-        Returns:
-            LDDMMConfig with high-precision settings.
         """
         return cls(
             n_steps=10,
@@ -115,12 +106,7 @@ class LDDMMConfig:
     @classmethod
     def fast(cls) -> "LDDMMConfig":
         """Preset for quick exploratory analysis.
-
-        Trades accuracy for speed. Useful for prototyping or
-        large datasets where exact geodesics are less critical.
-
-        Returns:
-            LDDMMConfig with fast settings.
+        Trades accuracy for speed. 
         """
         return cls(
             n_steps=3,

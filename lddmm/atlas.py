@@ -5,11 +5,12 @@ Computes the population mean (Fréchet mean) shape and initial momenta for
 tangent space analysis using true LDDMM geodesic averaging.
 
 The atlas is computed via iterative geodesic averaging:
-1. Initialize with arithmetic mean
-2. Compute log maps (momenta) from atlas to each shape via LDDMM registration
-3. Average momenta in tangent space
-4. Update atlas via exponential map (geodesic shooting)
-5. Repeat until convergence
+
+Initialize with arithmetic mean
+Repeat until convergence:
+    Compute log maps (momenta) from atlas to each shape via LDDMM registration
+    Average momenta in tangent space
+    Update atlas via exponential map (geodesic shooting) in direction of average momenta
 
 Example:
     >>> from lddmm import AtlasBuilder, LDDMMConfig
