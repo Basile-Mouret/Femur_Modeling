@@ -29,10 +29,10 @@
 
 = Motivation
 #include "chapters/motivation.typ"
-= Methods
-#include "chapters/methods.typ"
-= Results
-#include "chapters/results.typ"
+= PCA
+#include "chapters/pca.typ"
+= Autoencoder 
+#include "chapters/autoencoder.typ"
 = LDDMM
 #include "chapters/lddmm.typ"
 = Discussion

@@ -1,5 +1,3 @@
-// results achieved with the chosen method + performance assessment (computation time, accuracy, code quality, ...).
-
 == Tools to debug and assess the quality of the reconstruction
 
 To help us debug and assess the quality of our neural network, we developed several Python scripts using the PyVista library @pyvista:

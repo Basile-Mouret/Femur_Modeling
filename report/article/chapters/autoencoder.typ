@@ -1,53 +1,3 @@
-// detailed description of the methods chosen to solve the challenge.
-
-== Linear Principal Component Analysis (PCA)
-
-Out first approach to understand the shape variability of femur bones is through Linear Principal Component Analysis (PCA). 
-
-=== Principle 
-
-It's clear that in general, femur bones have a similar structure, but they can vary in size, curvature, and other shape characteristics. PCA is a statistical technique that helps us to identify and quantify these variations. It's a change of basis that aims to find the directions (principal components) in which the data varies the most. By projecting the data onto these principal components, we can reduce the dimensionality of the dataset while retaining most of the variance.
-
-#figure(
-  image("/resources/img/bone_visu.png", width: 20%),
-  caption: [3D visualisation of a femur. We reconize a general shape]
-)
-
-#v(1em)
-
-=== Change of Basis
-
-To perform PCA, we start with a dataset of femur bone shapes represented as high-dimensional vectors. We note our $N$ femurs $S_i in RR^(3P)$ the shape vector of the $i^(t h)$ femur, where $P$ is the number of points used to represent the shape. The first step is to compute the mean shape vector $macron(S)$:
-
-$ S = 1/N sum_(i=1)^N S_i $
-
-We then center the data by subtracting the mean shape from each femur shape vector and compute the covariance matrix $C$ of the centered data:
-
-$ C = 1/(N-1) sum_(i=1)^N (S_i - macron(S))(S_i - macron(S))^T $
-
-Our goal is to find a change of basis four our centered vector that all our data are uncorrelated. That means we want to find a basis where the covariance matrix is diagonal. This is achieved by finding the eigenvalues and eigenvectors of the covariance matrix $C$. The eigenvectors represent the directions of maximum variance (principal components), and the corresponding eigenvalues indicate the amount of variance captured by each principal component.
-
-#v(1em)
-
-=== Dimensionality Reduction
-
-Once we have the principal components, we can project the original femur shape vectors onto a lower-dimensional subspace spanned by the top $K$ principal components. This is done by selecting the $K$ eigenvectors $v_k$corresponding to the largest eigenvalues $lambda_k$.
-
-Any femur instance $S_i$ in the dataset can be approximated as the mean shape plus a weighted sum of the principal components.
-
-$ S_i approx macron(S) + sum_(k=1)^K w_k v_k $
-
-where $w_k$ correspond to the standard déviations along each principal component direction.
-
-=== Results, visualisation and limitations
-
-Doing the pca on our femur dataset, allow us to reduce the dimensionality from 54873 (3*18291) to 10 while still capturing a significant amount of the variance in the data.
-
-#v(1em)
-
-However, PCA has its limitations. It assumes that the data lies on a linear subspace, which may not always be the case for complex shapes like femur bones. Additionally, PCA is sensitive to outliers and may not capture non-linear relationships in the data. To address these limitations, we also explored non-linear dimensionality reduction techniques, such as Neural Networks.
-
-
 == Neural Networks
 
 Neural Networks are a class of machine learning models inspired by the structure and function of biological neural networks. They are particularly well-suited for modeling complex, non-linear relationships in data. In this section, we describe the architecture and training process of the neural network implemented for our shape analysis task.
@@ -111,18 +61,59 @@ The training process consists of the following steps:
 
 === Neural Network Implementation
 
-For our problem, our goal is to reduce the dimensionality of the input data (femur shapes represented as high-dimensional vectors) to a lower-dimensional representation while preserving as much information as possible. 
+For this project, we implemented a Neural Network from scratch in `C++`. This enabled us a deep understanding of the method and the underlying computations. We started by creating a `Vector` and `Matrix2D` class for which we implemented all the necessary linear algebra methods for a neural network. We used the `Eigen` library to store the data as we were only interested in the mathematical implementation. We then created a `Neural Network` class defining fully connected neural networks with specific activation and loss functions. This class also has the methods to do a forward pass of the neural network and train it using backpropagation.
 
-We tried several architectures but each one had this same characteristics:
+=== Autoencoder Structure
 
-- Input layer size: 54873 (number of coordinates of the femur mesh)
-- Output layer size: 54873 (reconstructed femur mesh)
-- Hidden layers: several layers with decreasing and then increasing sizes to create a bottleneck effect, forcing the network to learn a compressed representation of the input data.
-- A latent space size of 10.
+In order to reduce the dimensionality and to discover underlying relationships in the data we used an Autoencoder structure.
+This is a type of fully connected neural network which tries to regenerate the input data while passing through a very small layer.
+This layer called the latent space acts as a bottleneck for information transfer between the encoder, the part before the latent space, and the decoder, the part after it. Our input and output layers consist of 54873 neurons as we had 18291 three dimensional points for each femur.
+By empirical testing, we chose a latent space of size 10 as it seemed enough to capture the main component of the dataset.
+As we used our own implementation of neural networks, which isn't as efficient a state of the art libraries, we had to aggressively compress each layer, going from the full 54873 down to 256, 32 and finally 10 neurons for the latent space.
+Furthermore, in order to get faster training, we did some preprocessing by subtracting the mean femur before feeding them to the autoencoder.
 
-To train the network, we used a dataset of femur shapes, splitting it into training and validation sets. During the training process, we gave the network femur shapes as input and used the same shapes as target outputs, effectively training the network to reconstruct the input data.
+#figure(
+  box(width: 100%)[
+    #grid(
+      columns: (auto, auto, 19em, auto, auto),
+      align: (center + horizon),
+      column-gutter: 1em, // Added for better spacing between elements
 
-After the training, we could use the encoder part of the network to obtain a low-dimensional representation of any femur shape, and the decoder part to reconstruct the femur shape from its low-dimensional representation.
+      // 1. Original
+      stack(dir: ttb, spacing: 0.5em,
+        image("../resources/img/original_L_Femur_11.png"),
+        [Original\ Femur]
+      ),
+
+      // 2. Preprocessing
+      stack(dir: ttb, spacing: 0.5em,
+        $arrow.long$, 
+        text(size: 0.8em)[Preprocessing]
+      ),
+
+      // 3. Network (Big)
+      image("../resources/img/autoencoder.svg", width: 19em),
+
+      // 4. Postprocessing
+      stack(dir: ttb, spacing: 0.5em,
+        $arrow.long$,
+        text(size: 0.8em)[Postprocessing]
+      ),
+
+      // 5. Reconstructed
+      stack(dir: ttb, spacing: 0.5em,
+        image("../resources/img/reconstructed_L_Femur_11.png"),
+        [Reconstructed\ Femur]
+      )
+    )
+  ],
+  caption: [Autoencoder pipeline for femur mesh reconstruction],
+  supplement: [Figure],
+) <autoencoder-fig>
+
+We used the Mean Squared error for the loss function as all the point where corresponding to one another. We also tried different activation functions, and got the best results with LeakyReLU and tanh.
+
+As we implemented the neural network and linear algebra ourselves, the training took a long time. We then focused on increasing performance.
 
 == Multi-threading
 
@@ -167,3 +158,4 @@ Overall, the multi-threaded implementation shows a clear advantage over the sing
 
 #include "memory_allocations.typ"
 
+#include "results_visu.typ"
