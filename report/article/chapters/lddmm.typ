@@ -1,6 +1,8 @@
 // LDDMM Theory and Implementation
 // This chapter explains the mathematical foundations of our LDDMM implementation
 
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+
 #figure(
   caption: []
 )[
@@ -12,7 +14,7 @@ In an altogether remarkable work, the scholar, biologist, and mathematician D’
     
     Remarkable fact: the diagrams above present the variability of fish shapes not as arbitrary displacements of skeletons, but as *coordinate changes, deformations of the ambient space*. It is upon this mathematical concept of _extrinsic_ deformation of space (as opposed to _intrinsic_ movements of fish particles) that Procrustean analysis and the “LDDMM” theory presented in this chapter rely.
 
-    We will attempt to present the big ideas and algorithms of LDDMM for shape spaces with point correspondance (commonly known as landmarks spaces) in an intuitive manner, preserving the most mathematical content as possible but surely making compromises. For full technical details, proofs and rigorous presentation, see @younes2010shapes, @beg2005computing , @miller2015hamiltonian, @joshi2000landmark . 
+    We will attempt to present the big ideas and algorithms of LDDMM for discrete shape spaces with point correspondance (commonly known as landmarks spaces) in an intuitive manner, preserving the most mathematical content as possible but surely making compromises. For full technical details, proofs and rigorous presentation, see @younes2010shapes, @beg2005computing , @miller2015hamiltonian, @joshi2000landmark . 
     This study will be centered on the application of LDDMM to human femurs, but the global theory is a general computational anatomy framework.
 
 == Overview
@@ -22,34 +24,75 @@ Consider the space of all possible femur shapes $cal(S)$. There is no biological
 #figure(
   caption: [Curved space is not stable by linear operations, and requires a  metric aware of its geometry]
 )[
-  #image("/resources/img/sphere_geodesic.png", width: 80%) 
+  #image("/resources/img/sphere_geodesic.png", width: 50%) 
 ]
-In addition to anatomical implausibility of linear transformations, the Euclidean distance poses other challenges to anatomical relevancy, as it treats all point movements equally : this is not the general case in nature, as some deformations physically "cost" more than others, or simply less probable. The straight line $S_1 -> S_2$ is not the optimal deformation path on the shape manifold.
+In addition to anatomical implausibility of linear transformations, the Euclidean distance poses other challenges to anatomical relevancy, as it treats all point movements equally : this is not the general case in nature, as some deformations physically "cost" more than others, rendering them less probable. The straight line $S_1 -> S_2$ is not the optimal deformation path on the shape manifold.
 
 For statistical shape analysis, we need two fundamental objects:
 - A *distance* between shapes (how different are two femurs?)
 - A *linear space* for statistics (PCA requires vector operations)
 
 
-LDDMM provides both through its Riemannian geometry. Crucially, the resulting mean and distances are geometrically meaningful and respect the physical constraints of anatomical deformations @younes2010shapes. We first present the broad theoretical plan, before diving into technical aspects of the construction aimed at making the problem computationally tractable.
+LDDMM provides both through its Riemannian geometry. Crucially, the resulting mean and distances are geometrically meaningful and respect the physical constraints of anatomical deformations @younes2010shapes. We first present the broad theoretical plan, before diving into technical aspects of the construction aimed at making the problem both interpretable and computationally tractable.
 
-Our goal is to build/learn a relevant metric on $cal(D) = op("Diff")(cal(S))$, the group of diffeomorphisms (smooth invertible transformations) of $cal(S)$. The "cost" of these deformations will be evalued by the *geodesic distance* $d(S_1,S_2)$ on $cal(S)$ induced by this metric. It is computed as the *energy* of the cheapest transformation from $S_1$ to $S_2$. The notion of geodesic is a generalization of the notion of a "straight line" where every step of the movement must lie on the manifold. Using this distance, we can define a mean shape of our population of $K$ shapes, commonly referred to as *atlas* in Riemannian geometry.
+Our goal is to build/learn a relevant metric on $op("Diff")(cal(S))$, the group of diffeomorphisms (smooth invertible transformations) of $cal(S)$. However, since $op("Diff")(cal(S))$ is curved and infinite dimensional, we cannot perform standard statistical analysis on it. Indeed, there exists a lot of different such ways to transform a shape into another. We thus need to restrict ourselves to some subspace of this group, building a diffeomorphism space that can reflect complex deformations while being computationally viable.
+
+The general framework is as follows: we first construct a vector space (called "velocity field") whose norm defines the *cost* of an infinitesimal deformation; the diffeomorphisms enabling the deformation of our shapes are then obtained by integrating a flow equation.
+
+This approach is powerful but still yields a bunch of different "velocity fields" leading to the same diffeomorphism : we thus focus on the *cheapest* ones w.r.t a general *energy* of the deformation derived from the cost of the velocity field.
+ 
+One reason for this is it provides a *geodesic distance* on $cal(S)$, computed as the energy of the *cheapest* transformation from $S_1$ to $S_2$
+
+The notion of geodesic is a generalization of the notion of a "straight line" where every step of the movement must lie on the manifold. Here, the "movement" is the deformation, and it belonging to $op("Diff")(cal(S))$ ensures this property. Geodesics are the "shortest" diffeormorphic paths (w.r.t to the energy) between two shapes. [SOURCE]
+
+Using this distance, we can define a mean shape of our population of $K$ shapes, commonly referred to as *atlas* in Riemannian geometry.
 
 $ macron(S) = arg min_S sum_(i=1)^K d^2 (S, S_i) $
 
-The geodesic point of view of deformations is not only good for defining a distance.
-Since $op("Diff")(cal(S))$ is curved and infinite dimensional, we can not perform standard statistical analysis on it. We thus restrict our study to geodesic deformations for three compelling reasons :
+One important result of LDDMM theory is that focusing on geodesic deformations is not only good for defining a distance :
 
-- Since our space of deformations is a manifold, it is locally Euclidean, i.e a flat vector space, called the *tangent space*. "Small" deformations from the mean, which we're interested in, thus live in $cal(T)_D macron(S)$, the tangent space at the atlas.
-- A fundamental theorem on the nature of geodesics creates a one-to-one correspondance between geodesics from a point and 
-=== The Tangent Space
+- It is plausible to believe that nature favors "cheap" deformations from a biological standpoint, analogous to the principle of least action. [SOURCE]
 
-At any shape (point on the manifold), there exists a *tangent space*: a linear vector space where we can perform standard operations like addition, subtraction, and inner products.
+- Since our space of deformations is a manifold, it is locally Euclidean around any shape $S$, i.e. is a flat vector space called the *tangent space* at $S$, denoted $T_S cal(S)$.
 
-The *initial momentum* $bold(p)_0$ at the atlas encodes "which direction and how far" to travel along a geodesic to reach a target shape. Critically, the momentum $bold(p)_0$ is *not* the displacement $("target" - "source")$. It is the initial velocity of the geodesic, transformed through the kernel.
+- A fundamental theorem on the nature of geodesics establishes a local bijection between geodesic deformations originating from the atlas and their *initial momenta*—vectors with one component attached to every vertex of the shape, which thus live in the $3N$-dimensional tangent space $T_(macron(S)) cal(S)$.
 
-=== The Key Idea
+The *initial momentum* $bold(p)_0$ at the atlas encodes "which direction and how far" to travel along a geodesic to reach a target shape. This bijection is realized through two fundamental maps:
+- The *exponential map* $"Exp"_(macron(S)) : T_(macron(S)) cal(S) -> cal(S)$ sends an initial momentum to the shape reached by following the corresponding geodesic for unit time.
+- The *logarithm map* $"Log"_(macron(S)) : cal(S) -> T_(macron(S)) cal(S)$ is its inverse, returning the initial momentum that generates a geodesic to a given shape.
+Said in a more compact way, the following diagram commutes :
 
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 2em,
+    align: horizon,
+
+    // Left Column: Your Fletcher Diagram
+    fletcher.diagram(
+      spacing: (25mm, 20mm),
+      node-stroke: 0.5pt,
+      node-inset: 8pt,
+      node((0, 0), $T_(macron(S)) cal(S)$, name: <tangent>),
+      node((1, 0), $cal(S)$, name: <shape>),
+      edge(<tangent>, <shape>, $"Exp"_(macron(S))$, "->", bend: 25deg),
+      edge(<shape>, <tangent>, $"Log"_(macron(S))$, "->", bend: 25deg),
+      node((0.5, 0.7), $bold(p)_0 |-> S = "Exp"_(macron(S))(bold(p)_0)$, stroke: none),
+    ),
+
+    // Right Column: The Image
+    image("/resources/img/exp_and_log.png", width: 100%)
+  ),
+  caption: [The exponential and logarithm maps establish a local diffeomorphism between the tangent space at the atlas and the shape manifold.],
+) <fig:exp-log-diagram>Beware this is only a *local* result, thus only valid for "small" deformations of the atlas, a limitation we precise and adress later.
+
+This geodesic point of view thus yields us the two fundamental objects needed for statistical analysis. We can then perform standard PCA (linear or kernel) on $T_(macron(S)) cal(S)$ in order to understand the most probable deformations of the mean femur $macron(S)$. We call this *Tangent PCA* or *Principal Geodesic Analysis* (PGA).
+
+Computationally, the most frequent operations to perform are $op("Exp")$ (called *geodesic shooting* ) and $op("Log")$ (called *registration*). Rendering these computations tractable is thus one important goal that influences the construction of the diffeomorphism space. 
+
+== Diffeomorphisms via integration of velocity fields
+
+In this section, we describe the construction of diffeomorphism spaces in the LDDMM framework.
 Instead of directly computing a deformation $phi: RR^3 -> RR^3$, LDDMM constructs $phi$ as the *flow of a time-varying velocity field* $v(x, t)$:
 
 $ (diff phi_t) / (diff t) (x) = v(phi_t (x), t), quad phi_0 = "Id" $
