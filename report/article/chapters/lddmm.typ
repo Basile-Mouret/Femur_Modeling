@@ -49,13 +49,13 @@ Using this distance, we can define a mean shape of our population of $K$ shapes,
 
 $ macron(S) = arg min_S sum_(i=1)^K d^2 (S, S_i) $
 
-One important result of LDDMM theory is that focusing on geodesic deformations is not only good for defining a distance :
+One important result of LDDMM theory is that, given the right diffeomorphism space, focusing on geodesic deformations is not only good for defining a distance :
 
 - It is plausible to believe that nature favors "cheap" deformations from a biological standpoint, analogous to the principle of least action. [SOURCE]
 
 - Since our space of deformations is a manifold, it is locally Euclidean around any shape $S$, i.e. is a flat vector space called the *tangent space* at $S$, denoted $T_S cal(S)$.
 
-- A fundamental theorem on the nature of geodesics establishes a local bijection between geodesic deformations originating from the atlas and their *initial momenta*—vectors with one component attached to every vertex of the shape, which thus live in the $3N$-dimensional tangent space $T_(macron(S)) cal(S)$.
+- A fundamental theorem on the nature of geodesics establishes a local bijection between geodesic deformations originating from the atlas and their *initial momenta*—vectors with one component attached to every vertex of the shape, which thus live in the $3N$-dimensional subspace of the tangent space at the atlas $T_(macron(S)) cal(S)$.
 
 The *initial momentum* $bold(p)_0$ at the atlas encodes "which direction and how far" to travel along a geodesic to reach a target shape. This bijection is realized through two fundamental maps:
 - The *exponential map* $"Exp"_(macron(S)) : T_(macron(S)) cal(S) -> cal(S)$ sends an initial momentum to the shape reached by following the corresponding geodesic for unit time.
@@ -90,46 +90,103 @@ This geodesic point of view thus yields us the two fundamental objects needed fo
 
 Computationally, the most frequent operations to perform are $op("Exp")$ (called *geodesic shooting* ) and $op("Log")$ (called *registration*). Rendering these computations tractable is thus one important goal that influences the construction of the diffeomorphism space. 
 
-== Diffeomorphisms via integration of velocity fields
+== Diffeomorphism spaces in LDDM : General Principle 
+In this section, we describe the general principle of the building of diffeomorphism spaces in the LDDMM framework.
+This presentation is adapted from [SOURCE], which the interested reader should refer to for a more detailed presentation.
+// Definitions for formatting theorems, etc.
+#let definition(title, body) = block(width: 100%, inset: 8pt, fill: luma(245), stroke: (left: 2pt + black))[
+  *#title* #body
+]
+#let theorem(title, body) = block(width: 100%, inset: 8pt, fill: luma(245), stroke: (left: 2pt + black))[
+  *#title* #body
+]
+#let proposition(title, body) = block(width: 100%, inset: 8pt, fill: luma(245), stroke: (left: 2pt + black))[
+  *#title* #body
+]
+#let remark(title, body) = block(width: 100%, inset: 8pt)[
+  #title #body
+]
+#let example(title, body) = block(width: 100%, inset: 8pt)[
+  #title #body
+]
 
-In this section, we describe the construction of diffeomorphism spaces in the LDDMM framework.
-Instead of directly computing a deformation $phi: RR^3 -> RR^3$, LDDMM constructs $phi$ as the *flow of a time-varying velocity field* $v(x, t)$:
+=== General framework : integrating the flow of vector fields
+#definition("Definition 4.1.")[
+  A vector space $V$ of vector fields on $RR^d$ is said to be _admissible_ if it satisfies the following conditions:
+  
+  1. $V$ is a Hilbert space. We denote its norm by $||dot||_V$ and its inner product by $angle.l dot, dot angle.r_V$.
+  2. $(V, ||dot||_V)$ is continuously embedded in $(C_0^1(RR^d, RR^d), ||dot||_{1, infinity})$, the space of $C^1$ fields on $RR^d$ vanishing at infinity, along with their partial derivatives. There exists, therefore, a constant $c_V > 0$ such that:
+  $ forall v in V, quad ||v||_(1, infinity) <= c_V ||v||_V $ <eq:13.1>
+]
 
-$ (diff phi_t) / (diff t) (x) = v(phi_t (x), t), quad phi_0 = "Id" $
+In fact, the diffeomorphisms we are about to define are viewed as solutions to a flow equation. We observe a vector field $v_t$ (modeling infinitesimal deformations) deforming our space over time. Upon reaching time $t$, the deformation defines a diffeomorphism. A theorem guarantees the existence and uniqueness of such solutions. However, we require additional hypotheses on our vector fields, specifically an $L^2$ control. #footnote[We actually only need a $L^1$ control for the theorem, but a lemma allows us to restrict our following study to vector fields with an $L^2$ control whilst not losing any generality.] 
+#definition("Definition 4.2.")[
+  We define the following space and norm:
+  $ L_V^2 = L^2 ([0, 1], V) "endowed with" ||v||_(L_V^2) = sqrt(integral_0^1 ||v_t||_V^2 dif t) $ <eq:13.3>
+]
 
-This construction ensures two fundamental properties:
-+ *Diffeomorphism*: The transformation $phi$ is smooth and invertible---no folding or tearing can occur.
-+ *Metric structure*: The "length" of the deformation path defines a proper distance between shapes.
+#theorem("Theorem 4.1.")[
+  Let $v in L_V^2$. For all $x in RR^d$, there exists a unique continuous mapping $t mapsto Phi_t^v(x)$ from $[0, 1]$ to $RR^d$ satisfying the flow equation:
+  $ Phi_t^v (x) = x + integral_0^t v_s compose Phi_s^v (x) dif s $ <eq:13.6>
+  Alternatively,
+  $ Phi_0^v (x) = x quad "and" (diff Phi_t^v) / (diff t) (x) = v_t (Phi_t^v (x)) $ <eq:13.7>
 
-=== Fundamental Difference from Euclidean Methods
+]
 
-LDDMM treats shapes as manifold-valued data, which leads to fundamentally different computations than Euclidean approaches:
+The diffeomorphisms that will serve our purpose are thus the elements of the set:
+$ cal(D)_V = { Phi_1^v | v in L_V^2 } $ <eq:13.8>
 
-#figure(
-  table(
-    columns: (auto, auto, auto),
-    inset: 8pt,
-    align: left,
-    table.header([*Aspect*], [*Euclidean (Linear PCA)*], [*LDDMM*]),
-    [Shape space], [$RR^(3N)$ (flat vector space)], [$"Diff"(Omega)$ (curved manifold)],
-    [Distance], [$norm(S_1 - S_2)$ (Euclidean)], [$integral_0^1 norm(v_t)_V^2 dif t$ (geodesic)],
-    [Mean], [Arithmetic: $1/K sum_i S_i$], [Fréchet: $arg min sum_i d^2 (mu, S_i)$],
-    [Interpolation], [Linear: $(1-t)S_1 + t S_2$], [Geodesic: $"Exp"_(S_1)(t dot "Log"_(S_1)(S_2))$],
-  ),
-  caption: [Comparison between Euclidean and LDDMM approaches to shape analysis.]
-) <tab:lddmm-comparison>
+Indeed, it suffices to consider flows at time 1 via time renormalization. This definition of diffeomorphisms on our space allows us to establish a metric, which in turn will allow us to evaluate the cost associated with using a diffeomorphism to deform our space.
 
-The distance in LDDMM is *not* the Euclidean distance, even when shapes have point correspondence. The geodesic distance measures the "cost" of the smoothest diffeomorphism connecting two shapes, weighted by a kernel that enforces spatial coherence.
+#proposition("Proposition 4.1.")[
+  $cal(D)_V$ is a group and a complete space for the metric:
+  $ d_V (id, Phi) = inf { ||v||_(L_V^2) | v in L_V^2, Phi_1^v = Phi } $ <eq:13.9>
+  which can be extended by right-invariance:
+  $ d_V (Phi, Psi) = d_V (id, Psi compose Phi^(-1)) $ <eq:13.10>
+]
 
-=== Why Does This Matter?
+This metric is simply defined as the infimum of the norm of vector fields that deform the identity to $Phi(id)$.
 
-For statistical shape analysis, we need three fundamental operations:
-- A *distance* between shapes (how different are two femurs?)
-- A *mean* shape (what is the average femur?)
-- A *linear space* for statistics (PCA requires vector operations)
+If we take two diffeomorphisms in $cal(D)_V$, there exists a geodesic between them for the metric we have defined, i.e the infimum is actually a minimum.
 
-LDDMM provides all three through its Riemannian geometry. Crucially, the resulting mean and distances are geometrically meaningful and respect the physical constraints of anatomical deformations @younes2010shapes.
+#proposition("Proposition 4.2")[
+  Let $Phi, Psi in cal(A)_V$.
+  There exists $v in L_V^2$ such that $Phi_1^v = Phi compose Psi^(-1)$ and $d(Phi, Psi) = ||v||_(L_V^2) $. 
+]
 
+We say that $cal(D)_V$ is the group of diffeomorphisms modeled on $V$ starting from the identity. \
+In the "limit" case where $V$ is the space of constant fields, identified with $RR^m$ equipped with the Euclidean metric, $cal(A)_V$ is simply the space of translations equipped with the natural Euclidean distance.
+
+By considering a more flexible space $V$, we cause the number of degrees of freedom—and thus the complexity of the space of diffeomorphisms $cal(A)_V$—to explode. The entire objective of this exposition will be to see how to choose $V$ to keep the problem _reasonable_ and numerically solvable.
+
+== The Matching problem 
+We have defined a metric on a general diffeomorphism space that deforms our shape space $cal(S)$.
+A linear algebra theorem guarantees the existence of a diffeomorphism $Phi in cal(D)_V$ such that $Phi(S_1) = S_2$ for arbitrary shapes $S_1, S_2$ To derive a distance on $cal(S)$, we could thus theoretically just define $ d_V (S_1,S_2) = d_V (id, Phi) = min_(v in L^2_V) sqrt(integral_0^1 norm(v_t)_V^2 dif t). $
+
+In practice, finding the $Phi$ that exactly maps $S_1$ to $S_2$ is too hard, we thus relax the problem by defining a naive *matching* distance, which we can do because our shape space is a landmark space. #footnote[This becomes way harder in non-landmark spaces, and is done via Varifolds. See [SOURCE] for more details. ] \
+#definition("Matching distance.")[
+Let $Phi in cal(D)_V$, $S_1 = {x_i, i in bracket.stroked 1, n bracket.stroked.r} in cal(S)$ and $S_2 in cal(S)$. The matching distance between $S_2$ and $Phi(S_1) = {y_i, i in bracket.stroked 1, n bracket.stroked.r} $ is defined by:
+  $ d_cal(S)(Phi) = norm(phi(S_1) - S_2)_2 ^2 = sum_(i=1)^(n) abs(y_i - x_i)^2  $
+]
+This matching (squared euclidean) distance is not a relevant quantity in general as already discussed, but can be used to assess if two shapes are "very" close or not.
+
+We are now ready to properly define a relevant *energy* (cost) of the transformation from $S_1$ to $S_2$, by minimizing the cost of $Phi$ and relaxing the matching :
+
+#definition("Matching problem")[Let $lambda > 0$. The matching problem is defined by :
+
+$ op("Minimize") quad quad  E(Phi) =  lambda d_V ( id , Phi) + d_cal(S) (Phi) "over" cal(D)_V $
+
+Which is equivalent to minimizing the following functional over $L^2_V$ :
+$ E(v) = lambda integral_0^1 norm(v_t)_V^2 dif t + d_cal(S) (Phi^v_1). $] <matching-1>
+
+To solve this matching problem, we have an existence theorem at our disposal, which assures us that this endeavor is not futile and that there effectively exist diffeomorphisms allowing us, in practice, to map one shape to another in an optimal manner.
+
+In practice, the task consists of finding a diffeomorphism $Phi$ that deforms a shape $S_1$ into a shape $Phi(S_1)$ close to $S_2$. The optimal shape $Phi(S_1)$ can then be viewed as a _barycenter_ of the points $S_1$ — with weight $lambda$ — and $S_2$ — with weight $1$.
+
+The real number $lambda$ is a _regularization_ weight, which compels $Phi(S_1)$ to remain within a neighborhood of $S_1$: one often selects $0 < lambda << 1$, so as to obtain a model $Phi(S_1)$ close to the observation $S_2$, yet remaining at a "finite" deformation distance from the shape $S_1$.
+== Building the right vector field space
+
+The matching problem as expressed in [REF] is over $L^2_V$, which can _a priori_ be infinite dimensional. Our goal is thus to build $V$ such that we can _reduce_ #footnote[_Reduction_ is the process of proving that the optimization of a functional over a larger space can be done over a smaller space] the problem to a finite dimensional setting, making it numerically solvable. In this section, we define $V$ as a *Reproducing Kernel Hilbert Space* (RHKS) induced by a positive definite kernel $k$. In this context, we perform a first reduction step to the space of vector fields which are null outside of the shape's region of $RR^3$. We then reinterpret our matching problem in terms of *Riemannian geometry*, ultimately yielding a _stunning_ reduction of the problem to *initial momenta* in $RR^(3N)$.
 == Geodesic Shooting
 
 === The EPDiff Equation
