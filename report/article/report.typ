@@ -3,8 +3,8 @@
 #import "tail/bibliography.typ": *
 #import "tail/glossary.typ": *
 #import "extra.typ": *
-#show:make-glossary
-#register-glossary(entry-list)
+//#show:make-glossary
+//#register-glossary(entry-list)
 
 //-------------------------------------
 // Template config
@@ -45,7 +45,7 @@
 //-------------------------------------
 // Glossary
 //
-#make_glossary(gloss:gloss, title:i18n("gloss-title"))
+//#make_glossary(gloss:gloss, title:i18n("gloss-title"))
 
 //-------------------------------------
 // Bibliography

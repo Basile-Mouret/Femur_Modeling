@@ -1,86 +1,48 @@
-# Femur_Modeling
-Research Project in Artificial Intelligence for the Applied Mathematics Master 1 at UGA
+# Femur Modeling
 
-# Règles
-1. Ordre: Déclarer -> Définir -> Raporter
-2. Commit au propre
-   1. FEAT: Ajout d'une fonctionalité, classes...
-   2. FIX: Lorsqu'un bug est corrigé
-3. Commenter pour doxygèn 
-   1. Devant fonctions et classes laisser un espace pour les commentaires
-   2. Utilisation de *@brief* pour ce que ça fait et *@param* pour décrire les paramètres
-   ```cpp
-   /**
-   * @brief Function saying Hello to a person of our choice
-   *
-   * @param name: str 
-   */
-   ```
-4. Nommer les variables
-   1. pas de tiret de 8 ( _ ) tout en minuscule avec des majuscule à chaque nouveau mots. *femurTriangle*.
-   2. Pour les attributs d'une classe ils sont précédés de la lettre m_. *m_color*.
-   3. Si constante, ou macro tout est en majuscue et donc utilisation du tiret du 8 ( _ ). *EARTH_GRAVITY*.
+Statistical shape analysis of femur bones using PCA, neural networks and diffeomorphic registration (LDDMM).
 
-# TODO
-1. Produit vectoriel et matriciel optimisé (fait ?)
-2. Voir resultats RDN avec differentes fonction d'activation et d'erreur
-3. Optimisation du code
-4. Standardisation des données --> Basile
-5. PCA lineaire pour augmenter le jeu de données --> Malik
-6. Multi-threading (au moins utiliser avx, voire au mieux écrire un noyau cuda), pouvoir choisir le nombre de coeurs--> Martin
-7. Enregistrement plus simple du NN (hdf5 ou format hugging face) --> Time
-8. Mettre tout dans des .hpp (si le temps)
-9. Faire un programme qui a partir d'un nuage de point en .obj, trouve les triangles associés
+## Overview
 
-# Ideas
-- avoir un serveur pour entrainer le réseau
-- le RDN sort la déformation par rapport au fémur moyen plutôt que les positions absolues des points du fémur (convergence et entrainement plus rapide, plus précis)
+This project implements a pipeline for 3D femur shape modeling:
+- **Custom C++ neural network** library with linear algebra operations (using Eigen)
+- **PCA-based dimensionality reduction** for shape representation
+- **LDDMM registration** for computing diffeomorphic mappings between femur shapes
+- **Python bindings** via pybind11 for integration with visualization tools
 
-# Remarks
-- In linalg.hpp, in class Vector, nhadmaard return 0 if size don't match, and *this for overload+ et -
-- Modifer valeur d'un élement d'un vecteur ou matrice avec setCoeff ou &() et modifier la reference
-- a quoi sert le destructor du reseau de neurones si ya rien dedans ?
+## Building the C++ Code
 
-# Avancées
-- Object matrice2D et Vecteur fait avec produit matriciel. Lisez le code pour comprendre comment les utiliser (fichier linalg.hpp et linalg.cpp)
-- Neural Network Function
-- Neural Network les test ont été fait avec l'IA. Voir si on corrige ça.
-- Visu 3D du Fémur
+### Requirements
 
-# Compilation
+- CMake >= 3.10
+- C++17 compiler
+- Eigen (included in `lib/eigen-5.0.0/`)
 
-**1**
-If new src files add them in the *CMakeList.txt* files in the command *add_executable*
+### Build Instructions
 
-**2**
 ```bash
-cd build
-
-# If CmakeLists.txt modified
+mkdir -p build && cd build
 cmake ..
-make "[Name executable]"
-
-#else
-make "[Name executable]"
-```
-Use the flag `-DCMAKE_BUILD_TYPE=Release` for better runtime
-
-**3**
-```bash
-../bin/"[Name executable]"
+make
 ```
 
-# Doxygen documentation
+Executables are generated in the `bin/` directory.
+
+### Running Tests
 
 ```bash
 cd build
-
-# Generate the documentation
-make doc
-
-# Generate AND open in Firefox
-make doc-open
+ctest
 ```
 
-# Link of the Drive for models/ and html slides :
-https://drive.google.com/drive/folders/1XfqVVEv_XzGETwcklJSmiH7S0PmQqdPp
+### Documentation (optional)
+
+```bash
+make doc        # Generate Doxygen documentation
+```
+
+## Additional Documentation
+
+- **LDDMM Pipeline**: See [lddmm/README.md](lddmm/README.md)
+- **Visualization Tools**: See [visualization/](visualization/)
+

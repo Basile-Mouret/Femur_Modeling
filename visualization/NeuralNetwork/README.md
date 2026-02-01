@@ -1,6 +1,6 @@
 # Femur Latent Space Visualization
 
-This folder contains scripts to explore and visualize the latent space of the femur neural network autoencoder.
+This folder contains scripts to explore and visualize the latent space of the femur neural network autoencoder. Here is a drive with some trained model of autoencoder. (https://drive.google.com/drive/folders/1XfqVVEv_XzGETwcklJSmiH7S0PmQqdPp)
 
 ## Main scripts
 
