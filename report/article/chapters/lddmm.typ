@@ -55,7 +55,7 @@ One important result of LDDMM theory is that, given the right diffeomorphism spa
 
 - Since our space of deformations is a manifold, it is locally Euclidean around any shape $S$, i.e. is a flat vector space called the *tangent space* at $S$, denoted $T_S cal(S)$.
 
-- A fundamental theorem on the nature of geodesics establishes a local bijection between geodesic deformations originating from the atlas and their *initial momenta*—vectors with one component attached to every vertex of the shape, which thus live in the $3N$-dimensional subspace of the tangent space at the atlas $T_(macron(S)) cal(S)$.
+- A fundamental theorem on the nature of geodesics establishes a local bijection between geodesic deformations originating from the atlas and their *initial momenta*—vectors with one component attached to every vertex of the shape, which thus live in the $3n$-dimensional subspace of the tangent space at the atlas $T_(macron(S)) cal(S)$.
 
 The *initial momentum* $bold(p)_0$ at the atlas encodes "which direction and how far" to travel along a geodesic to reach a target shape. This bijection is realized through two fundamental maps:
 - The *exponential map* $"Exp"_(macron(S)) : T_(macron(S)) cal(S) -> cal(S)$ sends an initial momentum to the shape reached by following the corresponding geodesic for unit time.
@@ -119,7 +119,7 @@ This presentation is adapted from [SOURCE], which the interested reader should r
   $ forall v in V, quad ||v||_(1, infinity) <= c_V ||v||_V $ <eq:13.1>
 ]
 
-In fact, the diffeomorphisms we are about to define are viewed as solutions to a flow equation. We observe a vector field $v_t$ (modeling infinitesimal deformations) deforming our space over time. Upon reaching time $t$, the deformation defines a diffeomorphism. A theorem guarantees the existence and uniqueness of such solutions. However, we require additional hypotheses on our vector fields, specifically an $L^2$ control. #footnote[We actually only need a $L^1$ control for the theorem, but a lemma allows us to restrict our following study to vector fields with an $L^2$ control whilst not losing any generality.] 
+The diffeomorphisms we are about to define are viewed as solutions to a flow equation. We observe a vector field $v_t$ (modeling infinitesimal deformations) deforming our space over time. Upon reaching time $t$, the deformation defines a diffeomorphism. A theorem guarantees the existence and uniqueness of such solutions. However, we require additional hypotheses on our vector fields, specifically an $L^2$ control. #footnote[We actually only need a $L^1$ control for the theorem, but a lemma allows us to restrict our following study to vector fields with an $L^2$ control whilst not losing any generality.] 
 #definition("Definition 4.2.")[
   We define the following space and norm:
   $ L_V^2 = L^2 ([0, 1], V) "endowed with" ||v||_(L_V^2) = sqrt(integral_0^1 ||v_t||_V^2 dif t) $ <eq:13.3>
@@ -159,20 +159,24 @@ In the "limit" case where $V$ is the space of constant fields, identified with $
 
 By considering a more flexible space $V$, we cause the number of degrees of freedom—and thus the complexity of the space of diffeomorphisms $cal(A)_V$—to explode. The entire objective of this exposition will be to see how to choose $V$ to keep the problem _reasonable_ and numerically solvable.
 
+#figure(
+  image("/resources/img/extrinsic_def_ex.png", width: auto, height: auto),
+  caption: [Deformation of a surface in another under the action of a diffeomorphism. Step by step, we see the ambient grid deform under the action of a vector field $v_t$.],
+) <extrinsic>
+
 == The Matching problem 
-We have defined a metric on a general diffeomorphism space that deforms our shape space $cal(S)$.
-A linear algebra theorem guarantees the existence of a diffeomorphism $Phi in cal(D)_V$ such that $Phi(S_1) = S_2$ for arbitrary shapes $S_1, S_2$ To derive a distance on $cal(S)$, we could thus theoretically just define $ d_V (S_1,S_2) = d_V (id, Phi) = min_(v in L^2_V) sqrt(integral_0^1 norm(v_t)_V^2 dif t). $
+We have defined a metric on a general diffeomorphism space that deforms our shape space $cal(S)$. Considering arbitrary shapes $S_1, S_2 in cal(S)$, a linear algebra theorem guarantees the existence of a diffeomorphism $Phi in cal(D)_V$ such that $Phi(S_1) = S_2$. We could thus theoretically define a distance on $cal(S)$ in the following way: $ d_V (S_1,S_2) = d_V (id, Phi) = min_(v in L^2_V) sqrt(integral_0^1 norm(v_t)_V^2 dif t). $
 
 In practice, finding the $Phi$ that exactly maps $S_1$ to $S_2$ is too hard, we thus relax the problem by defining a naive *matching* distance, which we can do because our shape space is a landmark space. #footnote[This becomes way harder in non-landmark spaces, and is done via Varifolds. See [SOURCE] for more details. ] \
 #definition("Matching distance.")[
 Let $Phi in cal(D)_V$, $S_1 = {x_i, i in bracket.stroked 1, n bracket.stroked.r} in cal(S)$ and $S_2 in cal(S)$. The matching distance between $S_2$ and $Phi(S_1) = {y_i, i in bracket.stroked 1, n bracket.stroked.r} $ is defined by:
   $ d_cal(S)(Phi) = norm(phi(S_1) - S_2)_2 ^2 = sum_(i=1)^(n) abs(y_i - x_i)^2  $
 ]
-This matching (squared euclidean) distance is not a relevant quantity in general as already discussed, but can be used to assess if two shapes are "very" close or not.
+This matching ($L^2$, squared euclidean) distance is not a relevant quantity in general as already discussed, but can be used to assess if two shapes are "very" close or not.
 
 We are now ready to properly define a relevant *energy* (cost) of the transformation from $S_1$ to $S_2$, by minimizing the cost of $Phi$ and relaxing the matching :
 
-#definition("Matching problem")[Let $lambda > 0$. The matching problem is defined by :
+#definition("Matching problem.")[Let $lambda > 0$. The matching problem is defined by :
 
 $ op("Minimize") quad quad  E(Phi) =  lambda d_V ( id , Phi) + d_cal(S) (Phi) "over" cal(D)_V $
 
@@ -186,149 +190,152 @@ In practice, the task consists of finding a diffeomorphism $Phi$ that deforms a 
 The real number $lambda$ is a _regularization_ weight, which compels $Phi(S_1)$ to remain within a neighborhood of $S_1$: one often selects $0 < lambda << 1$, so as to obtain a model $Phi(S_1)$ close to the observation $S_2$, yet remaining at a "finite" deformation distance from the shape $S_1$.
 == Building the right vector field space
 
-The matching problem as expressed in [REF] is over $L^2_V$, which can _a priori_ be infinite dimensional. Our goal is thus to build $V$ such that we can _reduce_ #footnote[_Reduction_ is the process of proving that the optimization of a functional over a larger space can be done over a smaller space] the problem to a finite dimensional setting, making it numerically solvable. In this section, we define $V$ as a *Reproducing Kernel Hilbert Space* (RHKS) induced by a positive definite kernel $k$. In this context, we perform a first reduction step to the space of vector fields which are null outside of the shape's region of $RR^3$. We then reinterpret our matching problem in terms of *Riemannian geometry*, ultimately yielding a _stunning_ reduction of the problem to *initial momenta* in $RR^(3N)$.
-== Geodesic Shooting
+The matching problem as expressed in [REF] is over $L^2_V$, which can _a priori_ be infinite dimensional. Our goal is thus to build $V$ such that we can _reduce_ #footnote[_Reduction_ is the process of proving that the optimization of a functional over a larger space can be done over a smaller space] the problem to a finite dimensional setting, making it numerically solvable. In this section, we define $V$ as the *Reproducing Kernel Hilbert Space* (RHKS) induced by a positive definite kernel $k$. In this context, we perform a first reduction step allowing us to only focus on defining the deformation at the landmarks. We then introduce the *Gaussian kernel*, used in practice. Finally, we reinterpret our matching problem in terms of *Riemannian geometry*, ultimately yielding a _stunning_ reduction of the problem to *initial momenta* in $RR^(3n)$.
 
-=== The EPDiff Equation
 
-LDDMM computes geodesics (shortest paths) on the shape manifold. The velocity field $v(t)$ evolves according to the *EPDiff equation* (Euler-Poincaré equation on diffeomorphisms) @miller2015hamiltonian:
+=== Reproducing space and kernels
 
-$ (diff bold(p)) / (diff t) + nabla_v bold(p) + (nabla v)^T bold(p) + bold(p) thin "div"(v) = 0 $
+In the following section, $A = RR^3$ is our ambient space, thus vectors of dimension $n$ of $A$ represent shapes with $n$ landmarks. We adopt the notation $q$ for positions (landmarks) in $A$ and $p$ for momenta or vectors, in order to anticipate the Hamiltonian formalism introduced later.
 
-where $bold(p)$ is the momentum, dual to velocity via the kernel: $v = K * bold(p)$.
+#definition("RKHS.")[
+  Let $H$ a Hilbert space of vector fields $A -> RR^3$ .
+  $H$ is called a _Reproducing Kernel Hilbert Space_ (or RKHS) when the linear functionals \ $delta_q^p : f in H mapsto f(q) dot p$, where $q in A$ and $p in RR^3$, are continuous.
+]
 
-=== The Exponential Map
+We can then apply the Riesz theorem to $delta_q^p$ and define the reproducing kernel of an RKHS:
 
-Given an initial momentum $bold(p)_0$ at the atlas, we can compute the resulting shape by integrating the geodesic equations forward in time. This operation is called the *exponential map*:
+#definition("Reproducing kernel.")[
+  Let H be an RKHS. the _reproducing kernel_ of $H$ is the mapping \ $k_H : A^2 -> cal(L)(RR^3)$ such that:
+  $ forall q in A, k_H (q, dot) p = K_H delta_q^p $  meaning that $k_H (q, dot) p$ is the unique element of $H$ such that:
+  $ forall h in H, delta_q^p (h) = angle.l k_H (q, dot) p, h angle.r_H = h(q) dot p $ ]
 
-$ "Exp"_"atlas" (bold(p)_0) = phi_1 ("atlas") $
 
-The exponential map "shoots" from the atlas along the initial momentum direction to produce a new shape at time $t = 1$.
+#definition("Positive kernel")[
+Let $k : A^2 -> cal(L)(RR^3)$. For any shape $S = (q_1, dots, q_n) in A^n$, we define the associated kernel matrix $K_S$ as the following square block matrix of size $3n$:
 
-=== The Log Map
+  $ K_S = mat(delim: "(",
+    k(q_1, q_1), k(q_1, q_2), dots, k(q_1, q_n);
+    k(q_2, q_1), k(q_2, q_2), dots, k(q_2, q_n);
+    dots.v, dots.v, dots.down, dots.v;
+    k(q_n, q_1), k(q_n, q_2), dots, k(q_n, q_n)
+  ) $ <eq:gram_matrix>
 
-The inverse operation---finding the initial momentum that reaches a given target shape---is the *log map*:
+  where each entry $k(q_i, q_j)$ is a $3 times 3$ matrix.
+  The map $k$ is said to be a *positive kernel* if for every stacked vector of momenta $P = (p_1, dots, p_n)^T in (RR^3)^n$, the quadratic form defined by $K_S$ is non-negative:
+  
+  $ P^T K_S P >= 0 <=>  sum_(i, j) (p_i)^T k(q_i, q_j) p_j >= 0 $   
+]
 
-$ "Log"_"atlas" (S) = bold(p)_0 quad "such that" quad "Exp"_"atlas" (bold(p)_0) = S $
+One can show the equivalence between the notions of reproducing kernel and positive kernel.
 
-Computing the log map requires solving an optimization problem (registration). It is *not* simply the difference $(S - "atlas")$.
+#theorem("Theorem")[
+  1. The reproducing kernel of an RKHS is a positive kernel.
+  
+  2. For any positive kernel $k$ on $A$ , there exists a unique RKHS included in $(RR^3)^A$ whose reproducing kernel is $k$.
+]
 
-=== The Geodesic Distance
 
-The distance between two shapes is defined as the length of the geodesic connecting them:
+The main appeal of reproducing kernels is they provide a simple method for defining admissible vector field spaces that are interpretable and algorithmically efficient. We first choose the positive kernel $k$ then define $V$ as the unique RKHS corresponding to $k$.
 
-$ d(S_1, S_2)^2 = min_({v_t}) integral_0^1 norm(v_t)_V^2 dif t $
+=== Spatial Reduction of the Matching problem
+Consider a fixed time $t$, and suppose the current positions of our $n$ landmarks forming the shape $S$ are $q_1, dots, q_n$.  \ Physically, the term $k(x, q_i) p_i$ represents the velocity field generated in the entire space by a single "push" (momentum $p_i$) applied at the point $q_i$. 
+- If we push on a landmark $q_i$, the kernel acts as a transmission function, dragging the surrounding space along with it.
+- The "shape" of this drag is determined by the kernel function.
 
-where $v_t$ is the time-varying velocity field and $norm(dot)_V$ is the RKHS norm defined by the kernel. This geodesic distance is fundamentally different from the Euclidean distance.
+Therefore, the subspace spanned by these kernels:
+$ V_S = "span"({k(dot, q_i) p_i | i=1..n, p_i in RR^3}) $
+represents the set of all infinitesimal deformations that can be constructed *solely* by pushing on the landmarks at time $t$.
 
-== Energy Minimization and Registration
+We recall that at each time step, our goal is to find the vector field $v$ that moves our landmarks $q_i$ while minimizing the infinitesimal deformation energy $||v||_V^2$. #footnote[ Indeed, this implies a minimization of the total energy $integral_(0)^(1) norm(v_t)^2 dif t $ by the increasing nature of the integral.]
 
-Computing the geodesic distance---or equivalently, the log map---requires solving an optimization problem. This section details the exact energy formulation used in our implementation via scikit-shapes @skshapes.
+Consider any candidate vector field $v_t in V$. We can decompose it into two orthogonal components:
+$ v_t = v_(t)^S + v_t^(perp) $
+where $v_t^(S) in V_S$ is built from the kernels applied at the landmarks, and $v_t^(perp)$ is orthogonal to them.
 
-=== The Total Energy Functional
+The crucial insight comes from the *Reproducing Property* of the RKHS. For any momentum $p$, the inner product with the kernel evaluates the field at the landmark:
+$ angle.l v_(perp), k(dot, q_i) p angle.r_V = p dot v_(perp)(q_i) $
 
-Given a source shape $S_"source"$ with vertices $bold(q)_0 in RR^(N times 3)$ and a target shape $S_"target"$, LDDMM registration finds the initial momentum $bold(p)_0 in RR^(N times 3)$ by minimizing:
+Since $v_(perp)$ is orthogonal to the kernel, it is orthogonal to the landmark, i.e $v_(perp)(q_i) = 0$.
+ 
+The component $v_(perp)$ does not help move the landmarks, yet still adds to the total cost $||v||^2 = ||v_S||^2 + ||v_(perp)||^2$. To minimize cost, we must therefore set $v_(perp) = 0$.
 
-$ E(bold(p)_0) = underbrace(cal(L)_"fid" (phi_1 (S_"source"), S_"target"), "Fidelity term") + lambda dot underbrace(H(bold(p)_0, bold(q)_0), "Regularization") $
+This reasoning tells us that the optimal deformation of the whole space is completely determined by the interaction of $n$ "bumps" centered at our landmarks, which yields a powerful reduction of our matching problem.
 
-where:
-- $phi_1$ is the diffeomorphism at time $t=1$ generated by shooting from $bold(p)_0$
-- $cal(L)_"fid"$ is the fidelity loss measuring correspondence quality
-- $H$ is the Hamiltonian (kinetic energy of the deformation)
-- $lambda$ is the regularization weight balancing data fit vs. smoothness
+#theorem("Theorem.")[
+  Let $S = {q_1, dots, q_n}$ be a set of distinct landmarks. The vector field $v in V$ which interpolates specific velocities $v(q_i)$ with minimal norm is a linear combination of the kernel centered at the landmarks:
+  
+  $ forall x in A  , quad  v(x) = sum_(i=1)^n k(q, q_i) p_i $ <eq:optimal_v>
+  
+  where the vectors $p_i in RR^3$ act as *momenta* determining the strength and direction of the local deformation.
+]
+Crucially, the finite dimensional nature of $L^2_(V   , S)$ makes for a simple computation of the norm :
 
-=== The Fidelity Term
+$ norm(v_t)_(L^2_V)^2 = sum_(i  , j in bracket.stroked 1, n bracket.stroked.r ) p_j^T k(q_i,q_j)p_i  $
 
-For shapes with known point correspondence (our case), we use the *L2 loss*:
+#theorem("Corollary.")[
+  The optimal solution of the problem
+  $ op("Minimize") quad E(v) = lambda integral_0^1 norm(v_t)_(L^2_V)^2 dif t + d_cal(S) (Phi^v_1). $
+  can be searched over $L_(V,S)^2 = { v in L_V^2, forall t in [0, 1], v_t in V_(Phi_t^v (S)) }$, space of dimension $3n$.
 
-$ cal(L)_"fid" (phi_1 (S), T) = sum_(i=1)^N norm(phi_1 (bold(q)_i) - bold(t)_i)^2 $
+]
+At each time step, instead of solving a PDE for a complex function $v(x)$, we have reduced the problem to finding the optimal momenta $p_i$ for each landmark. The global flow is simply the superposition of these local kernel influences. More precisely, for any arbitrary point $x$ in our ambient space $A$ (e.g., a point of a femur mesh), the flow equation becomes:
 
-where $bold(q)_i$ are source vertices and $bold(t)_i$ are corresponding target vertices.
+$ dot(Phi)_t^v (x) = v_t (Phi_t^v (x)) = sum_(j=1)^n k(Phi_t^v (x), q_j (t)) p_j (t) $ <eq:global_flow_reduced>
 
-=== The Regularization Term: Hamiltonian Formulation
+This shows that the deformation of the entire space is "interpolated" from the momenta $p_j$ of the driving landmarks.
 
-The regularization is the *Hamiltonian* (kinetic energy) of the initial state:
 
-$ H(bold(p), bold(q)) = 1/2 angle.l bold(p), K_(bold(q)) bold(p) angle.r = 1/2 sum_(i,j=1)^N bold(p)_i^T K(bold(q)_i, bold(q)_j) bold(p)_j $
+If we track the landmarks themselves—i.e., we set $Phi_t^v (q_i (0)) = q_i (t)$—the equation above becomes a closed system of ODEs:
 
-where $K(bold(q)_i, bold(q)_j)$ is the kernel matrix evaluated between vertices. With a Gaussian kernel:
+$ forall i in bracket.stroked 1, n bracket.stroked.r   , quad  dot(q)_i (t) = sum_(j=1)^n k(q_i (t), q_j (t)) p_j (t) $ <eq:landmark_dynamics>
 
-$ K(bold(q)_i, bold(q)_j) = exp(-norm(bold(q)_i - bold(q)_j)^2 / (2 sigma^2)) $
+This important reduction step has made the problem somewhat #footnote[This is really theoretical, in the sense that you can write algorithms that perform this optimization. In practice, this problem is still way too complex to be solved in a reasonable amount of time.] computationally tractable since we are optimizing over a finite set of parameters, can compute $ d_cal(S) (Phi^v_1)$ by integrating the flow equation, and easily compute $norm(v_t)_(L^2_V)^2$, hence $E(v)$ as a whole. \
+However, a Riemannian geometric view of our system will shed light on the true nature of our problem, leading us to the most significant and _beautiful_ reduction step.
 
-This quadratic form penalizes non-smooth deformations:
-- Large momenta at isolated points lead to high energy (discouraged)
-- Spatially coherent momenta lead to lower energy (encouraged)
 
-The kernel scale $sigma$ determines the correlation length: nearby points (within distance $sigma$) are encouraged to move together.
+=== The Riemannian Geometry of Landmarks
 
-=== Hamiltonian Dynamics: The Geodesic Equations
+We interpret the set of all possible landmark configurations, i.e our shape space $cal(S)$ as a smooth manifold $cal(S) = (RR^3)^n$.
+The kernel matrix $K_q$, which we encountered earlier, plays a fundamental role here: it acts as the *cometric* (inverse metric) on this manifold, endowing it with a Riemannian structure. It defines the local geometry, e.g curvature, around any point on the manifold.
 
-Given initial momentum $bold(p)_0$, the shape and momentum evolve according to *Hamilton's equations*:
+#definition("Definition: Kinetic Energy.")[ \
+  For a shape $S in cal(M)$, we define the *Hamiltonian* (or kinetic energy) of the system for any momentum vector $p in T^*_S cal(S) tilde.eq (RR^3)^n$:
+  
+  $ H(q, p) = 1/2 p^T K_q p = 1/2 sum_(i,j) p_i^T k(q_i, q_j) p_j $ <eq:hamiltonian_def>
+  
+  This energy corresponds exactly to the squared norm of the optimal velocity field $v$ generated by $p$: $H(q,p) = 1/2 ||v||_V^2$.
+]
 
-$ dot(bold(q))_i = (diff H) / (diff bold(p)_i) = sum_(j=1)^N K(bold(q)_i, bold(q)_j) bold(p)_j $
+== The Geodesic Equations
 
-$ dot(bold(p))_i = -(diff H) / (diff bold(q)_i) $
+In classical mechanics and Riemannian geometry, trajectories that minimize kinetic energy between two states are called *geodesics*. These trajectories satisfy the canonical **Hamilton's Equations**:
 
-These ODEs are integrated from $t=0$ to $t=1$ using numerical solvers. The final positions $bold(q)_1 = phi_1 (bold(q)_0)$ give the morphed shape.
+#theorem("Theorem: Hamiltonian Dynamics")[
+  A trajectory $(q_t, p_t)$ is a geodesic on the landmark manifold equipped with the kernel cometric if and only if it satisfies the following system of ODEs:
+  
+  $ cases(
+    dot(q) &= partial_p H(q, p) = K_q p,
+    dot(p) &= -partial_q H(q, p) = -1/2 nabla_q (p^T K_q p)
+  ) $ <eq:hamilton_sys>
+]
 
-A crucial property of Hamiltonian systems is *energy conservation*:
+*Interpretation:*
+1. The first equation $dot(q) = K_q p$ is simply the flow equation we derived in the Spatial Reduction step.
+2. The second equation describes how the momentum $p_t$ *must* evolve to conserve the energy of the deformation as the shape changes.
 
-$ H(bold(p)_t, bold(q)_t) = H(bold(p)_0, bold(q)_0) quad forall t in [0, 1] $
+== Equivalence and The "Shooting" Reduction
 
-=== Connection to Geodesic Distance
+We can now link our original matching problem to this Hamiltonian framework through a two-step argument.
 
-For velocity fields parameterized by momenta, the RKHS norm becomes:
+*Step 1: Optimality implies Geodesic*
+If a trajectory $(q_t)$ minimizes the deformation functional $J(v) = lambda integral_0^1 ||v_t||^2 dif t + A$, it specifically minimizes the integral term (the length) for fixed endpoints. 
+Therefore, *any optimal trajectory is a geodesic*.
+Consequently, the optimal parameters $(q_t, p_t)$ must satisfy the Hamiltonian system @eq:hamilton_sys.
 
-$ norm(v_t)_V^2 = 2 H(bold(p)_t, bold(q)_t) $
-
-By energy conservation along geodesics:
-
-$ d(S_1, S_2)^2 = integral_0^1 2 H(bold(p)_t, bold(q)_t) dif t = 2 H(bold(p)_0, bold(q)_0) $
-
-Thus, *the squared geodesic distance equals twice the initial Hamiltonian* of the optimal momentum. This is why minimizing the total energy $E(bold(p)_0) = cal(L)_"fid" + lambda H$ simultaneously:
-+ Achieves correspondence (via fidelity term)
-+ Finds the shortest geodesic (via Hamiltonian regularization)
-
-=== The Optimization Algorithm
-
-We use *L-BFGS* (Limited-memory Broyden–Fletcher–Goldfarb–Shanno), a quasi-Newton optimization method that:
-+ Approximates the Hessian using gradient history (memory-efficient)
-+ Converges superlinearly near the optimum
-+ Is well-suited for smooth, high-dimensional problems like LDDMM
-
-The gradient $nabla_(bold(p)_0) E$ is computed via automatic differentiation through the ODE integration, leveraging PyTorch's `autograd` capabilities.
-
-== The Kernel and RKHS
-
-=== Why Regularization?
-
-Without constraints, the velocity field $v$ could be arbitrarily irregular. We require *smooth* deformations that preserve anatomical plausibility---a heart should deform smoothly, not with discontinuous jumps.
-
-=== The RKHS Framework
-
-We constrain $v$ to live in a *Reproducing Kernel Hilbert Space (RKHS)* $V$ defined by a kernel $K$ @younes2010shapes:
-
-$ norm(v)_V^2 = angle.l v, v angle.r_V $
-
-The kernel implicitly defines the smoothness properties of allowed velocity fields.
-
-=== The Gaussian Kernel
-
-We use a Gaussian kernel:
-
-$ K(x, y) = exp(-norm(x - y)^2 / (2 sigma^2)) $
-
-*The scale parameter $sigma$ controls correlation:*
-- *Small $sigma$*: Local deformations, each point moves relatively independently
-- *Large $sigma$*: Global deformations, nearby points are strongly coupled
-
-=== Choosing $sigma$ for Femurs
-
-Rule of thumb: $sigma approx 10"-"20%$ of the shape's bounding box diagonal.
-
-For femurs with approximately 100mm bounding box: $sigma approx 10"-"15"mm"$.
-
-== Atlas Building
+*Step 2: Conservation of Momentum*
+A fundamental property of Hamiltonian systems is the conservation of energy. Along a geodesic, the Hamiltonian is constant:
+$ H(q_t, p_t) = H(q_0, p_0) = "constant" $
+This implies that the norm of the velocity field is constant over time: $||v_t||_V^2 = p_0^T K_(q_0) p_0$.
 
 === The Fréchet Mean
 
