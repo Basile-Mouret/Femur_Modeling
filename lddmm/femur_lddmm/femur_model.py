@@ -52,6 +52,7 @@ Examples:
     %(prog)s                                        # Use all data (training + validation)
     %(prog)s --n-components 20                      # Keep 20 PCA components
     %(prog)s --config high_precision                # More accurate LDDMM
+    %(prog)s --scale 12 --n-steps 10 --n-iter 150   # Custom LDDMM params
         """,
     )
 
@@ -81,12 +82,40 @@ Examples:
         default="for_femurs",
         help="LDDMM configuration preset (default: for_femurs)",
     )
+    
+    # LDDMM parameter overrides
     parser.add_argument(
         "--scale",
         type=float,
         default=None,
-        help="Override kernel scale parameter (mm)",
+        help="Kernel scale/bandwidth in mm (default: preset value ~15)",
     )
+    parser.add_argument(
+        "--n-steps",
+        type=int,
+        default=None,
+        help="ODE integration steps for geodesic shooting (default: preset value)",
+    )
+    parser.add_argument(
+        "--n-iter",
+        type=int,
+        default=None,
+        help="Max L-BFGS iterations per registration (default: preset value)",
+    )
+    parser.add_argument(
+        "--kernel",
+        type=str,
+        choices=["gaussian", "cauchy"],
+        default=None,
+        help="RKHS kernel type (default: gaussian)",
+    )
+    parser.add_argument(
+        "--regularization",
+        type=float,
+        default=None,
+        help="Regularization weight λ for deformation energy (default: preset value)",
+    )
+    
     parser.add_argument(
         "--quiet",
         action="store_true",
@@ -107,9 +136,17 @@ def get_config(args: argparse.Namespace) -> LDDMMConfig:
     else:
         config = LDDMMConfig()
 
-    # Override scale if specified
+    # Override individual parameters if specified
     if args.scale is not None:
         config.scale = args.scale
+    if args.n_steps is not None:
+        config.n_steps = args.n_steps
+    if args.n_iter is not None:
+        config.n_iter = args.n_iter
+    if args.kernel is not None:
+        config.kernel = args.kernel
+    if args.regularization is not None:
+        config.regularization_weight = args.regularization
 
     return config
 
