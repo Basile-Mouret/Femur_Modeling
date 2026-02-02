@@ -1,6 +1,8 @@
 # Femur Modeling
+![alt text](https://github.com/Basile-Mouret/Femur_Modeling/blob/main/report/fig/bone_visu.png)
 
 Statistical shape analysis of femur bones using PCA, neural networks and diffeomorphic registration (LDDMM).
+
 
 ## Overview
 
