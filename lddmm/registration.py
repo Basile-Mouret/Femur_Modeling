@@ -272,4 +272,4 @@ class LDDMMRegistration:
             shape=source_poly,
             parameter=momentum_tensor,
         )
-        return morphed.points.detach().cpu().numpy()
+        return morphed.morphed_shape.points.detach().cpu().numpy()

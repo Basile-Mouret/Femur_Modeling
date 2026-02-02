@@ -35,9 +35,9 @@
 #include "chapters/autoencoder.typ"
 = LDDMM
 #include "chapters/lddmm.typ"
-= Discussion
+#nonumber[= Discussion]
 #include "chapters/discussion.typ"
-= Conclusion and future works
+#nonumber[= Future Work]
 #include "chapters/conclusion.typ"
 
 #heading(numbering:none, outlined: false)[] <sec:end>

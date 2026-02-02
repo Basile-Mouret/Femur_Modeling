@@ -6,4 +6,6 @@ Exploring the latent space of the neural network, we found that most of the vari
 
 Our Python tools for visualization, mesh comparison, and latent space exploration were crucial for debugging and evaluating the models. They revealed that, while the neural network can generate a wide range of shapes, some are not anatomically realistic—highlighting the need for more constraints or regularization.
 
+We therefore explored LDDMM as a third pillar focused on diffeomorphic, anatomy-preserving deformations. In contrast to PCA and the autoencoder, LDDMM defines a Riemannian metric on the shape manifold and represents deformations through geodesic shooting and initial momenta. This provides a principled way to enforce smooth, invertible transformations and to build an atlas, at the cost of substantially heavier computations. The LDDMM pipeline is promising for anatomical consistency, and its quantitative evaluation is the next step once atlas construction is completed.
+
 In short, combining PCA and neural networks gives a flexible and powerful framework for shape modeling. The neural network's ability to capture non-linear variations and generate new shapes is a significant advantage, but ensuring anatomical plausibility remains a challenge for future work.

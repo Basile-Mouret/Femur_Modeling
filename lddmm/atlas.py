@@ -163,14 +163,15 @@ class AtlasBuilder:
             if self.verbose:
                 print(f"  Energy: {energy:.4f}")
 
-            # Check convergence
-            rel_change = abs(prev_energy - energy) / (abs(prev_energy) + 1e-10)
-            if rel_change < self.convergence_tol:
-                if self.verbose:
-                    iteration_time = time.time() - iteration_start
-                    print(f"  Converged (relative change: {rel_change:.2e})")
-                    print(f"  Iteration time: {iteration_time:.2f}s")
-                break
+            # Check convergence (skip first iteration when prev_energy is inf)
+            if np.isfinite(prev_energy):
+                rel_change = abs(prev_energy - energy) / (abs(prev_energy) + 1e-10)
+                if rel_change < self.convergence_tol:
+                    if self.verbose:
+                        iteration_time = time.time() - iteration_start
+                        print(f"  Converged (relative change: {rel_change:.2e})")
+                        print(f"  Iteration time: {iteration_time:.2f}s")
+                    break
 
             prev_energy = energy
 
