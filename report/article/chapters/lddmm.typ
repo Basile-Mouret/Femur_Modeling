@@ -191,7 +191,7 @@ In practice, the task consists of finding a diffeomorphism $Phi$ that deforms a 
 The real number $lambda$ is a _regularization_ weight, which compels $Phi(S_0)$ to remain within a neighborhood of $S_0$: one often selects $0 < lambda << 1$, so as to obtain a model $Phi(S_0)$ close to the observation $S_1$, yet remaining at a "finite" deformation distance from the shape $S_0$.
 == Kernel Methods : Efficient and Interpretable Vector Fields
 
-The matching problem as expressed in @def:matching-problem is over $L^2_V$, which can _a priori_ be infinite dimensional. Our goal is thus to build $V$ such that we can _reduce_ #footnote[_Reduction_ is the process of proving that the optimization of a functional over a larger space can be done over a smaller space] the problem to a finite dimensional setting, making it numerically solvable. In this section, we define $V$ as the *Reproducing Kernel Hilbert Space* (RKHS) induced by a positive definite kernel $k$. In this context, we perform a first reduction step allowing us to only focus on defining the deformation at the landmarks. We then introduce the *Gaussian kernel*, used in practice. Finally, we reinterpret our matching problem in terms of *Riemannian geometry*, ultimately yielding a _stunning_ reduction of the problem to *initial momenta* in $RR^(3n)$.
+The matching problem as expressed previously /* @def:matching-problem */ is over $L^2_V$, which can _a priori_ be infinite dimensional. Our goal is thus to build $V$ such that we can _reduce_ #footnote[_Reduction_ is the process of proving that the optimization of a functional over a larger space can be done over a smaller space] the problem to a finite dimensional setting, making it numerically solvable. In this section, we define $V$ as the *Reproducing Kernel Hilbert Space* (RKHS) induced by a positive definite kernel $k$. In this context, we perform a first reduction step allowing us to only focus on defining the deformation at the landmarks. We then introduce the *Gaussian kernel*, used in practice. Finally, we reinterpret our matching problem in terms of *Riemannian geometry*, ultimately yielding a _stunning_ reduction of the problem to *initial momenta* in $RR^(3n)$.
 
 
 === Reproducing space and kernels
@@ -386,8 +386,7 @@ To define the geometry, we must distinguish between the deformation itself and t
 The tangent space $T_S cal(S)$ is the space of all possible instantaneous deformations of the shape $S$. An element $v_t in T_S cal(S)$ is a vector field restricted to the landmarks, i.e., a collection of velocity vectors attached to each point, which we can think of as a global velocity vector attached to the shape:
 $ v_t = (v_(t,1), dots, v_(t,n)) in (RR^3)^n . $
 
-This is exactly the definition on $V_S$ @def:vs, which is the infinitesimal deformation space we are optimizing over thanks to our last reduction step.
-
+This is exactly the definition on $V_S$ /* @def:vs */, which is the infinitesimal deformation space we are optimizing over thanks to our last reduction step.
 The *Cotangent Space* $T_S^* cal(S)$ is the dual space of the tangent space. It contains the linear forms acting on velocities.
 An element $P(t) in T_S^* cal(S)$ is called the *momentum* (or co-vector). In our context, it represents the "force" or "constraints" applied to the landmarks to drive the deformation. Like velocity, it is numerically represented as a stacked vector in $(RR^3)^n$, with one component attached to each landmark.
 
@@ -480,8 +479,7 @@ As mentioned earlier, geodesics (defined as locally straight curves) are in gene
 
 === Hamiltonian Dynamics and Conservation of Energy
 
-We have established that our optimal deformation is a geodesic. Earlier @sec:initial-velocity, we have argued that, intuitively, given source and target, the only parameter that determines a geodesic and the time it takes is the initial *velocity* vector. 
-
+We have established that our optimal deformation is a geodesic. Earlier /* @sec:initial-velocity */, we have argued that, intuitively, given source and target, the only parameter that determines a geodesic and the time it takes is the initial *velocity* vector. 
 This is nothing more than a *classical mechanics* argument. We can view the evolving shape as a particle moving through a curved space, governed by physical laws. The state of such a system is described by its *Total Energy* defined as the sum of Kinetic energy ($K_E$) and Potential energy ($P_E$):
 
 $ "Total Energy (H)" = underbrace("Kinetic Energy" (K_E), "Motion / Inertia") + underbrace("Potential Energy" (P_E), "External Forces") . $
@@ -506,9 +504,8 @@ $ cases(
 
 
 ]
-We have already encountered the first equation: it is exactly the flow equation for the landmarks we derived @sec:landmark-flow using RKHS theory. 
+We have already encountered the first equation: it is exactly the flow equation for the landmarks we derived /* @sec:landmark-flow */ using RKHS theory. 
 This is not surprising: they are both interpretations of the same trajectory $S(t)$.
-
 The second equation, however, is completely new to us: it tells us how the momentum (thus velocity) should evolve. It arises specifically when interpreting our optimal deformation as following a geodesic.
 
 A simple application of the chain rule combined with the substitutions of both equation then yields the following result.
