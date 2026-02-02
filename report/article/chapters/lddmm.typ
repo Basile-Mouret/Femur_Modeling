@@ -124,7 +124,7 @@ The diffeomorphisms we are about to define are viewed as solutions to a flow equ
   We define the following space and norm:
   $ L_V^2 = L^2 ([0, 1], V) "endowed with" ||v||_(L_V^2) = sqrt(integral_0^1 ||v_t||_V^2 dif t) $ <eq:13.3>
 ]
-
+The elements of $L_V^2$ are time dependent vector fields $v : t mapsto v(t)$ where we denote $v(t) = v_t$, for $t in [0,1]$ and $v_t in V$.
 #theorem("Theorem 4.1.")[
   Let $v in L_V^2$. For all $x in RR^d$, there exists a unique continuous mapping $t mapsto Phi_t^v(x)$ from $[0, 1]$ to $RR^d$ satisfying the flow equation:
   $ Phi_t^v (x) = x + integral_0^t v_s compose Phi_s^v (x) dif s $ <eq:13.6>
@@ -170,7 +170,7 @@ We have defined a metric on a general diffeomorphism space that deforms our shap
 In practice, finding the $Phi$ that exactly maps $S_1$ to $S_2$ is too hard, we thus relax the problem by defining a naive *matching* distance, which we can do because our shape space is a landmark space. #footnote[This becomes way harder in non-landmark spaces, and is done via Varifolds. See [SOURCE] for more details. ] \
 #definition("Matching distance.")[
 Let $Phi in cal(D)_V$, $S_1 = {x_i, i in bracket.stroked 1, n bracket.stroked.r} in cal(S)$ and $S_2 in cal(S)$. The matching distance between $S_2$ and $Phi(S_1) = {y_i, i in bracket.stroked 1, n bracket.stroked.r} $ is defined by:
-  $ d_cal(S)(Phi) = norm(phi(S_1) - S_2)_2 ^2 = sum_(i=1)^(n) abs(y_i - x_i)^2  $
+  $ d_cal(S)(Phi) = norm(Phi(S_1) - S_2)_2 ^2 = sum_(i=1)^(n) abs(y_i - x_i)^2  $
 ]
 This matching ($L^2$, squared euclidean) distance is not a relevant quantity in general as already discussed, but can be used to assess if two shapes are "very" close or not.
 
@@ -246,7 +246,7 @@ Therefore, the subspace spanned by these kernels:
 $ V_S = "span"({k(dot, q_i) p_i | i=1..n, p_i in RR^3}) $
 represents the set of all infinitesimal deformations that can be constructed *solely* by pushing on the landmarks at time $t$.
 
-We recall that at each time step, our goal is to find the vector field $v$ that moves our landmarks $q_i$ while minimizing the infinitesimal deformation energy $||v||_V^2$. #footnote[ Indeed, this implies a minimization of the total energy $integral_(0)^(1) norm(v_t)^2 dif t $ by the increasing nature of the integral.]
+We recall that at each time step, our goal is to find the vector field $v$ that moves our landmarks $q_i$ while minimizing the infinitesimal deformation energy $||v_t||_V^2$. #footnote[ Indeed, this implies a minimization of the total energy $integral_(0)^(1) norm(v_t)_V^2 dif t $ by the increasing nature of the integral.]
 
 Consider any candidate vector field $v_t in V$. We can decompose it into two orthogonal components:
 $ v_t = v_(t)^S + v_t^(perp) $
@@ -270,11 +270,11 @@ This reasoning tells us that the optimal deformation of the whole space is compl
 ]
 Crucially, the finite dimensional nature of $L^2_(V   , S)$ makes for a simple computation of the norm :
 
-$ norm(v_t)_(L^2_V)^2 = sum_(i  , j in bracket.stroked 1, n bracket.stroked.r ) p_j^T k(q_i,q_j)p_i  $
+$ norm(v_t)_(V)^2 = sum_(i  , j in bracket.stroked 1, n bracket.stroked.r ) p_j^T k(q_i,q_j)p_i  $
 
 #theorem("Corollary.")[
   The optimal solution of the problem
-  $ op("Minimize") quad E(v) = lambda integral_0^1 norm(v_t)_(L^2_V)^2 dif t + d_cal(S) (Phi^v_1). $
+  $ op("Minimize") quad E(v) = lambda integral_0^1 norm(v_t)_(V)^2 dif t + d_cal(S) (Phi^v_1). $
   can be searched over $L_(V,S)^2 = { v in L_V^2, forall t in [0, 1], v_t in V_(Phi_t^v (S)) }$, space of dimension $3n$.
 
 ]
@@ -289,72 +289,199 @@ If we track the landmarks themselves—i.e., we set $Phi_t^v (q_i (0)) = q_i (t)
 
 $ forall i in bracket.stroked 1, n bracket.stroked.r   , quad  dot(q)_i (t) = sum_(j=1)^n k(q_i (t), q_j (t)) p_j (t) $ <eq:landmark_dynamics>
 
-This important reduction step has made the problem somewhat #footnote[This is really theoretical, in the sense that you can write algorithms that perform this optimization. In practice, this problem is still way too complex to be solved in a reasonable amount of time.] computationally tractable since we are optimizing over a finite set of parameters, can compute $ d_cal(S) (Phi^v_1)$ by integrating the flow equation, and easily compute $norm(v_t)_(L^2_V)^2$, hence $E(v)$ as a whole. \
-However, a Riemannian geometric view of our system will shed light on the true nature of our problem, leading us to the most significant and _beautiful_ reduction step.
+This important reduction step has made the problem somewhat #footnote[This is really theoretical, in the sense that you can write algorithms that perform this optimization. In practice, this problem is still way too complex to be solved in a reasonable amount of time.] computationally tractable since we are optimizing over a finite set of parameters, can compute $ d_cal(S) (Phi^v_1)$ by integrating the flow equation, and easily compute $norm(v_t)_(V)^2$, hence $E(v)$ as a whole. \
+However, a Riemannian geometric view of our dynamical system will shed light on the true nature of our problem, leading us to the most significant and _beautiful_ reduction step.
 
 
-=== The Riemannian Geometry of Landmarks
+== Riemannian Geometry of Landmarks
+=== Introduction
+
+In this section, we intuitively introduce the fundamental concepts of Riemannian Geometry, the study of smooth curved spaces called *manifolds*. For a comprehensive introduction to this field of study, see [SOURCE]. 
+
+It is an abstract model that captures the essence of all possible spaces having the same intrinsic geometry. By the “essence” we mean
+knowledge of the distance between any two points, for this and this alone determines the intrinsic
+geometry. In fact, it is sufficient to have a rule for the inﬁnitesimal distance between neighbouring points. This rule is
+called the *metric*. Given this metric, we may determine the length of any curve as an infinite sum
+(i.e., integral) of the infinitesimal segments into which it may be divided.
+We can then define a distance using the shortest paths between points on the manifold.
+These shortest paths on a curved space are the equivalent of straight lines in the plane, they are called *geodesics*. Thus, to use this new word, we may say that geodesics in Eculidean space are straight lines, and geodesics on the sphere are
+great circles.
+
+
+#figure(
+  caption: [Euclidean distance and distance on the sphere as a Riemannian manifold]
+)[
+  #image("/resources/img/sphere_geodesic.png", width: 50%) 
+]
+
+However, this _length-minimizing_ definition of geodesics is subtle, because even on the sphere, we see that nonantipodal points are connected by two arcs of the great circle passing through them:
+the short one (which is the shortest route) and the long one. Yet the long arc is every bit as much _straight_, thus a
+geodesic, as the short one. We thus provide a purely _local_ characterization of geodesics.
+
+One key property of manifolds is they are locally Euclidean, i.e look like flat space around any point when _zooming_ enough. This is formalized by the notion of *tangent space*, the flat space hugging our manifold exactly at a point.
+
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    image("/resources/img/tangent_1.png", width: 100%),
+    image("/resources/img/tangent_2.png", width: 100%),
+  ),
+  caption: [The tangent space at a point of the sphere is the plane touching the sphere at that single point, containing all possible directions in which one can instantaneously move starting from there.],
+)
+
+We experience this everyday walking on our beautiful planet Earth. To us, going "straight" is equivalent to the definition in flat space, i.e walking without ever _turning_. As we live *on* the surface of Earth, thus do not see its curvature, pursuing this local straight behavior yields a global geodesic.
+The only parameter that determines the particular geodesic we trace and the time it takes is our initial *velocity* vector. Indeed, once we are set on our path, flowing on the surface following the local rule of not turning is enough to characterize a unique geodesic. Conversely, provided we stay close enough to the source point, the unique geodesic connecting given source and target points is fully characterized by the initial velocity starting from the source. 
+
+This leads to another interpretation of the tangent space. Consider (conveniently) a Riemannian manifold $cal(S)$ and a point $macron(S)$. The tangent space at $macron(S)$, denoted $T_macron(S) cal(S)$ is the space of all possible velocity vectors a being moving *on* the surface can follow when it is in $macron(S)$. Armed with this insight, one can formalize the velocity $<->$ geodesic relationship.
+
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 2em,
+    align: horizon,
+
+    // Left Column: Your Fletcher Diagram
+    fletcher.diagram(
+      spacing: (25mm, 20mm),
+      node-stroke: 0.5pt,
+      node-inset: 8pt,
+      node((0, 0), $T_(macron(S)) cal(S)$, name: <tangent>),
+      node((1, 0), $cal(S)$, name: <shape>),
+      edge(<tangent>, <shape>, $"Exp"_(macron(S))$, "->", bend: 25deg),
+      edge(<shape>, <tangent>, $"Log"_(macron(S))$, "->", bend: 25deg),
+      node((0.5, 0.7), $bold(v)_0 |-> S = "Exp"_(macron(S))(bold(v)_0)$, stroke: none),
+    ),
+
+    // Right Column: The Image
+    image("/resources/img/exp_and_log.png", width: 100%)
+  ),
+  caption: [The exponential and logarithm maps establish a local diffeomorphism between the tangent space at a point and the manifold.],
+)
+
+- The *exponential map* $"Exp"_(macron(S)) : T_(macron(S)) cal(S) -> cal(S)$ sends an initial velocity vector to the point reached by following the corresponding geodesic for unit time.
+- The *logarithm map* $"Log"_(macron(S)) : cal(S) -> T_(macron(S)) cal(S)$ is its inverse, returning the initial velocity vector that generates a geodesic to a given point.
+
+As shown earlier by the example of antipodal points on the sphere, this result is only true *locally* : if the target and source points are too far apart, there can be multiple geodesics connecting them, thus multiple potential velocity vectors, yielding a multivalued $op("Log")$ map.
+=== The Landmarks Manifold 
 
 We interpret the set of all possible landmark configurations, i.e our shape space $cal(S)$ as a smooth manifold $cal(S) = (RR^3)^n$.
-The kernel matrix $K_q$, which we encountered earlier, plays a fundamental role here: it acts as the *cometric* (inverse metric) on this manifold, endowing it with a Riemannian structure. It defines the local geometry, e.g curvature, around any point on the manifold.
+To define the geometry, we must distinguish between the deformation itself and the force generating it. Let $S in cal(S)$ be a shape state (which we later interpret as the shape attained at time $t in [0,1]$ of a trajectory in $cal(S)$).
 
-#definition("Definition: Kinetic Energy.")[ \
-  For a shape $S in cal(M)$, we define the *Hamiltonian* (or kinetic energy) of the system for any momentum vector $p in T^*_S cal(S) tilde.eq (RR^3)^n$:
-  
-  $ H(q, p) = 1/2 p^T K_q p = 1/2 sum_(i,j) p_i^T k(q_i, q_j) p_j $ <eq:hamiltonian_def>
-  
-  This energy corresponds exactly to the squared norm of the optimal velocity field $v$ generated by $p$: $H(q,p) = 1/2 ||v||_V^2$.
+The tangent space $T_S cal(S)$ is the space of all possible instantaneous deformations of the shape $S$. An element $v_t in T_q cal(S)$ is a vector field restricted to the landmarks, i.e., a collection of velocity vectors attached to each point, which we can think of as a global velocity vector attached to the shape:
+$ v_t = (v_(t,1), dots, v_(t,n)) in (RR^3)^n $
+
+This is exactly the definition on $V_S$ in [REF], which is the infinitesimal deformation space we are optimizing over thanks to our last reduction step.
+
+The *Cotangent Space* $T_S^* cal(S)$ is the dual space of the tangent space. It contains the linear forms acting on velocities.
+An element $p_t in T_S^* cal(S)$ is called the *momentum* (or co-vector). In our context, it represents the "force" or "constraints" applied to the landmarks to drive the deformation. Like velocity, it is numerically represented as a stacked vector in $(RR^3)^n$.
+
+In standard Euclidean space, velocity and momentum are often identified ($v_t = p_t$). In a curved space, they are distinct, and linked by the physics / metric / curvature of the medium.
+
+The kernel matrix $K_S$, defined block-wise by $K_(i,j) = k(q_i, q_j)$, acts as the **Cometric** (inverse metric) on the manifold. It maps momentum to velocity:
+
+$ v_t = K_S p_t quad <==> quad v_(t,i) = sum_(j=1)^n k(q_i, q_j) p_(t  , j) $ <eq:fundamental_map>
+
+
+- The momentum $p$ is the control variable (the input "push").
+- The kernel $K_S$ is the transmission mechanism (smoothing/correlation).
+- The velocity $v_t$ is the resulting deformation (the output).
+
+Consequently, the Riemannian metric $g_S$, defined on $(T_S cal(S))^2$, which measures the cost of the deformation is expressed as #footnote[The metric is actually an inner product on the tangent space, thus expressed as $g_S(u,v) = u^T M_S v$ with $M_S$ a matrix. The derivation implicitely done here is $M_S = K_S^(-1)$, which exists by strict positivty of the kernel. Our focus is on using the metric to measure a norm. ]  :
+
+$ g_S(v_t, v_t) = norm(v_t)_(V)^2 =  p_t^T K_S p_t =  v^T K_S^(-1) v. $
+
+== Reduction of the Matching Problem to initial momentum
+
+In this section, we leverage the Riemannian structure of the Landmarks shape space to interpret the Matching problem as a geodesic problem. Then, by exploiting the *conservation of energy* principle on geodesics, an idea originating from classical mechanics, we reduce the problem to the space of initial momentum $T^*_(S) cal(S) tilde.eq RR^(3 n)$.
+
+=== Recap on the current state of the problem
+We have established that our shape space is a Riemannian manifold equipped with a cometric $K_S$. We can now reinterpret our original optimization problem through this geometrical lens. We denote $S_0, S_1$ respectivally our source and target shapes.
+Recall that we are minimizing the energy functional over $L^2_(V  , S)$:
+$ E(v) = lambda integral_0^1 ||v_t||_(V)^2 dif t + d_(cal(S))(Phi_1^v) $
+
+Using our Riemannian formalism, the integral term is exactly the cost / length of the trajectory $S(t)$ on the manifold, for $t in [0,1]$:
+$ L_(Phi^v_1)^(S_0) = integral_0^1 p_t^T K_(Phi_t^v (S)) p_t dif t $
+
+Where we denote $ Phi_t^v (q_i (0)) = q_i (t)$, thus $ S(t) = (q_1(t) , dots , q_n (t))$ is the shape deformed after time $t$ by the diffeomorphism obtained by integrating the time-dependent vector field $v$ up to $t$.
+
+=== Matching Problem as a Geodesic
+In the following section, $v$ is a minimizer of the energy functional. Based on previous arguments, we have $d_cal(S)(Phi_1^v) = 0 <=> Phi^v_1 (S_0) = S_1$, i.e the source shape is exactly matched to the target shape. Consequently, it is also a minimizer of $L_(Phi^(v_1))^(S_0)$.
+
+We interpret this geometrically by the fact that $Phi_t^v (S_0)$ is a _length-minimizing_ curve on $cal(S)$ between $S_0$ and $S_1$. By definition, this optimal deformation $S_0 --> S_1$ is thus a *geodesic* of $cal(S)$.
+
+As mentioned earlier, geodesics (defined as locally straight curves) are in general, not unique. But our optimal trajectory is *the* shortest geodesic w.r.t to the defined length .
+
+
+=== Hamiltonian Dynamics and Conservation of Energy
+
+We have established that our optimal deformation is a geodesic. Earlier [REF], we have argued that, intuitively, given source and target, the only parameter that determines a geodesic and the time it takes is the initial *velocity* vector. 
+
+This is nothing more than a *classical mechanics* argument. We can view the evolving shape as a particle moving through a curved space, governed by physical laws. The state of such a system is described by its *Total Energy* defined as the sum of Kinetic energy ($T$) and Potential energy ($V$):
+
+$ "Total Energy (H)" = underbrace("Kinetic Energy" (T), "Motion / Inertia") + underbrace("Potential Energy" (P), "External Forces") $
+
+In our specific case, no external forces apply to the deformation hence the absence of potential energy.\
+The shape thus behaves as a **free particle**: it "coasts" along the manifold solely due to its initial inertia, thus following a geodesic (equivalent to "not turning" in our previous walking analogy). A fundamental law of mechanics is the *Conservation of Total Energy* for isolated systems. Since $P=0$, this implies the *Conservation of Kinetic Energy*. 
+
+The ubiquity of Riemannian geometry in the description of physical systems allows us to formalize this via a theorem true for every Riemannian manifold, originally emanating from the *Hamiltonian* formulation of classical mechanics.
+
+We define the *Hamiltonian* for every shape $S$, momentum $p$ and associated velocity $v_p in V$ as:
+$ H(S, p) = 1/2 p^T K_S p = 1/2 norm(v_p)_V^2   $
+
+
+#theorem("Geodesic equations.")[
+Any geodesic trajectory $(S(t), p(t))$ on our manifold satisfies the canonical system:
+
+$ cases(
+  (partial S) / (partial t) &= partial_p H(S, p) = K_q p,
+  (partial p) / (partial t) &= -partial_S H(q, p) = -1/2 nabla_S (p^T K_q p)
+) $ <eq:hamilton_sys>
+
+
+
+]
+We have already encountered the first equation : it is exactly the flow equation for the landmarks we derived [REF] using RKHS theory.
+This is not surprising : they are both interpretations of the same trajectory $S(t)$.
+
+The second equation, however, is completely new to us : it tells us how the momentum (thus velocity) should evolve. It arises specifically when interpreting our optimal deformation as following a geodesic.
+
+A simple application of the chain rule combined with the substitutions of both equation then yields the following result.
+
+
+#theorem("Conservation of Energy.")[
+Let $(S(t), p(t))$ be a solution to the canonical system. We have :
+$ frac(dif, dif t) H(S(t), p(t)) = 0 => H(S(t), p(t)) = H(S_0, p_0) $
+
+The total energy is conserved.
 ]
 
-== The Geodesic Equations
+Applying the theorem to our hamiltonian containing only kinetic energy, we get :
 
-In classical mechanics and Riemannian geometry, trajectories that minimize kinetic energy between two states are called *geodesics*. These trajectories satisfy the canonical **Hamilton's Equations**:
+$  integral_0^1 ||v_t||_V^2 dif t = integral_0^1 2 H(S_0, p_0) dif t = 2 H(S_0, p_0) = p_0^T K_(S_0) p_0 $
 
-#theorem("Theorem: Hamiltonian Dynamics")[
-  A trajectory $(q_t, p_t)$ is a geodesic on the landmark manifold equipped with the kernel cometric if and only if it satisfies the following system of ODEs:
-  
-  $ cases(
-    dot(q) &= partial_p H(q, p) = K_q p,
-    dot(p) &= -partial_q H(q, p) = -1/2 nabla_q (p^T K_q p)
-  ) $ <eq:hamilton_sys>
+
+The entire trajectory $S(t)$ is fully determined by it's initial momentum $P_0 = (p_1, ... , p_n )^T in (RR^3)^n$.
+
+=== Matching Problem over initial momentum space
+
+
+#definition("Matching Problem over momentum space.")[ Let $lambda > 0$.   The Matching problem over $L^2_(V,  S)$ :  $ op("Minimize") quad E(v) = lambda integral_0^1 norm(v_t)_(V)^2 dif t + d_cal(S) (Phi^v_1). $ 
+Is equivalent to the following problem over $RR^(3 n)$ :
+
+$ op("Minimize") quad E(p_0) = lambda p_0^T K_S p_0 + d_cal(S) (Phi_1^(v_(p_0))) $
+
 ]
 
-*Interpretation:*
-1. The first equation $dot(q) = K_q p$ is simply the flow equation we derived in the Spatial Reduction step.
-2. The second equation describes how the momentum $p_t$ *must* evolve to conserve the energy of the deformation as the shape changes.
+Starting from an infinite dimensional setting over $L^2_V$, choosing $V$ to be a RKHS space allowed us to reduce the problem to a finite dimensional problem over the time interval $[0,1]$. Finally, interpreting our problem as finding a geodesic in a Riemannian manifold reduced the problem to finding the optimal initial condition $p_0$., which has the dimension of our shape.
 
-== Equivalence and The "Shooting" Reduction
-
-We can now link our original matching problem to this Hamiltonian framework through a two-step argument.
-
-*Step 1: Optimality implies Geodesic*
-If a trajectory $(q_t)$ minimizes the deformation functional $J(v) = lambda integral_0^1 ||v_t||^2 dif t + A$, it specifically minimizes the integral term (the length) for fixed endpoints. 
-Therefore, *any optimal trajectory is a geodesic*.
-Consequently, the optimal parameters $(q_t, p_t)$ must satisfy the Hamiltonian system @eq:hamilton_sys.
-
-*Step 2: Conservation of Momentum*
-A fundamental property of Hamiltonian systems is the conservation of energy. Along a geodesic, the Hamiltonian is constant:
-$ H(q_t, p_t) = H(q_0, p_0) = "constant" $
-This implies that the norm of the velocity field is constant over time: $||v_t||_V^2 = p_0^T K_(q_0) p_0$.
-
-=== The Fréchet Mean
+=== Numerical implementation
 
 The atlas $mu$ is the *Fréchet mean*: the shape that minimizes total squared geodesic distance to all training shapes @durrleman2014morphometry:
 
 $ mu = arg min_S sum_(i=1)^K d^2 (S, S_i) $
 
 where $d$ is the *geodesic distance*, not the Euclidean distance.
-
-=== Why the Fréchet Mean $eq.not$ Arithmetic Mean
-
-Even with point correspondence, the Fréchet mean in LDDMM is *not* the arithmetic mean. Here's why:
-
-+ *Different distance metric*: The geodesic distance $d(S_1, S_2)$ involves minimizing $integral norm(v_t)_V^2 dif t$ over smooth velocity fields. This is not equal to $norm(S_1 - S_2)_F$.
-
-+ *Regularization matters*: The kernel $K$ penalizes non-smooth deformations. Two shapes differing by a smooth global rotation have smaller geodesic distance than shapes differing by local jagged displacements of the same Euclidean magnitude.
-
-+ *Curved geometry*: The minimizer of $sum_i d^2 (mu, S_i)$ on a curved manifold is generally not the same as $(1/K) sum_i S_i$.
-
 === Algorithm: Iterative Geodesic Averaging
 
 Our implementation uses true LDDMM geodesic averaging:

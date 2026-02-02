@@ -37,7 +37,7 @@
 #include "chapters/lddmm.typ"
 = Discussion
 #include "chapters/discussion.typ"
-= Conclusion and future works
+= Conclusion and future work
 #include "chapters/conclusion.typ"
 
 #heading(numbering:none, outlined: false)[] <sec:end>
