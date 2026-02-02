@@ -12,4 +12,6 @@ We can also improve the training time of the neural network by implementing more
 
 The network could also be used to do clustering on healty and unhealthy femurs, by training it on a larger dataset containing both types of femurs. This would allow us to better understand the differences between these two categories and potentially identify pathological shapes. 
 
+A complementary direction is to complete and evaluate the LDDMM pipeline. This includes finalizing atlas construction, tuning the kernel scale and regularization weight, and comparing geodesic distances and tangent-space statistics against PCA and the autoencoder. LDDMM also opens the possibility of using diffeomorphic constraints to regularize the neural network or to validate generated shapes.
+
 Finally, exploring more advanced generative models, such as Variational Autoencoders, could provide better control over the generation process and improve the realism of the generated femur shapes. These models can learn more complex distributions and might help in generating anatomically plausible shapes.

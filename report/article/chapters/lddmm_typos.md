@@ -1,0 +1,26 @@
+# LDDMM typos and inconsistencies (fixed)
+
+- “landmarks spaces” → “landmark spaces.”
+- Spacing before colons and punctuation (e.g., “equally :” → “equally:”, “We have :” → “We have:”).
+- “w.r.t to” standardized to “with respect to.”
+- Missing period in the proposition statement about $cal(D)_V$.
+- Malformed internal references (e.g., `/* @def:... */`) replaced by proper Typst refs.
+- Duplicate equation labels removed to keep formatting consistent.
+- Gaussian/Gaussian kernel capitalization and spacing normalized.
+- “with regards” → “with regard”; “i.e” → “i.e.,” and $T_S^*$ notation fixed.
+- Metric notation corrected: $g_S$ (not $g_s$), “norms” plural, and missing transpose fixed in $v_t^T K_S^{-1} v_t$.
+- $T_S^(*)$ → $T_S^*$ in the initial momentum section.
+- “Hamiltonian” capitalization fixed.
+- “its reduced form,” “this is achieved,” and “lack information about” grammar fixes.
+- “an data-driven” → “a data-driven”; “betwen” → “between.”
+- “Linear PCA” → “linear PCA.”
+- Generated-shape equation fixed: $\mathrm{Exp}$ applied to $\macron(S)$, not $\macron(P)$.
+- Geodesic distance definition uses consistent $S_0, S_1$ notation.
+- “squared euclidean” → “squared Euclidean,” and a double-space removed.
+- Space-before-colon fixes across text and headings (e.g., “distance :” → “distance:”, “commutes :” → “commutes:”).
+- “time dependent” → “time-dependent.”
+- Extra spacing in $L^2_{(V, S)}$ and similar math cleaned up.
+- “locally :” → “locally:”; similar colon spacing in the Hamiltonian discussion and matching problem.
+- “2.Compute” → “2. Compute”; “i.e” → “i.e.,” in the atlas algorithm.
+- “a RK4” → “an RK4.”
+- Removed an empty results bullet; clarified that parameters are still being finalized.
