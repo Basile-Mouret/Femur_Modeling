@@ -86,7 +86,7 @@ Said in a more compact way, the following diagram commutes :
   caption: [The exponential and logarithm maps establish a local diffeomorphism between the tangent space at the atlas and the shape manifold.],
   ) <fig:exp-log-diagram>
 
-Beware this is only a *local* result, thus only valid for "small" deformations of the atlas, a limitation we clarify and address later.
+
 
 This geodesic point of view thus yields us the two fundamental objects needed for statistical analysis. We can then perform standard PCA (linear or kernel) on $T_macron(S) cal(S)$ in order to understand the most probable deformations of the mean femur $macron(S)$. We call this *Tangent PCA* or *Principal Geodesic Analysis* (PGA).
 
@@ -140,7 +140,7 @@ $ cal(D)_V = { Phi_1^v | v in L_V^2 } . $
 Indeed, it suffices to consider flows at time 1 via time renormalization. This definition of diffeomorphisms on our space allows us to establish a metric, which in turn will allow us to evaluate the cost associated with using a diffeomorphism to deform our space.
 
 #proposition("Proposition.")[
-  $cal(D)_V$ is a group and a complete space for the metric.
+  $cal(D)_V$ is a group and a complete space for the metric
   $ d_V (id, Phi) = inf { norm(v)_(L_V^2) | v in L_V^2, Phi_1^v = Phi } .$
   Which can be extended by right-invariance:
   $ d_V (Phi, Psi) = d_V (id, Psi compose Phi^(-1)) . $
@@ -152,7 +152,7 @@ If we take two diffeomorphisms in $cal(D)_V$, there exists a geodesic between th
 
 #proposition("Proposition.")[
   Let $Phi, Psi in cal(D)_V$.
-  There exists $v in L_V^2$ such that $Phi_1^v = Phi compose Psi^(-1)$ and $d_V(Phi, Psi) = norm(v)_(L_V^2) . $
+  There exists $v in L_V^2$ such that $Phi_1^v = Phi compose Psi^(-1)$ and $d_V (Phi, Psi) = norm(v)_(L_V^2) . $
 ]
 
 We say that $cal(D)_V$ is the group of diffeomorphisms modeled on $V$ starting from the identity. \
@@ -166,7 +166,7 @@ By considering a more flexible space $V$, we cause the number of degrees of free
 ) <extrinsic>
 
 == The Matching problem 
-We have defined a metric on a general diffeomorphism space that deforms our shape space $cal(S)$. Considering arbitrary shapes $S_0, S_1 in cal(S)$, a theorem guarantees the existence of a diffeomorphism $Phi in cal(D)_V$ such that $Phi(S_0) = S_1$. We could thus theoretically define a distance on $cal(S)$ in the following way: $ d_V (S_0,S_1) = d_V (id, Phi) = min_(v in L^2_V) sqrt(integral_0^1 norm(v_t)_V^2 dif t) $.
+We have defined a metric on a general diffeomorphism space that deforms our shape space $cal(S)$. Considering arbitrary shapes $S_0, S_1 in cal(S)$, a theorem guarantees the existence of a diffeomorphism $Phi in cal(D)_V$ such that $Phi(S_0) = S_1$. We could thus theoretically define a distance on $cal(S)$ in the following way: $ d_V (S_0,S_1) = d_V (id, Phi) = min_(v in L^2_V) sqrt(integral_0^1 norm(v_t)_V^2 dif t) . $
 
 In practice, finding the $Phi$ that exactly maps $S_0$ to $S_1$ is too hard, we thus relax the problem by defining a naive *matching* distance, which we can do because our shape space is a landmark space. #footnote[This becomes way harder in non-landmark spaces, and is done via Varifolds. See @younes2010shapes for more details. ] \
 #definition("Matching distance.")[
@@ -236,9 +236,20 @@ One can show the equivalence between the notions of reproducing kernel and posit
 ]
 
 
-The main appeal of reproducing kernels is they provide a simple method for defining admissible vector field spaces that are interpretable and algorithmically efficient. We first choose the positive kernel $k$ then define $V$ as the unique RKHS corresponding to $k$.
+The main appeal of reproducing kernels is they provide a simple method for defining admissible vector field spaces that are interpretable and algorithmically efficient. We first choose the positive kernel $k$ then define $V$ as the unique RKHS corresponding to $k$. For Riemannian interpretation purposes, we consider strictly positive kernels in practice, where $P^T K_S P > 0$, so that $K_S$ is invertible.
 
 === Gaussian Kernel
+
+In practice, the choice of the kernel $k$ determines the nature of the deformations allowed by our model. The most common choice in computational anatomy is the **Isotropic Gaussian Kernel**.
+
+It is defined by a scalar Gaussian curve acting diagonally on the ambient space vectors $x  ,y in A = RR^3$:
+
+$ k_sigma (x, y) = exp( -norm(x - y)^2 / sigma^2 ) dot I_3 $ <eq:gaussian_kernel>
+
+where $I_d$ is the identity matrix in $RR^d$ and $sigma$ is a scale parameter. The use of the identity matrix ensures *isotropy*: the cost of moving a point is independent of the direction of movement.
+
+We later interpret this kernel as defining a Riemannian metric on $cal(S)$, and go over more details about the impact specific kernel.
+
 
 == Spatial Reduction of the Matching problem
 Consider a fixed time $t in [0, 1]$, and suppose the current positions of our $n$ landmarks forming the shape $S$ are $q_1, dots, q_n$.  \ Physically, the term $k(x, q_i) p_i$ represents the velocity field generated in the entire space by a single "push" (momentum $p_i$) applied at the point $q_i$. 
@@ -360,12 +371,13 @@ This leads to another interpretation of the tangent space. Consider (convenientl
     image("/resources/img/exp_and_log.png", width: 100%)
   ),
   caption: [The exponential and logarithm maps establish a local diffeomorphism between the tangent space at a point and the manifold.],
-)
+) <local-bijection>
 
 - The *exponential map* $"Exp"_(macron(S)) : T_macron(S) cal(S) -> cal(S)$ sends an initial velocity vector to the point reached by following the corresponding geodesic for unit time.
 - The *logarithm map* $"Log"_(macron(S)) : cal(S) -> T_macron(S) cal(S)$ is its inverse, returning the initial velocity vector that generates a geodesic to a given point.
 
 As shown earlier by the example of antipodal points on the sphere, this result is only true *locally* : if the target and source points are too far apart, there can be multiple geodesics connecting them, thus multiple potential velocity vectors, yielding a multivalued $op("Log")$ map.
+
 === The Landmarks Manifold 
 
 We interpret the set of all possible landmark configurations, i.e., our shape space $cal(S)$ as a smooth manifold embedded in $(RR^3)^n$.
@@ -374,25 +386,75 @@ To define the geometry, we must distinguish between the deformation itself and t
 The tangent space $T_S cal(S)$ is the space of all possible instantaneous deformations of the shape $S$. An element $v_t in T_S cal(S)$ is a vector field restricted to the landmarks, i.e., a collection of velocity vectors attached to each point, which we can think of as a global velocity vector attached to the shape:
 $ v_t = (v_(t,1), dots, v_(t,n)) in (RR^3)^n . $
 
-This is exactly the definition on $V_S$ in /* @def:vs */ , which is the infinitesimal deformation space we are optimizing over thanks to our last reduction step.
+This is exactly the definition on $V_S$ /* @def:vs */ , which is the infinitesimal deformation space we are optimizing over thanks to our last reduction step.
 
 The *Cotangent Space* $T_S^* cal(S)$ is the dual space of the tangent space. It contains the linear forms acting on velocities.
-An element $P(t) in T_S^* cal(S)$ is called the *momentum* (or co-vector). In our context, it represents the "force" or "constraints" applied to the landmarks to drive the deformation. Like velocity, it is numerically represented as a stacked vector in $(RR^3)^n$.
+An element $P(t) in T_S^* cal(S)$ is called the *momentum* (or co-vector). In our context, it represents the "force" or "constraints" applied to the landmarks to drive the deformation. Like velocity, it is numerically represented as a stacked vector in $(RR^3)^n$, with one component attached to each landmark.
+
 
 In standard Euclidean space, velocity and momentum are often identified ($v_t = P(t)$). In a curved space, they are distinct, and linked by the physics / metric / curvature of the medium.
 
+At first, it seems unintuitive to introduce this space and not do everything with velocity the classical tangent space. In practice, the kernel's action is best interpreted with regards to momentum. Please note that both notions are completely equivalent, i.e $T^*_S cal(S) tilde.eq T_S cal(S)$.
+
 The kernel matrix $K_S$, defined block-wise by $K_(i,j) = k(q_i, q_j)$, acts as the **Cometric** (inverse metric) on the manifold. It maps momentum to velocity:
 
-$ v_t = K_S P(t) quad <==> quad v_(t,i) = sum_(j=1)^n k(q_i, q_j) p_j(t) . $
+$ v_t = K_S P(t) quad <==> quad v_(t,i) = sum_(j=1)^n k(q_i, q_j) p_j (t) . $
 
 
 - The momentum $P$ is the control variable (the input "push").
 - The kernel $K_S$ is the transmission mechanism (smoothing/correlation).
 - The velocity $v_t$ is the resulting deformation (the output).
 
-Consequently, the Riemannian metric $g_S$, defined on $(T_S cal(S))^2$, which measures the cost of the deformation is expressed as #footnote[The metric is actually an inner product on the tangent space, thus expressed as $g_S(u,v) = u^T M_S v$ with $M_S$ a matrix. The derivation implicitly done here is $M_S = K_S^(-1)$, which exists by strict positivity of the kernel. Our focus is on using the metric to measure a norm.]  :
+A Riemannian metric $g_S: (T_S cal(S))^2 mapsto RR$ is an inner product on the tangent space, which allows for norm, distances and angles in the tangent space, thus in the neighborhood of $cal(S)$. It defines the local geometry of the manifold and is expressed:
+
+$ g_s (u  , v) = u^T M_S v $
+
+with $M_S$ a certain matrix.
+
+We want to define a Riemannian metric on $cal(S)$ such that the associated norm of vector fields (elements of $V_S tilde.eq T_S cal(S)$) is the norm on $V$, which measures the cost of the associated deformation :
 $ g_S(v_t,v_t) = norm(v_t)_V^2 = P(t)^T K_S P(t) = v_t K_S^(-1) v_t $
 
+Consequently, $M_S = K_S^(-1)$ and $K_S$ is called the inverse metric (or cometric).
+
+=== Interpreting the Gaussian Kernel as a Riemannian metric
+
+We recall the definition of the gaussian kernel $k_sigma$, for $x  , y in A =  RR^3 "and" sigma > 0$:
+
+$ k_sigma (x, y) = exp( - norm( x - y)^2 / sigma^2 ) dot I_d $ <eq:gaussian_kernel>
+
+
+Consider a shape consisting of two nearby points $q_1, q_2$ and denote $k = k_sigma (q_1, q_2)$ their gaussian correlation.
+
+The inverse kernel matrix is $ K^(-1) = 1/(1-k^2) mat(1, -k; -k, 1) $
+
+Let us compare the cost of moving the points together against the cost of breaking them apart.
+We define a translation vector field $v_T = 1/sqrt(2) vec(1, 1)$ and a tearing vector field $v_D = 1/sqrt(2) vec(1, -1)$.
+    $ norm(v_T)_V^2 =  1 / (1 + k)   quad   "and" quad norm(v_D)_V^2= 1 / (1 - k) $
+
+
+When $sigma$ is large, the bell surface widens and the points get strongly correlated, $k approx 1$.
+The cost of translation is bounded, but the cost of tearing explodes to infinity. The metric rewards nearby points moving together : the shape is locally solid.
+  
+Conversely, when $sigma$ is small, $k approx 0$ and the costs are identical. The metric allows points to move in opposite directions as easily as they move together : the shape locally acts like a fluid.
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 1em,
+    [
+      #image("/resources/img/gaussian_2.png", width: 100%)
+      #align(center)[(a) Kernel scale $sigma = 2$]
+    ],
+    [
+      #image("/resources/img/gaussian_02.png", width: 100%)
+      #align(center)[(b) Kernel scale $sigma = 0.2$]
+    ],
+  ),
+  caption: [
+    Matching of a square onto a circle using a Gaussian kernel.
+     ],
+)
+ Such a kernel enforces the preservation of structures larger than the characteristic length $sigma$, by strongly correlating the motion of points $x, y$ such that $k(x, y) approx 1$.
+    Note how the large scale (a) maintains the straight edges of the square, while the small scale (b) allows the points to break structure and fit the circle perfectly.
 
 == Reduction of the Matching Problem to initial momentum
 
@@ -404,14 +466,14 @@ Recall that we are minimizing the energy functional over $L^2_(V  , S)$:
 $ E(v) = lambda integral_0^1 norm(v_t)_V^2 dif t + d_cal(S)(Phi_1^v). $
 
 Using our Riemannian formalism, the integral term is exactly the cost / length of the trajectory $S(t)$ on the manifold, for $t in [0,1]$:
-$ L_(Phi^v_1)^(S_0) = integral_0^1 P(t)^T K_(Phi_t^v (S)) P(t) dif t. $
+$ L_(Phi^v_1)^(S_0) = integral_0^1 P(t)^T K_(S(t)) P(t) dif t. $
 
 Where we recall that $ Phi_t^v (q_i (0)) = q_i (t)$, thus $ S(t) = (q_1(t) , dots , q_n (t))$ is the shape deformed after time $t$ by the diffeomorphism obtained by integrating the time-dependent vector field $v$ up to $t$.
 
 === Matching Problem as a Geodesic
-In the following section, we consider the exact-matching formulation (or the inexact problem with a hard constraint $Phi^v_1(S_0) = S_1$). In this setting, $d_cal(S)(Phi_1^v) = 0 <=> Phi^v_1 (S_0) = S_1$, i.e., the source shape is exactly matched to the target shape. Consequently, it is also a minimizer of $L_(Phi^v_1)^(S_0)$.
+In the following sections, $v$ is a minimizer of $E$, which maps $S_0$ to $S(1) = Phi_1^v (S_0) approx S_1$.  It is thus the optimal deformation of $S_0$ into $S(1)$. Consequently, it is also a minimizer of $L_(Phi^v_1)^(S_0)$.
 
-We interpret this geometrically by the fact that $Phi_t^v (S_0)$ is a _length-minimizing_ curve on $cal(S)$ between $S_0$ and $S_1$. By definition, this optimal deformation $S_0 --> S_1$ is thus a *geodesic* of $cal(S)$.
+We interpret this geometrically by the fact that $S(t)$ is a _length-minimizing_ curve on $cal(S)$ between $S_0$ and $S(1)$. By definition, this optimal deformation $S_0 --> S(1)$ is thus a *geodesic* of $cal(S)$.
 
 As mentioned earlier, geodesics (defined as locally straight curves) are in general, not unique. Our optimal trajectory is a length-minimizing geodesic for the chosen formulation.
 
@@ -425,11 +487,11 @@ This is nothing more than a *classical mechanics* argument. We can view the evol
 $ "Total Energy (H)" = underbrace("Kinetic Energy" (K_E), "Motion / Inertia") + underbrace("Potential Energy" (P_E), "External Forces") . $
 
 In our specific case, no external forces apply to the deformation hence the absence of potential energy.\
-The shape thus behaves as a **free particle**: it "coasts" along the manifold solely due to its initial inertia, thus following a geodesic (equivalent to "not turning" in our previous walking analogy). A fundamental law of mechanics is the *Conservation of Total Energy* for isolated systems. Since $P_E=0$, this implies the *Conservation of Kinetic Energy*. 
+The shape thus behaves as a **free particle**: it "coasts" along the manifold solely due to its initial momentum, thus following a geodesic (equivalent to "not turning" in our previous walking analogy). A fundamental law of mechanics is the *Conservation of Total Energy* for isolated systems. Since $P_E=0$, this implies the *Conservation of Kinetic Energy*. 
 
 The ubiquity of Riemannian geometry in the description of physical systems allows us to formalize this via a theorem true for every Riemannian manifold, originally emanating from the *Hamiltonian* formulation of classical mechanics.
 
-We define the *Hamiltonian* for every shape $S$, momentum $P$ and associated velocity $v^P in V$ as:
+We define the *Hamiltonian* for every shape $S$, momentum $P$ and associated velocity $v^P = K_S P in V$ as:
 $ H(S, P) = 1/2 P^T K_S P = 1/2 norm(v^P)_V^2 . $
 
 
@@ -476,6 +538,128 @@ $ op("Minimize") quad E(P_0) = lambda P_0^T K_S P_0 + d_cal(S) (Phi_1^(v_(P_0)))
 
 ]
 
-Starting from an infinite dimensional setting over $L^2_V$, choosing $V$ to be a RKHS space allowed us to reduce the problem to a finite dimensional problem over the time interval $[0,1]$. Finally, interpreting our problem as finding a geodesic in a Riemannian manifold reduced the problem to finding the optimal initial condition $P_0$, which has the dimension of our shape.
+
+Starting from an infinite dimensional setting over $L^2_V$, choosing $V$ to be a RKHS space allowed us to reduce the matching problem to a finite dimensional problem over the time interval $[0,1]$. Finally, interpreting our problem as finding a geodesic in a Riemannian manifold reduced the problem to finding the optimal initial momentum $P_0$, which has the dimension of our shape.
 
 
+Solving this inexact matching problem can be interpreted as approximating the $op("Log"_(S_0))$ map at the source shape $S_0$, in the cotangent space.
+=== The geodesic distance
+
+We define the geodesic distance between shapes $S  , tilde(S)$ as: $ d^2(S_0, S_1) = min_(P_0 in RR^(3 n )) E(P_0) $
+
+Where the matching problem is taken with respect to shapes $S$ and $tilde(S)$.
+== Solving the Matching Problem
+
+In this section, we describe how to computationally solve the Matching problem in it's reduced form and our numerical implementation through the open-source `Python` library `scikit-shapes`.
+
+
+=== Computing the energy
+
+
+Given a momentum $P_0$, we recall the expression of the matching term:
+$ d_cal(S)(Phi_1^(v_(P_0))) = norm(Phi_1^(v_(P_0))(S_0) - S_1)_2^2 $ 
+
+ Geometrically, we know our optimal deformation *must* follow a geodesic, thus $Phi_1^(v_(P_0)) (S_0)$ is obtained by *shooting* the shape along the geodesic defined by $P_0$. This is exactly computing the exponential map $op("Exp"_(S_0))$ at the source shape in the cotangent space. 
+
+Numerically, this is done by integrating the time-discretized Hamiltonian system with $P_0$ as initial condition.
+The `scikit-shapes` library implements a RK4 scheme for solving this system, with $n_("steps")$ as the discretization parameter.
+
+
+=== Optimization 
+
+Now that we know how to compute the energy $E(P_0)$, the last step is to minimize this cost function.
+In `scikit-shapes`, this achieved by leveraging the modern computational graph of *PyTorch*.
+
+- *Automatic Differentiation:*
+   Since the geodesic shooting is composed entirely of differentiable tensor operations, we do not need to derive or implement the complex adjoint equations manually. We simply leverage PyTorch's autograd engine to compute the exact gradient via backpropagation:
+   $ nabla_(P_0) E = (partial E) / (partial P_0) $
+
+- *The L-BFGS Optimizer:*
+   Standard Gradient Descent is often too slow for deformation problems where the energy landscape can be ill-conditioned (narrow valleys). Instead, the standard choice in Computational Anatomy is the *L-BFGS* algorithm  [SOURCE]
+   
+   This is a quasi-Newton method that approximates the inverse Hessian matrix of the energy using the history of past gradients. It offers the crucial advantage of avoiding the storage of the full $3n times 3n$ Hessian matrix, making it scalable to shapes with thousands of landmarks like femurs.
+
+In general, the solver iteratively updates $P_0$ using this gradient information until the energy stabilizes or the gradient norm falls below a tolerance threshold.
+In practice, we lack about the energy landscape in deformation problems, and the problem is highly dimensional ($3 times 18291 = 54873$ for our femur data). We thus set a fixed number of iterations  $n_("it")$ for the descent.
+
+== Statistics on the Shape Manifold
+
+The linear structure of the cotangent space $T_S cal(S) tilde.eq RR^(3 n)$ is the great reward for our efforts of characterization of the optimal shape deformations : one initial condition, a momentum vector, which is linearly stable : the sum of two valid momentum vectors is another valid momentum vector, tangent to the manifold. This all arises from the smooth manifold assumption of the shape space.
+
+Beware, however, that previous reasoning [@local-bijection] tell us the results of our method are only valid for "small enough" deformations of the atlas. However, probabilistic arguments tell us it is not a limitation to worry about, see  @lytchak2025zeroprobabilitycutlocus. 
+=== Atlas Construction: Computing the Fréchet Mean
+
+In Computational Anatomy, an **Atlas** is a statistical model of the population structure. It consists of two main components:
+1.  A **Template Shape** (or Mean Shape) $macron(S)$.
+2.  A set of **Deformations** mapping this template to each individual subject $S_i$ in the dataset.
+
+Mathematically, constructing an atlas corresponds to computing the **Fréchet Mean** (or Riemannian barycenter) of the population. Just as the arithmetic mean $S_a$ minimizes the sum of squared Euclidean distances, the Fréchet mean $macron(S)$ minimizes the sum of squared  geodesic distances. 
+
+$ macron(S) = arg min_S sum_(i=1)^K d^2 (S, S_i) . $
+
+We provide an data-driven algorithm that computes the mean and the initial momentum $P_i$ necessary to reconstruct each shape from the mean by following a geodesic.
+
+#block(width: 100%, stroke: 1pt + black, inset: 12pt, radius: 4pt, fill: luma(250))[
+ *Algorithm: Atlas Construction via Geodesic Shooting*
+  
+  *Input:* 
+  - Target Dataset ${S_1, ..., S_K}$
+  - Kernel scale $sigma$, Regularization weight $lambda$
+  - Step size $epsilon$
+  - Optimizer (e.g., L-BFGS)
+  
+  *Initialization:* 
+  - $macron(S) arrow.l$ Euclidean Mean of ${S_i}$  
+  - ${P_0^i} arrow.l {0, ..., 0}$ 
+
+  *Optimization Loop:* *While* $i < n_("atlas") $ *do*:
+    
+  1. *Registration Step (Log-Map approximation):*
+       For each subject $S_i$, find the momentum $P_i$ that shoots the current atlas onto the subject:
+       $ P^i_0 arrow.l "argmin"_(P_0^i) ( E(P_0^i)) $
+       
+  2.Compute the average momentum vector :
+       $ macron(P) arrow.l frac(1, N) sum_(i=1)^N P_i $
+       
+  3. *Geodesic Update (Exponential Map):*
+  
+       Update the atlas by shooting it along the average momentum  for step size $epsilon$:
+       $ macron(S) arrow.l Phi_1^(epsilon dot v_(macron(P))) (macron(S)) $
+  *Returns:* 
+  - Learned Template $macron(S)$
+  - Subject-specific deformations of the template parameterized by ${P_0^i}$
+]
+
+
+One important aspect of this algorithm is that it relies on computing in the cotangent space to take advantage of the linear structure for interpretable operations. In order to do this, we need to go back and forth betwen $cal(S)$ and $T^*_macron(S) cal(S)$ via $op("Exp")$ and approximate-$op("Log")$ #footnote[Actually via their dual maps, but we aim to not make the presentation more confusing than it already is for the non-initiated reader.].
+
+
+If the algorithm converges, the atlas is centered, i.e the mean momentum $macron(P_0)$ of the set of optimal momenta ${P_0^i}$ is $0$, which is to be expected intuitively.
+
+=== Principal Geodesic Analysis : PCA in the (co)tangent space
+
+Once the atlas is built, we can perform classical statistical analysis on the momentum space, isomorphic #footnote[Actually locally isomorphic. ] to the space of optimal deformations. We chose a Linear PCA implementation.
+
+This process, known as *Tangent PCA* or Principal Geodesic Analysis (PGA), identifies the principal modes of anatomical variation by diagonalizing the covariance matrix of the momenta. Let ${(lambda_k, U_k)}_k$ be the resulting eigenvalues (variances) and eigenvectors (principal directions of deformation).
+
+We can now model any plausible deformation in the population as a linear combination of these principal modes. A new momentum vector $P(alpha)$ is constructed as:
+
+$ P(alpha) = macron(P) + sum_(k=1)^M alpha_k sqrt(lambda_k) U_k $ <eq:pga_momentum>
+
+where $macron(P)$ is the mean momentum (usually $approx 0$) and $alpha = (alpha_1, dots, alpha_M)$ are the coordinates in the reduced latent space (standard deviation units).
+
+*Generative Model:*
+To visualize the shape corresponding to a specific configuration $alpha$, we simply "shoot" the template along this synthesized momentum vector using the Riemannian exponential map:
+
+$ S_("gen") = "Exp"_(macron(S)) ( P(alpha) ) = Phi_1^(v_(P(alpha))) (macron(P)) $
+
+It is important to stress that while the PCA is Linear, it is done in the cotangent space hence doesn't assume the data is located on a linear subspace of the ambient space. Via geodesic shooting, it allows us to explore the shape manifold by moving along geodesic sub-manifolds defined by the principal components, guaranteeing that the generated shapes remain diffeomorphic to the template.
+
+== Results
+
+The LDDMM method as detailed in this report is very computationally intensive. At the time of writing (02/02/26), the atlas for a high precision configuration of the method is being built. The parameters are:
+
+
+- 
+
+We will update this section once the definitive results are in.
