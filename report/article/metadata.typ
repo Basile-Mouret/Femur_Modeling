@@ -25,7 +25,7 @@
 #let doc= (
  
  title    : [*Statistical, Neural and Geometric approaches in Computational Anatomy* ],
-  abbr     : "SNSM",
+  //abbr     : "SNSM",
   url      : "https://github.com/Basile-Mouret/Femur_Modeling/",
   logos: (
     tp_topleft  : image("resources/img/uga.svg", height: 1.2cm),

@@ -61,13 +61,14 @@ The training process consists of the following steps:
 
 === Neural Network Implementation
 
-For this project, we implemented a Neural Network from scratch in `C++`. This enabled us a deep understanding of the method and the underlying computations. We started by creating a `Vector` and `Matrix2D` class for which we implemented all the necessary linear algebra methods for a neural network. We used the `Eigen` library to store the data as we were only interested in the mathematical implementation. We then created a `Neural Network` class defining fully connected neural networks with specific activation and loss functions. This class also has the methods to do a forward pass of the neural network and train it using backpropagation.
+For this project, we implemented a Neural Network from scratch in `C++`. This gave us a deep understanding of the method and the underlying computations. We started by creating a `Vector` and `Matrix2D` class for which we implemented all the necessary linear algebra methods for a neural network. We used the `Eigen` library to store the data as we were only interested in the mathematical implementation. We then created a `Neural Network` class defining fully connected neural networks with specific activation and loss functions. This class also has the methods to do a forward pass of the neural network and train it using backpropagation.
 
 === Autoencoder Structure
 
 In order to reduce the dimensionality and to discover underlying relationships in the data we used an Autoencoder structure.
 This is a type of fully connected neural network which tries to regenerate the input data while passing through a very small layer.
-This layer called the latent space acts as a bottleneck for information transfer between the encoder, the part before the latent space, and the decoder, the part after it. Our input and output layers consist of 54873 neurons as we had 18291 three dimensional points for each femur.
+This layer called the latent space acts as a bottleneck for information transfer between the encoder (the part before the latent space) and the decoder (the part after it).
+Our input and output layers consist of 54873 neurons as we had 18291 three dimensional points for each femur.
 By empirical testing, we chose a latent space of size 10 as it seemed enough to capture the main component of the dataset.
 As we used our own implementation of neural networks, which isn't as efficient a state of the art libraries, we had to aggressively compress each layer, going from the full 54873 down to 256, 32 and finally 10 neurons for the latent space.
 Furthermore, in order to get faster training, we did some preprocessing by subtracting the mean femur before feeding them to the autoencoder.
@@ -111,7 +112,7 @@ Furthermore, in order to get faster training, we did some preprocessing by subtr
   supplement: [Figure],
 ) <autoencoder-fig>
 
-We used the Mean Squared error for the loss function as all the point where corresponding to one another. We also tried different activation functions, and got the best results with LeakyReLU and tanh.
+We used the Mean Squared error for the loss function as all the point were corresponding to one another. We also tried different activation functions, and got the best results with LeakyReLU and tanh.
 
 As we implemented the neural network and linear algebra ourselves, the training took a long time. We then focused on increasing performance.
 
