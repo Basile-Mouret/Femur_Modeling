@@ -18,7 +18,7 @@ In an altogether remarkable work, the scholar, biologist, and mathematician D’
     This study will be centered on the application of LDDMM to human femurs, but the global theory is a general computational anatomy framework.
 
 == Overview
-*Large Deformation Diffeomorphic Metric Mapping* (LDDMM) is a mathematical framework for computing smooth, invertible transformations between shapes @beg2005computing. Unlike linear methods that treat shapes as vectors in Euclidean space, LDDMM treats shapes as points on a *Riemannian manifold*, i.e a curved locally Euclidean space, respecting the intrinsic geometry of the shape space.
+*Large Deformation Diffeomorphic Metric Mapping* (LDDMM) is a mathematical framework for computing smooth, invertible transformations between shapes @beg2005computing. Unlike linear methods that treat shapes as vectors in Euclidean space, LDDMM treats shapes as points on a *Riemannian manifold* i.e, a curved locally Euclidean space, respecting the intrinsic geometry of the shape space.
 Consider the space of all possible femur shapes $cal(S)$. There is no biological nor anatomical reason suggesting this should be a vector space---you cannot simply add two femurs and get a valid femur [SOURCE]. Studying large deformations with a Riemannian approach has been an efficient point of view to generate metrics between deformable objects, and to provide accurate, non ambiguous and smooth matchings between shapes. 
 
 #figure(

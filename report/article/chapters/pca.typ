@@ -1,6 +1,6 @@
 == Linear Principal Component Analysis (PCA)
 
-Out first approach to understand the shape variability of femur bones is through Linear Principal Component Analysis (PCA). 
+Our first approach to understand the shape variability of femur bones is through Linear Principal Component Analysis (PCA). 
 
 === Principle 
 
@@ -8,7 +8,7 @@ It's clear that in general, femur bones have a similar structure, but they can v
 
 #figure(
   image("/resources/img/bone_visu.png", width: 20%),
-  caption: [3D visualisation of a femur. We reconize a general shape]
+  caption: [3D visualisation of a femur. We recognize a general shape]
 )
 
 #v(1em)
@@ -23,7 +23,7 @@ We then center the data by subtracting the mean shape from each femur shape vect
 
 $ C = 1/(N-1) sum_(i=1)^N (S_i - macron(S))(S_i - macron(S))^T $
 
-Our goal is to find a change of basis four our centered vector that all our data are uncorrelated. That means we want to find a basis where the covariance matrix is diagonal. This is achieved by finding the eigenvalues and eigenvectors of the covariance matrix $C$. The eigenvectors represent the directions of maximum variance (principal components), and the corresponding eigenvalues indicate the amount of variance captured by each principal component.
+Our goal is to find a change of basis for our centered vector that all our data are uncorrelated. That means we want to find a basis where the covariance matrix is diagonal. This is achieved by finding the eigenvalues and eigenvectors of the covariance matrix $C$. The eigenvectors represent the directions of maximum variance (principal components), and the corresponding eigenvalues indicate the amount of variance captured by each principal component.
 
 #v(1em)
 
@@ -35,11 +35,11 @@ Any femur instance $S_i$ in the dataset can be approximated as the mean shape pl
 
 $ S_i approx macron(S) + sum_(k=1)^K w_k v_k $
 
-where $w_k$ correspond to the standard déviations along each principal component direction.
+where $w_k$ correspond to the standard deviations along each principal component direction.
 
 === Results, visualisation and limitations
 
-Doing the pca on our femur dataset, allow us to reduce the dimensionality from 54873 (3*18291) to 10 while still capturing a significant amount of the variance in the data.
+Performing PCA on our femur dataset, allows us to reduce the dimensionality from 54873 (3*18291) to 10 while still capturing a significant amount of the variance in the data.
 
 #v(1em)
 
